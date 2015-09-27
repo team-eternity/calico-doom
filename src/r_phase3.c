@@ -14,557 +14,88 @@ static void R_PrepMobj(mobj_t *thing)
 {
    fixed_t tr_x, tr_y;
    fixed_t gxt, gyt;
-/*
- load (FP+24),r0 ; local thing                 // param thing => r0
- move r0,r1                                    // r0 => r1
- addq #12,r1                                   // r1 += &mobj_t::x
- load (r1),r1                                  // thing->x => r1
- movei #_viewx,r2                              // &viewx => r2
- load (r2),r2                                  // *r2 => r2 
- sub r2,r1                                     // r1 -= r2
- move r1,r21 ;(trx)                            // r1 => r21 (trx) (phase1.c line 107)
+   fixed_t tx, tz;
+   fixed_t xscale;
 
- addq #16,r0                                   // r0 += &mobj_t::y
- load (r0),r0                                  // thing->y => r0
- movei #_viewy,r1                              // &viewy => r1
- load (r1),r1                                  // *r1 => r1
- sub r1,r0                                     // r0 -= r1
- move r0,r22 ;(try)                            // r0 => r22 (try) (phase1.c line 108)
+   spritedef_t   *sprdef;
+   spriteframe_t *sprframe;
 
- store r21,(FP) ; arg[] ;(trx)
- movei #_viewcos,r0
- load (r0),r0
- or r0,scratch ; scoreboard bug
- store r0,(FP+1) ; arg[]
- movei #_G_FixedMul,r0
- store r28,(FP+10) ; push ;(RETURNPOINT)
- store r22,(FP+11) ; push ;(try)
- store r21,(FP+12) ; push ;(trx)
- store r20,(FP+13) ; push ;(xscale)
- store r19,(FP+14) ; push ;(tx)
- store r18,(FP+15) ; push ;(gyt)
- store r17,(FP+16) ; push ;(gxt)
- store r16,(FP+17) ; push ;(tz)
- movei #L121,RETURNPOINT
- jump T,(r0)                                   // G_FixedMul(trx, viewcos);
- store r15,(FP+18) ; delay slot push ;(vis)    
+   angle_t      ang;
+   unsigned int rot;
+   boolean      flip;
+   int          lump;
+   vissprite_t *vis;
 
-L121:
- load (FP+11),r22 ; pop ;(try)
- load (FP+12),r21 ; pop ;(trx)
- load (FP+13),r20 ; pop ;(xscale)
- load (FP+14),r19 ; pop ;(tx)
- load (FP+15),r18 ; pop ;(gyt)
- load (FP+16),r17 ; pop ;(gxt)
- load (FP+17),r16 ; pop ;(tz)
- load (FP+18),r15 ; pop ;(vis)
- load (FP+10), RETURNPOINT ; pop
- move r29,r17 ;(RETURNVALUE)(gxt)              // => gxt (phase1.c line 110)
+   // transform origin relative to viewpoint
+   tr_x = thing->x - viewx;
+   tr_y = thing->y - viewy;
 
- store r22,(FP) ; arg[] ;(try)
- movei #_viewsin,r0
- load (r0),r0
- or r0,scratch ; scoreboard bug
- store r0,(FP+1) ; arg[]
- movei #_G_FixedMul,r0
- store r28,(FP+10) ; push ;(RETURNPOINT)
- store r22,(FP+11) ; push ;(try)
- store r21,(FP+12) ; push ;(trx)
- store r20,(FP+13) ; push ;(xscale)
- store r19,(FP+14) ; push ;(tx)
- store r18,(FP+15) ; push ;(gyt)
- store r17,(FP+16) ; push ;(gxt)
- store r16,(FP+17) ; push ;(tz)
- movei #L122,RETURNPOINT
- jump T,(r0)                                   // G_FixedMul(try, viewsin)
- store r15,(FP+18) ; delay slot push ;(vis)
-L122:
- load (FP+11),r22 ; pop ;(try)
- load (FP+12),r21 ; pop ;(trx)
- load (FP+13),r20 ; pop ;(xscale)
- load (FP+14),r19 ; pop ;(tx)
- load (FP+15),r18 ; pop ;(gyt)
- load (FP+16),r17 ; pop ;(gxt)
- load (FP+17),r16 ; pop ;(tz)
- load (FP+18),r15 ; pop ;(vis)
- load (FP+10), RETURNPOINT ; pop
- move r29,r0 ;(RETURNVALUE)
- neg r0                                        // r0 = -r0 
- move r0,r18 ;(gyt)                            // => gyt   (r_things.c line 489)
- move r17,r0 ;(gxt)                            // gxt => r0
- sub r18,r0 ;(gyt)                             // r0 -= gyt
- move r0,r16 ;(tz)                             // r0 => tz (r_things.c line 492)
- movei #262144,r0                              // MINZ => r0
- cmp r16,r0 ;(tz)
- movei #L103,scratch
- jump EQ,(scratch)                             // if r0 == MINZ, goto L103
- nop
- jump MI,(scratch)                             // if r0 > MINZ, goto L103
- nop
+   gxt =  FixedMul(tr_x, viewcos);
+   gyt = -FixedMul(tr_y, viewsin);
+   tz  = gxt - gyt;
 
+   // thing is behind view plane?
+   if(tz < MINZ)
+      return;
 
- movei #L102,r0                              // COND: r0 < MINZ (r_things.c line 495)
- jump T,(r0)                                   // goto L102
- nop
+   gxt = -FixedMul(tr_x, viewsin);
+   gyt =  FixedMul(tr_y, viewcos);
+   tx  = -(gyt + gxt);
 
-L103:
+   // too far off the side?
+   if(tx > (tz << 2) || tx < -(tz<<2))
+      return;
 
- store r21,(FP) ; arg[] ;(trx)
- movei #_viewsin,r0
- load (r0),r0
- or r0,scratch ; scoreboard bug
- store r0,(FP+1) ; arg[]
- movei #_G_FixedMul,r0
- store r28,(FP+10) ; push ;(RETURNPOINT)
- store r22,(FP+11) ; push ;(try)
- store r21,(FP+12) ; push ;(trx)
- store r20,(FP+13) ; push ;(xscale)
- store r19,(FP+14) ; push ;(tx)
- store r18,(FP+15) ; push ;(gyt)
- store r17,(FP+16) ; push ;(gxt)
- store r16,(FP+17) ; push ;(tz)
- movei #L123,RETURNPOINT
- jump T,(r0)                                   // G_FixedMul(tr_x, viewsin) (r_things.c line 500)
- store r15,(FP+18) ; delay slot push ;(vis)
-L123:
- load (FP+11),r22 ; pop ;(try)
- load (FP+12),r21 ; pop ;(trx)
- load (FP+13),r20 ; pop ;(xscale)
- load (FP+14),r19 ; pop ;(tx)
- load (FP+15),r18 ; pop ;(gyt)
- load (FP+16),r17 ; pop ;(gxt)
- load (FP+17),r16 ; pop ;(tz)
- load (FP+18),r15 ; pop ;(vis)
- load (FP+10), RETURNPOINT ; pop
- move r29,r0 ;(RETURNVALUE)                    // => r0
- neg r0                                        // r0 = -r0
- move r0,r17 ;(gxt)                            // r0 => gxt
+   // check sprite for validity
+   if((unsigned int)thing->spawnangle >= NUMSPRITES)
+      return;
 
- store r22,(FP) ; arg[] ;(try)
- movei #_viewcos,r0
- load (r0),r0
- or r0,scratch ; scoreboard bug
- store r0,(FP+1) ; arg[]
- movei #_G_FixedMul,r0
- store r28,(FP+10) ; push ;(RETURNPOINT)
- store r22,(FP+11) ; push ;(try)
- store r21,(FP+12) ; push ;(trx)
- store r20,(FP+13) ; push ;(xscale)
- store r19,(FP+14) ; push ;(tx)
- store r18,(FP+15) ; push ;(gyt)
- store r17,(FP+16) ; push ;(gxt)
- store r16,(FP+17) ; push ;(tz)
- movei #L124,RETURNPOINT
- jump T,(r0)                                   // G_FixedMul(tr_y, viewcos) (r_things.c line 501)
- store r15,(FP+18) ; delay slot push ;(vis)
-L124:
- load (FP+11),r22 ; pop ;(try)
- load (FP+12),r21 ; pop ;(trx)
- load (FP+13),r20 ; pop ;(xscale)
- load (FP+14),r19 ; pop ;(tx)
- load (FP+15),r18 ; pop ;(gyt)
- load (FP+16),r17 ; pop ;(gxt)
- load (FP+17),r16 ; pop ;(tz)
- load (FP+18),r15 ; pop ;(vis)
- load (FP+10), RETURNPOINT ; pop
- move r29,r18 ;(RETURNVALUE)(gyt)              // => gyt
+   sprdef = &sprites[thing->sprite];
 
- move r18,r0 ;(gyt)                            // gyt => r0
- add r17,r0 ;(gxt)                             // r0 += gxt
- neg r0                                        // r0 = -r0
- move r0,r19 ;(tx)                             // r0 => tx (r_things.c line 502)
+   // check frame for validity
+   if((thing->frame & FF_FRAMEMASK) >= sprdef->numframes)
+      return;
 
- move r16,r0 ;(tz)                             // tz => r0
- shlq #2,r0                                    // r0 <<= 2
- cmp r19,r0 ;(tx)                              
- movei #L107,scratch
- jump MI,(scratch)                             // if tx > tz<<2, goto L107 (phase1.c line 120)
- nop
+   sprframe = &sprdef->spriteframes[thing->frame & FF_FRAMEMASK];
 
- neg r0                                        // r0 = -r0 (tz)
- cmp r19,r0 ;(tx)
- movei #L105,scratch
- jump EQ,(scratch)                             // if tx == r0, goto L105
- nop
- jump MI,(scratch)                             // if tx > r0, goto L105
- nop
+   if(sprframe->rotate)
+   {
+      // select proper rotation depending on player's view point
+      ang  = R_PointToAngle2(viewx, viewy, thing->x, thing->y);
+      rot  = (ang - thing->angle + (unsigned int)(ANG45 / 2)*9) >> 29;
+      lump = sprframe->lump[rot];
+      flip = (boolean)(sprframe->flip[rot]);
+   }
+   else
+   {
+      // sprite has a single view for all rotations
+      lump = sprframe->lump[0];
+      flip = (boolean)(sprframe->flip[0]);
+   }
 
-L107:                                        // COND: sprite is off-sides
- movei #L102,r0
- jump T,(r0)                                   // goto L102 (unconditional) (phase1.c line 121)
- nop
+   // get a new vissprite
+   if(vissprite_p == vissprites + MAXVISSPRITES)
+      return; // too many visible sprites already
+   vis = vissprite_p++;
 
-L105:
- load (FP+24),r0 ; local thing                 // thing => r0
- movei #36,r1
- add r1,r0                                     // r0 += &mobj_t::sprite
- load (r0),r0                                  // thing->sprite => r0
- movei #91,r1                                  // NUMSPRITES => r1
- cmp r0,r1
- movei #L108,scratch
- jump U_LT,(scratch)                           // if r0 < NUMSPRITES, goto L108 (r_things.c line 510)
- nop
+   vis->patchnum = lump; // CALICO: store to patchnum, not patch (number vs pointer)
+   vis->x1       = tx;
+   vis->gx       = thing->x;
+   vis->gy       = thing->y;
+   vis->gz       = thing->z;
+   vis->xscale   = xscale = FixedDiv(PROJECTION, tz);
+   vis->yscale   = FixedMul(xscale, STRETCH);
+   vis->yiscale  = FixedDiv(FRACUNIT, vis->yscale); // NB: -1 in GAS... test w/o.
 
- movei #L102,r0                                // sprite out of range, exit
- jump T,(r0)
- nop
+   if(flip)
+      vis->xiscale = -FixedDiv(FRACUNIT, xscale);
+   else
+      vis->xiscale = FixedDiv(FRACUNIT, xscale);
 
-L108:
- move FP,r0
- addq #28,r0 ; &sprdef                         // &sprdef => r0
- load (FP+24),r1 ; local thing                 // thing => r1
- movei #36,r2                                  // &mobj_t::sprite => r2
- move r1,r3                                    // thing => r3
- add r2,r3                                     // r3 += &mobj_t::sprite
- load (r3),r2                                  // thing->sprite => r2
- shlq #3,r2                                    // adjust to array index
- movei #_sprites,r3                            // sprites => r3
- add r3,r2                                     // &sprites[r3] => r2
- store r2,(r0)                                 // r2 => *r0 (sprdef) (r_things.c line 514)
-
- movei #40,r2                                  // &mobj_t::frame => r2
- add r2,r1                                     // r1 += &mobj_t::frame
- load (r1),r1                                  // thing->frame => r1
- movei #32767,r2                               // FF_FRAMEMASK => r2
- and r2,r1                                     // r1 &= r2
- load (r0),r0                                  // ...
- load (r0),r0                                  // numframes => r0
- cmp r1,r0
- movei #L110,scratch
- jump S_LT,(scratch)                           // if thing->frame < sprdef->numframes, goto L110
- nop
-
-
- movei #L102,r0                                // frame out of range, exit (r_things.c line 516)
- jump T,(r0)
- nop
-
-L110:
- move FP,r0                                    
- addq #24,r0 ; &sprframe                       // &sprframe => r0
- movei #44,r1
- load (FP+24),r2 ; local thing                 // thing => r2
- movei #40,r3                                  // &mobj_t::frame => r3
- add r3,r2                                     // r2 += &mobj_t::frame
- load (r2),r2                                  // thing->frame => r2
- movei #32767,r3                               // FF_FRAMEMASK => r3
- and r3,r2                                     // r2 &= FF_FRAMEMASK
- move r1,MATH_A
- movei #L125,MATH_RTS
- movei #GPU_IMUL,scratch
- jump T,(scratch)
- move r2,MATH_B ; delay slot
-L125:
- move MATH_C,r1                                // offset => r1
- load (FP+7),r2 ; local sprdef                 // sprdef => r2
- addq #4,r2                                    // &sprdef::spriteframes => r2
- load (r2),r2                                  // *r2 => r2
- add r2,r1                                     // r1 += r2
- store r1,(r0)                                 // r1 => sprframe (r_things.c line 520)
-
- load (r0),r0                                  // *sprframe => r0
- load (r0),r0                                  // sprframe.rotate => r0
- moveq #0,r1                                   // 0 => r1
- cmp r0,r1
- movei #L112,scratch
- jump EQ,(scratch)                             // if sprframe->rotate == 0, goto L112 (r_things.c line 522)
- nop
-                                             // COND: rotating sprite
- movei #_viewx,r0                              // viewx => r0
- load (r0),r0
- store r0,(FP) ; arg[]                         // push as arg
- movei #_viewy,r0                              // viewy => r0
- load (r0),r0
- or r0,scratch ; scoreboard bug
- store r0,(FP+1) ; arg[]                       // push as arg
- load (FP+24),r0 ; local thing                 // thing => r0
- move r0,r1                                    // r0 => r1
- addq #12,r1                                   // &mobj_t::x => r1
- load (r1),r1                                  // thing->x => r1
- or r1,scratch ; scoreboard bug
- store r1,(FP+2) ; arg[]                       // push as arg
- addq #16,r0                                   // r0 += &mobj_t::y
- load (r0),r0                                  // thing->y => r0
- or r0,scratch ; scoreboard bug
- store r0,(FP+3) ; arg[]                       // push as arg
- movei #_R_PointToAngle3,r0                    
- store r28,(FP+10) ; push ;(RETURNPOINT)
- store r22,(FP+11) ; push ;(try)
- store r21,(FP+12) ; push ;(trx)
- store r20,(FP+13) ; push ;(xscale)
- store r19,(FP+14) ; push ;(tx)
- store r18,(FP+15) ; push ;(gyt)
- store r17,(FP+16) ; push ;(gxt)
- store r16,(FP+17) ; push ;(tz)
- movei #L126,RETURNPOINT
- jump T,(r0)                                   // R_PointToAngle3(viewx, viewy, thing->x, thing->y)
- store r15,(FP+18) ; delay slot push ;(vis)
-L126:
- load (FP+11),r22 ; pop ;(try)
- load (FP+12),r21 ; pop ;(trx)
- load (FP+13),r20 ; pop ;(xscale)
- load (FP+14),r19 ; pop ;(tx)
- load (FP+15),r18 ; pop ;(gyt)
- load (FP+16),r17 ; pop ;(gxt)
- load (FP+17),r16 ; pop ;(tz)
- load (FP+18),r15 ; pop ;(vis)
- load (FP+10), RETURNPOINT ; pop
- movei #36,r0
- add FP,r0 ; &ang
- store r29,(r0) ;(RETURNVALUE)                 // => ang (phase1.c line 135, r_things.c line 525)
-
- move FP,r0
- addq #32,r0 ; &rot                            // &rot  => r0
- load (FP+9),r1 ; local ang                    // ang   => r1
- load (FP+24),r2 ; local thing                 // thing => r2
- addq #32,r2                                   // r2 += &mobj_t::angle
- load (r2),r2                                  // thing->angle => r2
- sub r2,r1                                     // r1 -= thing->r2
- movei #-1879048192,r2                         // ANG45/2*9 => r2
- add r2,r1                                     // r1 += r2
- shrq #29,r1                                   // r1 >>= 29
- store r1,(r0)                                 // r1 => rot (r_things.c line 526)
-
- move FP,r1
- addq #16,r1 ; &lump                           // &lump => r1
- load (r0),r0                                  // rot => r0
- move r0,r2                                    // r0  => r2
- shlq #2,r2                                    // adjust to array index
- load (FP+6),r3 ; local sprframe               // sprframe => r3
- move r3,r4                                    // r3 => r4
- addq #4,r4                                    // r4 += &spriteframe_t::lump
- add r4,r2                                     // r2 += r4 (&sprframe->lump[rot])
- load (r2),r2                                  // *r2 => r2
- store r2,(r1)                                 // r2 => lump (r_things.c line 527)
-
- move FP,r1
- addq #20,r1 ; &flip                           // &flip => r1
- movei #36,r2                                  // &spriteframe_t::flip => r2
- add r2,r3                                     // r3 += r2
- add r3,r0                                     // r0 += r3 (&sprframe->flip[rot])
- loadb (r0),r0                                 // *r0 => r0 
- store r0,(r1)                                 // r0 => flip (r_things.c line 528)
-
- movei #L113,r0
- jump T,(r0)                                   // goto L113 (unconditional)
- nop
-
-L112:                                        // COND: Not a rotating sprite, single-view
- move FP,r0
- addq #16,r0 ; &lump                           // &lump => r0
- load (FP+6),r1 ; local sprframe               // &sprframe => r1
- move r1,r2                                    // r1 => r2
- addq #4,r2                                    // r2 += &spriteframe_t::lump
- load (r2),r2                                  // *r2 => r2
- store r2,(r0)                                 // r2 => lump (r_things.c line 533)
- move FP,r0
- addq #20,r0 ; &flip                           // &flip => r0
- movei #36,r2                                  // &spriteframe_t::flip => r2
- add r2,r1                                     // r1 += r2 (sprframe->flip[rot])
- loadb (r1),r1                                 // *r1 => r1
- store r1,(r0)                                 // r1 => flip (r_things.c line 534)
-
-// === THIS CODE IS IN NEITHER VANILLA NOR 3DO AS SUCH ================================================
-L113:                                        // After rotated or not determination
- movei #_vissprite_p,r0                        // &vissprite_p => r0
- load (r0),r0                                  // *r0 => r0
- move r0,r15 ;(vis)                            // r0 => vis
- move r15,r0 ;(vis)                            // r15 => r0
- movei #_vissprites+7680,r1                    // vissprites + (MAXVISSPRITES*sizeof(vissprite_t) => r1
- cmp r0,r1                                     
- movei #L114,scratch                           
- jump NE,(scratch)                             // if !=, goto L114
- nop
- 
- movei #L102,r0                                // Exit because too many vissprites
- jump T,(r0)
- nop
-
-L114:
- movei #_vissprite_p,r0                        // vissprite_p => r0
- movei #60,r1                                  // sizeof(vissprite_t) => r1
- move r15,r2 ;(vis)                            // vis => r2
- add r1,r2                                     // r2 += sizeof(vissprite_t)
- store r2,(r0)                                 // r2 => vissprite_p
-
- move r15,r0 ;(vis)                            // vis => r0
- addq #32,r0                                   // r0 += &vissprite_t::patch
- load (FP+4),r1 ; local lump                   // lump => r1
- store r1,(r0)                                 // r1 => vis->patch
-
-// ====================================================================================================
-
- store r19,(r15) ;(tx)(vis)                   // tx => vis->x1
-
- movei #40,r0                                 // &vissprite_t::gx => r0
- move r15,r1 ;(vis)                           // vis => r1
- add r0,r1                                    // r1 += &vissprite_t::gx
- load (FP+24),r0 ; local thing                // thing => r0
- addq #12,r0                                  // r0 += &mobj_t::x
- load (r0),r0                                 // *r0 => r0
- store r0,(r1)                                // vis->gx = thing->x; (r_things.c line 556)
-
- movei #44,r0                                 // &vissprite_t::gy => r0
- move r15,r1 ;(vis)                           // vis => r1
- add r0,r1                                    // r1 += &vissprite_t::gy
- load (FP+24),r0 ; local thing                // thing => r0
- addq #16,r0                                  // r0 += &mobj_t::y
- load (r0),r0                                 // *r0 => r0
- store r0,(r1)                                // vis->gy = thing->y; (r_things.c line 557)
-
- movei #48,r0                                 // &vissprite_t::gz => r0
- move r15,r1 ;(vis)                           // vis => r1
- add r0,r1                                    // r1 += &vissprite_t::gz
- load (FP+24),r0 ; local thing                // thing => r0
- addq #20,r0                                  // r0 += &mobj_t::gz
- load (r0),r0                                 // *r0 => r0
- store r0,(r1)                                // vis->gz = thing->z; (r_things.c line 558)
-
- movei #5242880,r0                            // projection (centerx<<FRACBITS / 2; 80*FRACUNIT) = r0
- store r0,(FP) ; arg[]
- or r16,scratch ; scoreboard bug ;(tz)
- store r16,(FP+1) ; arg[] ;(tz)
- movei #_G_FixedDiv,r0
- store r28,(FP+10) ; push ;(RETURNPOINT)
- store r22,(FP+11) ; push ;(try)
- store r21,(FP+12) ; push ;(trx)
- store r20,(FP+13) ; push ;(xscale)
- store r19,(FP+14) ; push ;(tx)
- store r18,(FP+15) ; push ;(gyt)
- store r17,(FP+16) ; push ;(gxt)
- store r16,(FP+17) ; push ;(tz)
- movei #L127,RETURNPOINT
- jump T,(r0)                                   // G_FixedDiv(projection, tz)
- store r15,(FP+18) ; delay slot push ;(vis)
-L127:
- load (FP+11),r22 ; pop ;(try)
- load (FP+12),r21 ; pop ;(trx)
- load (FP+13),r20 ; pop ;(xscale)
- load (FP+14),r19 ; pop ;(tx)
- load (FP+15),r18 ; pop ;(gyt)
- load (FP+16),r17 ; pop ;(gxt)
- load (FP+17),r16 ; pop ;(tz)
- load (FP+18),r15 ; pop ;(vis)
- load (FP+10), RETURNPOINT ; pop
- move r29,r20 ;(RETURNVALUE)(xscale)           // => xscale (r_things.c line 498)
-
- move r15,r0 ;(vis)                            // vis => r0
- addq #12,r0                                   // r0 += &vissprite_t::xscale
- store r20,(r0) ;(xscale)                      // vis->xscale = xscale; (r_things.c line 555)~
-
- store r20,(FP) ; arg[] ;(xscale)
- movei #144179,r0                              // STRETCH => r0 (22*FRACUNIT/10) (2.2 scale, but, why?)
- or r0,scratch ; scoreboard bug
- store r0,(FP+1) ; arg[]
- movei #_G_FixedMul,r0
- store r28,(FP+10) ; push ;(RETURNPOINT)
- store r22,(FP+11) ; push ;(try)
- store r21,(FP+12) ; push ;(trx)
- store r20,(FP+13) ; push ;(xscale)
- store r19,(FP+14) ; push ;(tx)
- store r18,(FP+15) ; push ;(gyt)
- store r17,(FP+16) ; push ;(gxt)
- store r16,(FP+17) ; push ;(tz)
- movei #L128,RETURNPOINT
- jump T,(r0)                                   // G_FixedMul(xscale, STRETCH)
- store r15,(FP+18) ; delay slot push ;(vis)
-L128:
- load (FP+11),r22 ; pop ;(try)
- load (FP+12),r21 ; pop ;(trx)
- load (FP+13),r20 ; pop ;(xscale)
- load (FP+14),r19 ; pop ;(tx)
- load (FP+15),r18 ; pop ;(gyt)
- load (FP+16),r17 ; pop ;(gxt)
- load (FP+17),r16 ; pop ;(tz)
- load (FP+18),r15 ; pop ;(vis)
- load (FP+10), RETURNPOINT ; pop
- move r15,r0 ;(vis)                            // vis => r0
- addq #20,r0                                   // r0 += &vissprite_t::yscale
- store r29,(r0) ;(RETURNVALUE)                 // r29 => vis->yscale (phase1.c line 165)
-
- move r15,r0 ;(vis)                            // vis => r0
- addq #24,r0                                   // r0 += &vissprite_t::yiscale
- movei #-1,r1                                  // -1 => r1
- move r15,r2 ;(vis)                            // vis => r2
- addq #20,r2                                   // r2 += &vissprite_t::yscale
- load (r2),r2                                  // *r2 => r2
- div r2,r1                                     // r1 /= r2
- store r1,(r0)                                 // r1 => vis->yiscale
-
- load (FP+5),r0 ; local flip                   // flip => r0
- moveq #0,r1                                   // 0 => r1
- cmp r0,r1
- movei #L117,scratch
- jump EQ,(scratch)                             // if flip == 0, goto L117 (r_things.c line 565)
- nop
-                                             // COND: flip != 0
- move r15,r0 ;(vis)                            // vis => r0
- addq #16,r0                                   // r0 += &vissprite_t::xiscale
- movei #-1,r1                                  // -1 => r1
- move r20,r2 ;(xscale)                         // xscale => r2
- div r2,r1                                     // r1 /= r2
- neg r1                                        // r1 = -r1
- store r1,(r0)                                 // r1 => vis->xiscale (r_things.c line 568)
-
- movei #L118,r0
- jump T,(r0)                                   // goto L118 (unconditional)
- nop
-
-L117:                                        // COND: !flip
- move r15,r0 ;(vis)                            // vis => r0
- addq #16,r0                                   // r0 += &vissprite_t::xiscale
- movei #-1,r1                                  // -1 => r1
- move r20,r2 ;(xscale)                         // xscale => r2
- div r2,r1                                     // r1 /= r2
- store r1,(r0)                                 // r1 => vis->xiscale (r_things.c line 573)
-
-L118:                                        // After if(flip)
- load (FP+24),r0 ; local thing                 // thing => r0
- movei #40,r1                                  // &mobj_t::frame => r1
- add r1,r0                                     // r0 += r1
- load (r0),r0                                  // thing->frame => r0
- movei #32768,r1                               // FF_FULLBRIGHT => r1
- and r1,r0                                     // r0 &= r1
- moveq #0,r1                                   // 0 => r1
- cmp r0,r1
- movei #L119,scratch
- jump EQ,(scratch)                             // if !(thing->frame & FF_FULLBRIGHT), goto L119
- nop
-                                             // COND: fullbright thing
- movei #36,r0                                  // &vissprite_t::colormap => r0
- move r15,r1 ;(vis)                            // vis => r1
- add r0,r1                                     // r1 += r0
- movei #255,r0                                 // 255 => r0
- store r0,(r1)                                 // r0 => vis->colormap (phase1.c line 175)
-
- movei #L120,r0
- jump T,(r0)                                   // goto L120 (unconditional)
- nop
-
-L119:                                        // thing is not fullbright
- move FP,r0
- addq #16,r0 ; &lump                           // &lump => r0
- load (FP+24),r1 ; local thing                 // thing => r1
- movei #52,r2                                  // &mobj_t::subsector => r2
- add r2,r1                                     // r1 += r2
- load (r1),r1                                  // thing->subsector => r1
- load (r1),r1                                  // r1->sector => r1
- addq #16,r1                                   // r1 += &sector_t::lightlevel
- load (r1),r1                                  // r1->lightlevel => r1
- store r1,(r0)                                 // r1 => lump (???, reuse?)
- movei #36,r1                                  // &vissprite_t::colormap => r1
- move r15,r2 ;(vis)                            // vis => r2
- add r1,r2                                     // r2 += r1
- load (r0),r0                                  // *r0 => r0
- store r0,(r2)                                 // r0 => vis->colormap
-
-L120:                                        // RETURN FROM FUNCTION
-
-L102:                                        // RETURN FROM FUNCTION
- movei #96,scratch
- jump T,(RETURNPOINT)
- add scratch,FP ; delay slot
-*/
+   if(thing->frame & FF_FULLBRIGHT)
+      vis->colormap = 255;
+   else
+      vis->colormap = thing->subsector->sector->lightlevel;
 }
 
 //

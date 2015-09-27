@@ -345,6 +345,9 @@ typedef struct vissprite_s
    int     colormap;     /* -1 = shadow draw */
    fixed_t gx,gy,gz,gzt; /* global coordinates */
    pixel_t *pixels;      /* data patch header references */
+
+   // CALICO: avoid type punning for patch
+   int      patchnum;
 } vissprite_t;
 
 #define	MAXVISSPRITES 128
