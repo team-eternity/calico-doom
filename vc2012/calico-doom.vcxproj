@@ -114,6 +114,7 @@
     <ClCompile Include="..\src\r_main.c" />
     <ClCompile Include="..\src\r_phase1.c" />
     <ClCompile Include="..\src\r_phase2.c" />
+    <ClCompile Include="..\src\r_phase3.c" />
     <ClCompile Include="..\src\sounds.c" />
     <ClCompile Include="..\src\sprinfo.c" />
     <ClCompile Include="..\src\st_main.c" />

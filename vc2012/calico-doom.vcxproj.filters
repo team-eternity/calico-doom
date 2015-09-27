@@ -162,6 +162,9 @@
     <ClCompile Include="..\src\r_phase2.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\r_phase3.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\doomdata.h">
