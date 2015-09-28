@@ -107,125 +107,23 @@ static void R_PrepPSprite(pspdef_t *psp)
    spriteframe_t *sprframe;
    int            lump;
    vissprite_t   *vis;
-/*
- subq #12,FP
 
- move FP,r0
- addq #4,r0 ; &sprdef                          // &sprdef    => r0
- load (FP+3),r1 ; local psp                    // psp (arg)  => r1
- load (r1),r2                                  // psp->state => r2
- load (r2),r2                                  // state->sprite => r2
- shlq #3,r2                                    // adjust to array index
- movei #_sprites,r3                            // sprites => r3
- add r3,r2                                     // &sprites[r2] => r2
- store r2,(r0)                                 // r2 => *r0 (sprdef)
- move FP,r2
- addq #8,r2 ; &sprframe                        // &sprframe => r2
- movei #44,r3                                  // sizeof(spriteframe_t) => r3
- load (r1),r1                                  // psp->state => r1
- moveq #4,r4                                   // &state_t::frame => r4
- add r4,r1                                     // r1 += r4
- load (r1),r1                                  // state->frame => r1
- movei #32767,r5                               // FF_FRAMEMASK => r5
- and r5,r1                                     // r1 &= r5
- move r3,MATH_A
- movei #L135,MATH_RTS
- movei #GPU_IMUL,scratch
- jump T,(scratch)
- move r1,MATH_B ; delay slot
-L135:
- move MATH_C,r3                                // r3*r1 => r3
- load (r0),r0                                  // *r0 => r0
- add r4,r0                                     // r0 += &spritedef_t::spriteframes
- load (r0),r0                                  // *r0 => r0
- move r3,r1                                    // r3 => r1
- add r0,r1                                     // r1 += r0 (sprdef->spriteframes[r3])
- store r1,(r2)                                 // r1 => *r2 (sprframe)
- move FP,r0 ; &lump                            // &lump => r0
- load (r2),r1                                  // sprframe => r1
- add r4,r1                                     // r1 += &spriteframe_t::lump
- load (r1),r1                                  // *r1 => r1
- store r1,(r0)                                 // r1 => *r0 (lump = sprframe->lump[0])
- movei #_vissprite_p,r0                        // &vissprite_p => r0
- load (r0),r0                                  // *r0 => r0
- move r0,r15 ;(vis)                            // r0 => r15 (vis)
- move r15,r0 ;(vis)                            // r15 => r0 (vis)
- movei #_vissprites+7680,r1                    // vissprites + NUMVISSPRITES * sizeof(vissprite_t) => r1
- cmp r0,r1
- movei #L130,scratch
- jump NE,(scratch)                             // if !=, goto L130
- nop
+   sprdef   = &sprites[psp->state->sprite];
+   sprframe = &sprdef->spriteframes[psp->state->frame & FF_FRAMEMASK];
+   lump     = sprframe->lump[0];
 
- movei #L129,r0                                // goto L129 unconditional (out of vissprites)
- jump T,(r0)
- nop
+   if(vissprite_p == vissprites + MAXVISSPRITES)
+      return; // out of vissprites
+   vis = vissprite_p++;
 
-L130:
- movei #_vissprite_p,r0                        // &vissprite_p => r0
- movei #60,r1                                  // sizeof(vissprite_t) => r1
- move r15,r2 ;(vis)                            // r15 => r2 (vis)
- add r1,r2                                     // r2 += r1
- store r2,(r0)                                 // r1 => vissprite_p
- move r15,r0 ;(vis)                            // r15 => r0 (vis)
- addq #32,r0                                   // r0 += &vissprite_t::patch
- load (FP),r1 ; local lump                     // lump => r1
- store r1,(r0)                                 // r1 => vis->patch
+   vis->patchnum = lump; // CALICO: use patchnum here, not patch pointer
+   vis->x1 = psp->sx / FRACUNIT;
+   vis->texturemid = psp->sy;
 
- load (FP+3),r0 ; local psp                    // psp => r0
- addq #8,r0                                    // r0 += &pspdef_t::sx
- load (r0),r0                                  // psp->sx => r0
- sharq #16,r0                                  // r0 >>= FRACBITS
- store r0,(r15) ;(vis)                         // r0 => vis->x1
-
- move r15,r0 ;(vis)                            // r15 => r0 (vis)
- addq #28,r0                                   // r0 += &vissprite_t::texturemid
- load (FP+3),r1 ; local psp                    // psp => r1
- addq #12,r1                                   // r1 += &pspdef_t::sy
- load (r1),r1                                  // psp->sy => r1
- store r1,(r0)                                 // r1 => vis->texturemid
-
- load (FP+3),r0 ; local psp                    // psp => r0
- load (r0),r0                                  // psp->state => r0
- addq #4,r0                                    // r0 += &state_t::frame
- load (r0),r0                                  // psp->state->frame => r0
- movei #32768,r1                               // FF_FULLBRIGHT => r1  
- and r1,r0                                     // r0 &= r1
- moveq #0,r1                                   // 0 => r1
- cmp r0,r1
- movei #L133,scratch
- jump EQ,(scratch)                             // if !(frame & FF_FULLBRIGHT), goto L133
- nop
-
- movei #36,r0                                  // &vissprite_t::colormap => r0
- move r15,r1 ;(vis)                            // vis => r1
- add r0,r1                                     // r1 += r0
- movei #255,r0                                 // 255 => r0
- store r0,(r1)                                 // r0 => vis->colormap
-
- movei #L134,r0                                // goto L134 (unconditional)
- jump T,(r0)
- nop
-
-L133:                                        // COND: not fullbright
- movei #36,r0                                  // &vissprite_t::colormap => r0
- move r15,r1 ;(vis)                            // vis => r1
- add r0,r1                                     // r1 += r0
- movei #_viewplayer,r0                         // &viewplayer => r0
- load (r0),r0                                  // *r0 => r0
- load (r0),r0                                  // viewplayer->mo => r0
- movei #52,r2                                  // &mobj_t::subsector => r2
- add r2,r0                                     // r0 += r2
- load (r0),r0                                  // mo->subsector => r0
- load (r0),r0                                  // subsector->sector => r0
- addq #16,r0                                   // r0 += &sector_t::lightlevel
- load (r0),r0                                  // sector->lightlevel => r0
- store r0,(r1)                                 // r0 => vis->colormap
-
-L134:
-L129:
- jump T,(RETURNPOINT)
- addq #12,FP ; delay slot
-*/
+   if(psp->state->frame & FF_FULLBRIGHT)
+      vis->colormap = 255;
+   else
+      vis->colormap = viewplayer->mo->subsector->sector->lightlevel;
 }
 
 //
