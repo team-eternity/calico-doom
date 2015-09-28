@@ -99,6 +99,13 @@ static void R_PrepMobj(mobj_t *thing)
 }
 
 //
+// Project player weapon sprite
+//
+static void R_PrepPSprite(pspdef_t *psp)
+{
+}
+
+//
 // Process actors in all visible subsectors
 //
 void R_SpritePrep(void)
@@ -132,68 +139,9 @@ void R_SpritePrep(void)
    // draw player weapon sprites
    for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
    {
+      if(psp->state)
+         R_PrepPSprite(psp);
    }
-   /*
- movei #_lastsprite_p,r0                       // lastsprite_p => r0
- movei #_vissprite_p,r1                        // vissprite_p  => r1
- load (r1),r1                                  // *r1 = r1
- store r1,(r0)                                 // r1 => r0
- moveq #0,r0                                   // 0 => r0
- move r0,r19 ;(i)                              // r0 => r19 (i)
- movei #_viewplayer,r0                         // &viewplayer => r0
- load (r0),r0                                  // *r0 => r0
- movei #228,r1                                 // &player_t::psprites => r1
- add r1,r0                                     // r0 += r1
- move r0,r18 ;(psp)                            // r0 => r18 (psp)
-
- movei #L65,r0
- jump T,(r0)                                   // goto L65 (unconditional)
- nop
-
-L62:                                         // PSPRITES LOOP
- load (r18),r0 ;(psp)                          // *(psp) => r0 (pspdef_t::state)
- moveq #0,r1                                   // NULL => r1
- cmp r0,r1
- movei #L66,scratch
- jump EQ,(scratch)                             // if psp->state == NULL, goto L66
- nop
-
- store r18,(FP) ; arg[] ;(psp)
- movei #_R_PrepPSprite,r0
- store r28,(FP+1) ; push ;(RETURNPOINT)
- store r20,(FP+2) ; push ;(ss)
- store r19,(FP+3) ; push ;(i)
- store r18,(FP+4) ; push ;(psp)
- store r17,(FP+5) ; push ;(ssp)
- store r16,(FP+6) ; push ;(se)
- movei #L70,RETURNPOINT
- jump T,(r0)                                   // R_PrepPSprite(psp)
- store r15,(FP+7) ; delay slot push ;(thing)
-L70:
- load (FP+2),r20 ; pop ;(ss)
- load (FP+3),r19 ; pop ;(i)
- load (FP+4),r18 ; pop ;(psp)
- load (FP+5),r17 ; pop ;(ssp)
- load (FP+6),r16 ; pop ;(se)
- load (FP+7),r15 ; pop ;(thing)
- load (FP+1), RETURNPOINT ; pop
-
-L66:                                         // STEP TO NEXT PSPRITE
-L63:
- move r19,r0 ;(i)                              // r19 => r0 (i)
- addq #1,r0                                    // r0 += 1
- move r0,r19 ;(i)                              // r0 => r19
- move r18,r0 ;(psp)                            // r18 => r0 (psp)
- addq #16,r0                                   // r0 += sizeof(pspdef_t)
- move r0,r18 ;(psp)                            // r0 => r18
-
-L65:                                         // LOOP CONDITION
- moveq #2,r0                                   // 2 => r0 (MAXPSPRITES)
- cmp r19,r0 ;(i)
- movei #L62,scratch
- jump S_LT,(scratch)                           // if i < 2, goto L62
- nop
-*/
 }
 
 // EOF
