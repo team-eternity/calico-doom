@@ -14,30 +14,19 @@ static boolean cacheneeded;
 //
 static void *R_CheckPixels(int lumpnum)
 {
-/*
-	load	(FP),scratch ; local lumpnum          // lumpnum => scratch
-	shlq	#2,scratch                            // adjust to array index
-	movei	#_lumpcache,scratch2                  // lumpcache => scratch2
-	add		scratch2,scratch                   // scratch += scratch2
-	load	(scratch),RETURNVALUE                 // *scratch => RETURNVALUE
-	or		RETURNVALUE,RETURNVALUE               // RETURNVALUE == NULL ?
-	jr		NE,incache                            // if NOT, goto incache.
+   void *lumpdata = lumpcache[lumpnum];
    
-	moveq	#1,scratch                            // harmless delay slot (1 => scratch)
- 	movei	#_cacheneeded,scratch2                // &cacheneeded => scratch2
- 	store	scratch,(scratch2)                    // scratch (1) => *scratch2
-	jump	T,(RETURNPOINT)                       // return from function
- 	load	(FP),RETURNVALUE
-	
-incache:
-	movei	#_framecount,scratch2                 // &framecount => scratch2
-	load	(scratch2),scratch                    // *scratch2 => scratch
-	move	RETURNVALUE,scratch2                  // RETURNVALUE => scratch2
-	subq	#12,scratch2                          // scratch2 = scratch2 - sizeof(memblock_t) + &memblock_t::lockframe
-	jump	T,(RETURNPOINT)                       // return from function AFTER:
-	store	scratch,(scratch2)                    //   memblock->lockframe = framecount
-*/
-   return NULL; // temporary
+   if(lumpdata)
+   {
+      // touch this graphic resource with the current frame number so that it 
+      // will not be immediately purged again during the same frame
+      memblock_t *memblock = (memblock_t *)((byte *)lumpdata - sizeof(memblock_t));
+      memblock->lockframe = framecount;
+   }
+   else
+      cacheneeded = true; // phase 5 will need to be executed to cache graphics
+   
+   return lumpdata;
 }
 
 //
