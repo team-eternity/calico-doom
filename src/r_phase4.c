@@ -10,42 +10,51 @@
 static boolean cacheneeded;
 
 //
+// Check if texture is loaded; return if so, flag for cache if not
+//
+static void *R_CheckPixels(int lumpnum)
+{
+/*
+	load	(FP),scratch ; local lumpnum          // lumpnum => scratch
+	shlq	#2,scratch                            // adjust to array index
+	movei	#_lumpcache,scratch2                  // lumpcache => scratch2
+	add		scratch2,scratch                   // scratch += scratch2
+	load	(scratch),RETURNVALUE                 // *scratch => RETURNVALUE
+	or		RETURNVALUE,RETURNVALUE               // RETURNVALUE == NULL ?
+	jr		NE,incache                            // if NOT, goto incache.
+   
+	moveq	#1,scratch                            // harmless delay slot (1 => scratch)
+ 	movei	#_cacheneeded,scratch2                // &cacheneeded => scratch2
+ 	store	scratch,(scratch2)                    // scratch (1) => *scratch2
+	jump	T,(RETURNPOINT)                       // return from function
+ 	load	(FP),RETURNVALUE
+	
+incache:
+	movei	#_framecount,scratch2                 // &framecount => scratch2
+	load	(scratch2),scratch                    // *scratch2 => scratch
+	move	RETURNVALUE,scratch2                  // RETURNVALUE => scratch2
+	subq	#12,scratch2                          // scratch2 = scratch2 - sizeof(memblock_t) + &memblock_t::lockframe
+	jump	T,(RETURNPOINT)                       // return from function AFTER:
+	store	scratch,(scratch2)                    //   memblock->lockframe = framecount
+*/
+   return NULL; // temporary
+}
+
+//
 // Late prep for viswalls
 //
-static void R_FinishWallPrep(viswall_t *wall)
+static void R_FinishWallPrep(viswall_t *wc)
 {
+   unsigned int fw_actionbits = wc->actionbits;
+   texture_t   *fw_texture;
+   
+   if(fw_actionbits & AC_TOPTEXTURE)
+   {
+      fw_texture = wc->t_texture;
+      fw_texture->data = R_CheckPixels(fw_texture->lumpnum);
+   }
    /*
-fw_wc		.equr	r15
 fw_offsetangle	.equr	r19
-fw_actionbits	.equr	r19		; not used for long
-fw_texture		.equr	r18
-fw_R_CheckPixels	.equr	r17
-
-	load	(FP),fw_wc                                                  // arg => fw_wc
-
- movei #60,scratch                                                   // make space for locals
- sub scratch,FP
-
- 	store	r28,(FP+6) ; push ;(RETURNPOINT)                            // store returnpoint once   
-
-	movei	#_R_CheckPixels,fw_R_CheckPixels                            // store addr of R_CheckPixels
-	
-	load	(fw_wc+6),fw_actionbits                                     // fw_wc->actionbits => fw_actionbits
-	btst	#2,fw_actionbits			; AC_TOPTEXTURE                     // fw_actionbits & AC_TOPTEXTURE ?
-	jr		EQ,notoptex                                                 // if not, goto notoptex
-	nop
-	                                                                // COND: have top texture
-	load	(fw_wc+10),fw_texture                                       // fw_wc->t_texture => fw_texture
-	moveq	#20,scratch                                                 // &texture_t::lumpnum => scratch
-	add		fw_texture,scratch                                       // scratch += fw_texture
-	load	(scratch),r0				; texture->lumpnum                  // texture->lumpnum => r0
-
-	store	r0,(FP) ; arg[]                                             // r0 => arg
-	move	pc,RETURNPOINT
-	jump	T,(fw_R_CheckPixels)                                        // R_CheckPixels(texture->lumpnum)
-	addq	#6,RETURNPOINT
-	addq	#16,fw_texture                                              // fw_texture += &texture_t::data
-	store	RETURNVALUE,(fw_texture)	;texture->data                   // retval => fw_texture->data
 
 notoptex:                                                          // AFTER TOP TEXTURE CHECK
 	btst	#3,fw_actionbits		; AC_BOTTOMTEXTURE                     // fw_actionbits & AC_BOTTOMTEXTURE ?
