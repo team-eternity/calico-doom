@@ -7,6 +7,29 @@
 #include "doomdef.h"
 #include "r_local.h"
 
+static boolean cacheneeded;
+
+//
+// Late prep for viswalls
+//
+static void R_FinishWallPrep(viswall_t *wall)
+{
+}
+
+//
+// Late prep for vissprites
+//
+static void R_FinishSprite(vissprite_t *spr)
+{
+}
+
+//
+// Late prep for player psprites
+//
+static void R_FinishPSprite(vissprite_t *spr)
+{
+}
+
 //
 // Start late prep rendering stage
 //
@@ -14,162 +37,22 @@ boolean R_LatePrep(void)
 {
    viswall_t   *wall;
    vissprite_t *spr;
-/*
- subq #24,FP
+   
+   cacheneeded = false;   
+   
+   // finish viswalls
+   for(wall = viswalls; wall < lastwallcmd; wall++)
+      R_FinishWallPrep(wall);
 
- movei #_cacheneeded,r0                        // &cacheneeded => r0
- moveq #0,r1                                   // 0 => r1
- store r1,(r0)                                 // r1 => cacheneeded
- movei #_viswalls,r0                           // viswalls => r0
- move r0,r16 ;(wall)                           // r0 => r16 (wall)
-
-//=== VISWALLS LOOP =====================================================================
- movei #L55,r0
- jump T,(r0)                                   // goto L55 (unconditional - loop start)
- nop
-
-L52:                                         // LOOP START
- store r16,(FP) ; arg[] ;(wall)                // r16 => arg
- movei #_R_FinishWallPrep,r0
- store r28,(FP+1) ; push ;(RETURNPOINT)
- store r16,(FP+2) ; push ;(wall)
- movei #L69,RETURNPOINT
- jump T,(r0)                                   // R_FinishWallPrep(wall)
- store r15,(FP+3) ; delay slot push ;(spr)
-L69:
- load (FP+2),r16 ; pop ;(wall)
- load (FP+3),r15 ; pop ;(spr)
- load (FP+1), RETURNPOINT ; pop
-
-L53:
- movei #112,r0                                 // sizeof(viswall_t) => r0
- move r16,r1 ;(wall)                           // wall => r1
- add r0,r1                                     // r1 += r0
- move r1,r16 ;(wall)                           // r1 => r16
-
-L55:                                         // VISWALLS LOOP CONDITION
- move r16,r0 ;(wall)                           // wall => r0
- movei #_lastwallcmd,r1                        // &lastwallcmd => r1
- load (r1),r1                                  // *r1 => r1
- cmp r0,r1
- movei #L52,scratch
- jump U_LT,(scratch)                           // if wall < lastwallcmd, goto L52 (loop)
- nop
-
-//=== END OF VISWALLS LOOP ==============================================================
-//=== VISSPRITES LOOP =================================================================== 
- movei #_vissprites,r0                         // &vissprites => r0
- move r0,r15 ;(spr)                            // r0 => spr
-
- movei #L59,r0                                 // goto L59 (loop condition)
- jump T,(r0)
- nop
-
-L56:
-
- store r15,(FP) ; arg[] ;(spr)
- movei #_R_FinishSprite,r0
- store r28,(FP+1) ; push ;(RETURNPOINT)
- store r16,(FP+2) ; push ;(wall)
- movei #L70,RETURNPOINT
- jump T,(r0)
- store r15,(FP+3) ; delay slot push ;(spr)
-L70:
- load (FP+2),r16 ; pop ;(wall)
- load (FP+3),r15 ; pop ;(spr)
- load (FP+1), RETURNPOINT ; pop
-
-L57:
-
- movei #60,r0
- move r15,r1 ;(spr)
- add r0,r1
- move r1,r15 ;(spr)
-
-L59:                                         // VISSPRITES LOOP CONDITION
- move r15,r0 ;(spr)                            // r15 => r0 (spr)
- movei #_lastsprite_p,r1                       // &lastsprite_p => r1
- load (r1),r1                                  // *r1 => r1
- cmp r0,r1
- movei #L56,scratch
- jump U_LT,(scratch)                           // if spr < lastsprite_p, loop
- nop
-//=== END VISSPRITES LOOP ===============================================================
- 
- movei #L63,r0
- jump T,(r0)                                   // goto L63 (unconditional)
- nop
-
-//=== PSPRITES LOOP =====================================================================
-L60:
- store r15,(FP) ; arg[] ;(spr)                 // r15 (spr) => arg
- movei #_R_FinishPSprite,r0
- store r28,(FP+1) ; push ;(RETURNPOINT)
- store r16,(FP+2) ; push ;(wall)
- movei #L71,RETURNPOINT
- jump T,(r0)                                   // R_FinishPSprite(spr)
- store r15,(FP+3) ; delay slot push ;(spr)
-L71:
- load (FP+2),r16 ; pop ;(wall)
- load (FP+3),r15 ; pop ;(spr)
- load (FP+1), RETURNPOINT ; pop
-
-L61:
- movei #60,r0
- move r15,r1 ;(spr)
- add r0,r1
- move r1,r15 ;(spr)
-
-L63:                                         // PSPRITES LOOP CONDITION
- move r15,r0 ;(spr)                            // r15 (spr) => r0
- movei #_vissprite_p,r1                        // &vissprite_p => r1
- load (r1),r1                                  // *r1 => r1
- cmp r0,r1
- movei #L60,scratch
- jump U_LT,(scratch)                           // if spr < vissprite_p, loop
- nop
-//=== END PSPRITES LOOP =================================================================
- 
- movei #_phasetime+16,r0                       // Jag-specific timing crap
- movei #_samplecount,r1
- load (r1),r1
- store r1,(r0)
-
- movei #_cacheneeded,r0                        // &cacheneeded => r0
- load (r0),r0                                  // *r0 => r0
- moveq #0,r1                                   // 0 => r1
- cmp r0,r1
- movei #L65,scratch
- jump EQ,(scratch)                             // if !cacheneeded, goto L65
- nop
-
- movei #_gpucodestart,r0                       // COND: cacheneeded.
- movei #_ref5_start,r1                         // ref5_start => r1
- store r1,(r0)                                 // r1 => gpucodestart
-
- movei #L66,r0                                 
- jump T,(r0)                                   // goto L66 (unconditional)
- nop
-
-L65:                                         // COND: !cacheneeded
- movei #_phasetime+20,r0                       // Jag-specific timing crap
- movei #_phasetime+16,r1
- load (r1),r1
- store r1,(r0)
-
- movei #_gpucodestart,r0                       // &gpucodestart => r0
- movei #_ref6_start,r1                         // _ref6_start => r1
- store r1,(r0)                                 // r1 => gpucodestart
-
-L66:
- movei #_cacheneeded,r0                        // &cacheneeded => r0
- load (r0),r0                                  // *r0 => r0
- move r0,RETURNVALUE                           // return r0;
-
-L51:
- jump T,(RETURNPOINT)
- addq #24,FP ; delay slot
-*/
+   // finish actor sprites   
+   for(spr = vissprites; spr < lastsprite_p; spr++)
+      R_FinishSprite(spr);
+   
+   // finish player psprites
+   for(; spr < vissprite_p; spr++)
+      R_FinishPSprite(spr);
+   
+   return cacheneeded;
 }
 
 // EOF
