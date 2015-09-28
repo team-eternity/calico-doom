@@ -30,122 +30,78 @@ static void *R_CheckPixels(int lumpnum)
 }
 
 //
+// Get distance to point in 3D projection
+//
+static fixed_t R_PointToDist(fixed_t x, fixed_t y)
+{
+   int     angle;
+   fixed_t dx, dy, temp, dist;
+   
+   dx = abs(x - viewx);
+   dy = abs(y - viewy);
+   
+   if(dy > dx)
+   {
+      temp = dx;
+      dx = dy;
+      dy = temp;
+   }
+   
+   angle = (tantoangle[FixedDiv(dy, dx)>>DBITS] + ANG90) >> ANGLETOFINESHIFT
+   
+   // use as cosine
+   return FixedDiv(dx, finesine[angle]);
+}
+
+//
 // Late prep for viswalls
 //
 static void R_FinishWallPrep(viswall_t *wc)
 {
    unsigned int fw_actionbits = wc->actionbits;
    texture_t   *fw_texture;
+   angle_t      normalangle, distangle, offsetangle;
    
+   // has top or middle texture?
    if(fw_actionbits & AC_TOPTEXTURE)
    {
       fw_texture = wc->t_texture;
       fw_texture->data = R_CheckPixels(fw_texture->lumpnum);
    }
+   
+   // has bottom texture?
+   if(fw_actionbits & AC_BOTTOMTEXTURE)
+   {
+      fw_texture = wc->b_texture;
+      fw_texture->data = R_CheckPixels(fw_texture->lumpnum);
+   }
+   
+   // get floor texture
+   wc->floorpic = R_CheckPixels(firstflat + wc->floorpicnum); // CALICO: use floorpicnum field here
+   
+   // is there sky at this wall?
+   if(wc->ceilingpicnum == -1) // CALICO: likewise for ceilingpicnum
+   {
+      // cache skytexture if needed
+      skytexturep->data = R_CheckPixels(skytexturep->lumpnum);
+   }
+   else
+   {
+      // normal ceilingpic
+      wc->ceilingpic = R_CheckPixels(firstflat + wc->ceilingpicnum);
+   }
+   
+   // this is essentially R_StoreWallRange
+   // calculate rw_distance for scale calculation
+   normalangle = wc->seg->angle + ANG90;
+   offsetangle = abs(normalangle - wc->angle1);
+   
+   if(offsetangle > ANG90)
+      offsetangle = ANG90;
+   
+   distangle = ANG90 - offsetangle;
    /*
-fw_offsetangle	.equr	r19
-
-notoptex:                                                          // AFTER TOP TEXTURE CHECK
-	btst	#3,fw_actionbits		; AC_BOTTOMTEXTURE                     // fw_actionbits & AC_BOTTOMTEXTURE ?
-	jr		EQ,nobottex                                                 // if not, goto nobottex
-	nop
-	                                                               // COND: have bottom texture
-	load	(fw_wc+14),fw_texture                                       // fw_wc->b_texture => fw_texture
-	moveq	#20,scratch                                                 // &texture_t::lumpnum => scratch
-	add		fw_texture,scratch                                       // scratch += fw_texture
-	load	(scratch),r0				; texture->lumpnum                  // texture->lumpnum => r0
- 
-	store	r0,(FP) ; arg[]                                             // r0 => arg
-	move	pc,RETURNPOINT
-	jump	T,(fw_R_CheckPixels)                                        // R_CheckPixels(texture->lumpnum)
-	addq	#6,RETURNPOINT
-	addq	#16,fw_texture                                              // fw_texture += &texture_t::data
-	store	RETURNVALUE,(fw_texture)                                    // retval => fw_texture->data
-
-nobottex:                                                          // AFTER BOTTOM TEXTURE CHECK
-	movefa	alt_firstflat,r0                                         // firstflat => r0
-	load	(fw_wc+4),r1		; wc->floorpic                            // fw_wc->floorpic => r1
-	add		r1,r0                                                    // r0 += r1
- 
-	store	r0,(FP) ; arg[]                                             // r0 => arg
-	move	pc,RETURNPOINT
-	jump	T,(fw_R_CheckPixels)                                        // R_CheckPixels(firstflat + fw_wc->floorpic)
-	addq	#6,RETURNPOINT
-	store	RETURNVALUE,(fw_wc+4)	; wc->floorpic                      // retval => fw_wc->floorpic
-
-	load	(fw_wc+5),r1		; wc->ceilingpic                          // fw_wc->ceilingpic => r1
-	btst	#31,r1                                                      // == -1 ?
-	jr		EQ,notskywall                                               // if SO, notskywall.
-	nop
-                                                                   // SKY WALL
-	movei	#_skytexturep,r0                                            // &skytexturep => r0
-	load	(r0),r0                                                     // *r0 = r0
-	move	r0,r1                                                       // r0 => r1
-	addq	#20,r1                                                      // r1 += &texture_t::lumpnum
-	load	(r1),r1                                                     // skytexturep->lumpnum => r1
- 
-	store	r1,(FP) ; arg[]                                             // r1 => arg
-	move	pc,RETURNPOINT
-	jump	T,(fw_R_CheckPixels)                                        // R_CheckPixels(skytexturep->lumpnum)
-	addq	#6,RETURNPOINT
-	addq	#16,r0
-	jr		T,gotceiling                                                // goto gotceiling, after:
-	store	RETURNVALUE,(r0)	; delay slot, skytexturep->data           // retval => skytexturep->data
-
-notskywall:                                                        // NORMAL CEILING FLAT
-	movefa	alt_firstflat,r0                                         // firstflat => r0
-	add		r1,r0                                                    // r0 += r1 (fw_wc=>ceilingpic)
- 
-	store	r0,(FP) ; arg[]                                             // r0 => arg
-	move	pc,RETURNPOINT
-	jump	T,(fw_R_CheckPixels)                                        // R_CheckPixels(firstflat + fw_wc->ceilingpic)
-	addq	#6,RETURNPOINT
-	store	RETURNVALUE,(fw_wc+5)	; wc->ceilingpic                    // retval => fw_wc->ceilingpic
-
-gotceiling:                                                        // AFTER CEILINGPIC LOAD
- load (FP+15),r0 ; local wc                                          // fw_wc => r0
- load (r0),r1                                                        // fw_wc->seg => r1
- move r1,r16 ;(seg)                                                  // r1 => seg (local var)
- movei #_normalangle,r1                                              // &normalangle => r1
- moveq #12,r2                                                        // 12 => r2
- move r16,r3 ;(seg)                                                  // r16 => r3 (seg)
- add r2,r3                                                           // r3 += &seg_t::angle
- load (r3),r3                                                        // seg->angle => r3
- movei #1073741824,r4                                                // ANG90 => r4
- add r4,r3                                                           // r3 += r4
- store r3,(r1)                                                       // r4 => normalangle
- load (r1),r1                                                        // normalangle => r1
- add r2,r0                                                           // r0 += &viswall_t::angle1
- load (r0),r0                                                        // fw_wc->angle1 => r0
- sub r0,r1                                                           // r1 -= r0
- move r1,fw_offsetangle ;(offsetangle)                               // r1 => fw_offsetangle
- move fw_offsetangle,r0 ;(offsetangle)                               // fw_offsetangle => r0
- moveq #0,r1                                                         // 0 => r1
- cmp r0,r1
- movei #L118,scratch
- jump EQ,(scratch)                                                   // if fw_offsetangle == 0, goto L118
- nop
- jump MI,(scratch)                                                   // if fw_offsetangle > 0, goto L118
- nop
-
- neg fw_offsetangle		; offsetangle                                // fw_offsetangle = -fw_offsetangle;
-
-L118:
- movei #1073741824,r0                                                  // ANG90 => r0
- cmp fw_offsetangle,r0 ;(offsetangle)
- movei #L120,scratch
- jump CC,(scratch)                                                     // if fw_offsetangle <= ANG90, goto L120
- nop
-
- movei #1073741824,r0                                                  // ANG90 => r0
- move r0,fw_offsetangle ;(offsetangle)                                 // r0 => fw_offsetangle
-
 L120:
- move FP,r0
- addq #12,r0 ; &distangle                                              // &distangle (local) => r0
- movei #1073741824,r1                                                  // ANG90 => r1
- sub fw_offsetangle,r1 ;(offsetangle)                                  // r1 -= fw_offsetangle
- store r1,(r0)                                                         // r1 => distangle
  load (r16),r0 ;(seg)                                                  // seg->v1 => r0
  load (r0),r1                                                          // v1->x => r1
  
