@@ -8,6 +8,7 @@
 #include "r_local.h"
 
 static boolean cacheneeded;
+angle_t normalangle;
 
 //
 // Check if texture is loaded; return if so, flag for cache if not
@@ -54,13 +55,53 @@ static fixed_t R_PointToDist(fixed_t x, fixed_t y)
 }
 
 //
+// Convert angle and distance within view frustum to texture scale factor.
+//
+static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle)
+{
+   angle_t anglea, angleb;
+   int sinea, sineb;
+   
+   anglea = ANG90 + (visangle - viewangle);
+   sinea  = finesine[anglea >> ANGLETOFINESHIFT];
+   angleb = ANG90 + (visangle - normalangle);
+   sineb  = finesine[angleb >> ANGLETOFINESHIFT];
+   
+   sineb *= 22*8; // CALICO_TODO: This value makes no sense...
+   /*
+	movei	#22*8,scratch
+	mult	scratch,sg_sineb
+	
+	movei   #DIVCONTROL,scratch2     ; divide unit control
+	moveq   #1,scratch
+	store   scratch,(scratch2) 		; turn on frac div
+
+	move	sg_distance,scratch
+	shrq	#16,scratch
+	mult	sg_sinea,sg_distance
+	mult	sg_sinea,scratch
+	shrq	#16,sg_distance
+	add		scratch,sg_distance	
+	
+	div		sg_distance,sg_sineb	; FixedDiv
+
+	move	sg_sineb,RETURNVALUE
+	moveq   #0,scratch
+	jump	T,(RETURNPOINT)
+	store   scratch,(scratch2) 		; turn off frac div
+   */
+}
+
+//
 // Late prep for viswalls
 //
 static void R_FinishWallPrep(viswall_t *wc)
 {
    unsigned int fw_actionbits = wc->actionbits;
    texture_t   *fw_texture;
-   angle_t      normalangle, distangle, offsetangle;
+   angle_t      distangle, offsetangle;
+   seg_t       *seg = wc->seg;
+   fixed_t      hyp, sineval, rw_distance;
    
    // has top or middle texture?
    if(fw_actionbits & AC_TOPTEXTURE)
@@ -93,57 +134,19 @@ static void R_FinishWallPrep(viswall_t *wc)
    
    // this is essentially R_StoreWallRange
    // calculate rw_distance for scale calculation
-   normalangle = wc->seg->angle + ANG90;
+   normalangle = seg->angle + ANG90;
    offsetangle = abs(normalangle - wc->angle1);
    
    if(offsetangle > ANG90)
       offsetangle = ANG90;
    
    distangle = ANG90 - offsetangle;
+   hyp = R_PointToDist(seg->v1->x, seg->v1->y);
+   sineval = finesine[distangle >> ANGLETOFINESHIFT];
+   wc->distance = rw_distance = FixedMul(hyp, sineval);
+   
+   
    /*
-L120:
- load (r16),r0 ;(seg)                                                  // seg->v1 => r0
- load (r0),r1                                                          // v1->x => r1
- 
- addq #4,r0                                                            // r0 += &vertex_t::y
- load (r0),r0                                                          // v1->y => r0
- 
-	store	r1,(FP) ; arg[]                                               // v1->x => arg
-	store	r0,(FP+1) ; arg[]                                             // v1->y => arg
-	movei	#_R_PointToDist,r0
-	move	pc,RETURNPOINT
-	jump	T,(r0)                                                        // R_PointToDist(seg->v1->x, seg->v1->y)
-	addq	#6,RETURNPOINT
-	movei	#_hyp,r0                                                      // retval => hyp
-	store	RETURNVALUE,(r0) ;(RETURNVALUE)
-
- move FP,r0
- addq #16,r0 ; &sineval                                                // &sineval => r0 (local)
- load (FP+3),r1 ; local distangle                                      // distangle => r1
- shrq #19,r1                                                           // r1 >>= ANGLETOFINESHIFT
- shlq #2,r1                                                            // adjust to array index
- movei #_finesine,r2                                                   // &finesine => r2
- add r2,r1                                                             // r1 += r2
- load (r1),r1                                                          // finesine[distangle>>19] => r1
- store r1,(r0)                                                         // r1 => sineval
- movei #_hyp,r1                                                        // &hyp => r1
-
-	load	(r1),r1                                                       // hyp => r1
-	load	(r0),r0                                                       // sineval => r0
-	store	r1,(FP) ; arg[]                                               // hyp => arg
-	store	r0,(FP+1) ; arg[]                                             // sineval => arg
-	movei	#_G_FixedMul,r0
-	move	pc,RETURNPOINT
-	jump	T,(r0)                                                        // G_FixedMul(hyp, sineval)
-	addq	#6,RETURNPOINT
-	store	RETURNVALUE,(FP+2) ; rw_distance                              // => rw_distance
- 
- load (FP+15),r0 ; local wc                                            // fw_wc => r0
- movei #104,r1                                                         // &viswall_t::distance => r1
- add r1,r0                                                             // r0 += r1
- move r29,r1 ;(RETURNVALUE)                                            // r29 => r1
- store r1,(r0)                                                         // r1 => fw_wc->distance
-
  load (FP+2),r0 ; local rw_distance                                    // rw_distance => r0
  store r0,(FP) ; arg[]                                                 // r0 => arg
  movei #_viewangle,r0                                                  // &viewangle => r0
