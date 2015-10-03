@@ -36,7 +36,7 @@ static void *R_CheckPixels(int lumpnum)
 static fixed_t R_PointToDist(fixed_t x, fixed_t y)
 {
    int     angle;
-   fixed_t dx, dy, temp, dist;
+   fixed_t dx, dy, temp;
    
    dx = abs(x - viewx);
    dy = abs(y - viewy);
@@ -48,7 +48,7 @@ static fixed_t R_PointToDist(fixed_t x, fixed_t y)
       dy = temp;
    }
    
-   angle = (tantoangle[FixedDiv(dy, dx)>>DBITS] + ANG90) >> ANGLETOFINESHIFT
+   angle = (tantoangle[FixedDiv(dy, dx)>>DBITS] + ANG90) >> ANGLETOFINESHIFT;
    
    // use as cosine
    return FixedDiv(dx, finesine[angle]);
@@ -60,36 +60,132 @@ static fixed_t R_PointToDist(fixed_t x, fixed_t y)
 static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle)
 {
    angle_t anglea, angleb;
-   int sinea, sineb;
+   fixed_t num, den;
+   int     sinea, sineb;
    
    anglea = ANG90 + (visangle - viewangle);
    sinea  = finesine[anglea >> ANGLETOFINESHIFT];
    angleb = ANG90 + (visangle - normalangle);
    sineb  = finesine[angleb >> ANGLETOFINESHIFT];
    
-   sineb *= 22*8; // CALICO_TODO: This value makes no sense...
-   /*
-	movei	#22*8,scratch
-	mult	scratch,sg_sineb
-	
-	movei   #DIVCONTROL,scratch2     ; divide unit control
-	moveq   #1,scratch
-	store   scratch,(scratch2) 		; turn on frac div
+   num = sineb * 22 * 8; // CALICO_TODO: This value makes no sense...
+   den = FixedMul(rw_distance, sinea);
 
-	move	sg_distance,scratch
-	shrq	#16,scratch
-	mult	sg_sinea,sg_distance
-	mult	sg_sinea,scratch
-	shrq	#16,sg_distance
-	add		scratch,sg_distance	
-	
-	div		sg_distance,sg_sineb	; FixedDiv
+   return FixedDiv(num, den);
+}
 
-	move	sg_sineb,RETURNVALUE
-	moveq   #0,scratch
-	jump	T,(RETURNPOINT)
-	store   scratch,(scratch2) 		; turn off frac div
-   */
+//
+// Setup texture calculations for lines with upper and lower textures
+//
+static void R_SetupCalc(viswall_t *wc)
+{
+/*
+ movei #36,scratch
+ sub scratch,FP
+
+ movei #_normalangle,r0
+ load (r0),r0
+ load (FP+9),r1 ; local wc
+ addq #12,r1
+ load (r1),r1
+ sub r1,r0
+ move r0,r15 ;(offsetangle)
+ movei #-2147483648,r0
+ cmp r15,r0 ;(offsetangle)
+ movei #L104,scratch
+ jump CC,(scratch)
+ nop
+
+ move r15,r0 ;(offsetangle)
+ neg r0
+ move r0,r15 ;(offsetangle)
+
+L104:
+
+ movei #1073741824,r0
+ cmp r15,r0 ;(offsetangle)
+ movei #L106,scratch
+ jump CC,(scratch)
+ nop
+
+ movei #1073741824,r0
+ move r0,r15 ;(offsetangle)
+
+L106:
+
+ move FP,r0
+ addq #8,r0 ; &sineval
+ move r15,r1 ;(offsetangle)
+ shrq #19,r1
+ shlq #2,r1
+ movei #_finesine,r2
+ add r2,r1
+ load (r1),r1
+ store r1,(r0)
+ movei #_hyp,r1
+ load (r1),r1
+ store r1,(FP) ; arg[]
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+3) ; push ;(RETURNPOINT)
+ store r16,(FP+4) ; push ;(rw_offset)
+ movei #L110,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+5) ; delay slot push ;(offsetangle)
+L110:
+ load (FP+4),r16 ; pop ;(rw_offset)
+ load (FP+5),r15 ; pop ;(offsetangle)
+ load (FP+3), RETURNPOINT ; pop
+ move r29,r16 ;(RETURNVALUE)(rw_offset)
+
+ movei #_normalangle,r0
+ load (r0),r0
+ load (FP+9),r1 ; local wc
+ addq #12,r1
+ load (r1),r1
+ sub r1,r0
+ movei #-2147483648,r1
+ cmp r0,r1
+ movei #L108,scratch
+ jump EQ,(scratch)
+ nop
+ jump CS,(scratch)
+ nop
+
+ move r16,r0 ;(rw_offset)
+ neg r0
+ move r0,r16 ;(rw_offset)
+
+L108:
+
+ load (FP+9),r0 ; local wc
+ movei #100,r1
+ add r1,r0
+ load (r0),r1
+ move r16,r2 ;(rw_offset)
+ add r2,r1
+ store r1,(r0)
+
+ load (FP+9),r0 ; local wc
+ movei #96,r1
+ add r1,r0
+ movei #_viewangle,r1
+ load (r1),r1
+ movei #1073741824,r2
+ add r2,r1
+ movei #_normalangle,r2
+ load (r2),r2
+ sub r2,r1
+ store r1,(r0)
+
+
+L103:
+ movei #36,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+*/
 }
 
 //
@@ -102,6 +198,7 @@ static void R_FinishWallPrep(viswall_t *wc)
    angle_t      distangle, offsetangle;
    seg_t       *seg = wc->seg;
    fixed_t      hyp, sineval, rw_distance;
+   fixed_t      scalefrac, scale2;
    
    // has top or middle texture?
    if(fw_actionbits & AC_TOPTEXTURE)
@@ -145,134 +242,23 @@ static void R_FinishWallPrep(viswall_t *wc)
    sineval = finesine[distangle >> ANGLETOFINESHIFT];
    wc->distance = rw_distance = FixedMul(hyp, sineval);
    
-   
-   /*
- load (FP+2),r0 ; local rw_distance                                    // rw_distance => r0
- store r0,(FP) ; arg[]                                                 // r0 => arg
- movei #_viewangle,r0                                                  // &viewangle => r0
- load (r0),r0                                                          // *r0 => r0
- load (FP+15),r1 ; local wc                                            // fw_wc => r1
- move r1,r2                                                            // r1 => r2
- addq #4,r2                                                            // r2 += &viswall_t::start
- load (r2),r2                                                          // wc->start => r2
- shlq #2,r2                                                            // adjust to array index
- movei #_xtoviewangle,r3                                               // xtoviewangle => r3
- add r3,r2                                                             // r2 += r3
- load (r2),r2                                                          // xtoviewangle[r2] => r2
- add r2,r0                                                             // r0 (viewangle) += r2
- or r0,scratch ; scoreboard bug
- store r0,(FP+1) ; arg[]                                               // r0 => arg
- 
-	movei	#_R_ScaleFromGlobalAngle,r0
-	move	pc,RETURNPOINT
-	jump	T,(r0)                                                        // R_ScaleFromGlobalAngle(viewangle + xtoviewangle[start])
-	addq	#6,RETURNPOINT
+   scalefrac = scale2 = wc->scalefrac =
+      R_ScaleFromGlobalAngle(rw_distance, viewangle + xtoviewangle[wc->start]);
 
- movei #84,r0                                                          // &viswall_t::scalefrac => r0
- add r0,r1                                                             // r1 += r0
- move r29,r0 ;(RETURNVALUE)                                            // retval => r0
- store r0,(r1)                                                         // r0 => wc->scalefrac
- move r0,r17 ;(scale2)                                                 // r0 => r17 (local scale2)
- move FP,r1
- addq #20,r1 ; &scalefrac                                              // &scalefrac => r1
- store r0,(r1)                                                         // r0 => scalefrac
- load (FP+15),r0 ; local wc                                            // wc => r0
- move r0,r1                                                            // r0 => r1
- addq #8,r1                                                            // r1 += &viswall_t::stop
- load (r1),r1                                                          // wc->stop => r1
- addq #4,r0                                                            // r0 += &viswall_t::start
- load (r0),r0                                                          // wc->start => r0
- cmp r1,r0
- movei #L122,scratch
- jump PL,(scratch)                                                     // if wc->stop <= wc->start, goto L122
- nop
-                                                                     // COND: wc->stop > wc->start
- load (FP+2),r0 ; local rw_distance                                    // rw_distance => r0
- store r0,(FP) ; arg[]                                                 // r0 => arg
- movei #_viewangle,r0                                                  // &viewangle => r0
- load (r0),r0                                                          // *r0 => r0
- load (FP+15),r1 ; local wc                                            // wc => r1
- addq #8,r1                                                            // r1 += &viswall_t::stop
- load (r1),r1                                                          // wc->stop => r1
- shlq #2,r1                                                            // adjust to array index
- movei #_xtoviewangle,r2                                               // xtoviewangle => r2
- add r2,r1                                                             // r1 += r2
- load (r1),r1                                                          // xtoviewangle[wc->stop] => r1
- add r1,r0                                                             // r0 += r1
- or r0,scratch ; scoreboard bug
- 
-	store	r0,(FP+1) ; arg[]                                             // r0 => arg
-	movei	#_R_ScaleFromGlobalAngle,r0
-	move	pc,RETURNPOINT
-	jump	T,(r0)                                                        // R_ScaleFromGlobalAngle(viewangle + xtoviewangle[stop])
-	addq	#6,RETURNPOINT
-	move	RETURNVALUE,r17 ;(RETURNVALUE)(scale2)                        // retval => r17 (scale2)
+   if(wc->stop > wc->start)
+   {
+      scale2 = R_ScaleFromGlobalAngle(rw_distance, viewangle + xtoviewangle[wc->stop]);
+      wc->scalestep = (scale2 - scalefrac) / (wc->stop - wc->start);
+   }
 
- load (FP+15),r0 ; local wc                                            // wc => r0
- movei #92,r1                                                          // &viswall_t::scalestep => r1
- move r0,r2                                                            // r0 => r2
- add r1,r2                                                             // r2 += r1
- load (FP+5),r1 ; local scalefrac                                      // scalefrac => r1
- move r17,r3 ;(scale2)                                                 // scale2 => r3
- sub r1,r3                                                             // r3 -= r1 (scale2 - rw_scale)
- move r0,r1                                                            // r0 => r1
- addq #8,r1                                                            // r1 += &viswall_t::stop
- load (r1),r1                                                          // wc->stop => r1
- addq #4,r0                                                            // r0 += &viswall_t::start
- load (r0),r0                                                          // wc->start => r0
- sub r0,r1                                                             // r1 -= r0 (stop - start)
- move r1,MATH_SIGN
- move r1,MATH_B
- xor r3,MATH_SIGN
- move r3,r0
- abs MATH_B
- abs r0
- div MATH_B,r0
- btst #31, MATH_SIGN
- jr EQ,L135
- nop
- neg r0
-L135:
- store r0,(r2)                                                         // div op result => r2 (wc->scalestep)
+   wc->scale2 = scale2;
 
-L122:
- load (FP+15),r0 ; local wc                                            // wc => r0
- movei #88,r1                                                          // &viswall_t::scale2 => r1
- add r1,r0                                                             // r0 += r1
- move r17,r1 ;(scale2)                                                 // scale2 => r1
- store r1,(r0)                                                         // scale2 => wc->scale2
-
- load (FP+15),r0 ; local wc                                            // wc => r0
- addq #24,r0                                                           // &viswall_t::actionbits => r0
- load (r0),r0                                                          // wc->actionbits => r0
- moveq #12,r1                                                          // (AC_TOPTEXTURE|AC_BOTTOMTEXTURE) => r1
- and r1,r0                                                             // r0 &= r1
- moveq #0,r1                                                           // 0 => r1
- cmp r0,r1                                                             // r0 == r1 ?
- movei #L124,scratch
- jump EQ,(scratch)                                                     // if SO (NO top/bottom texture), goto L124
- nop
-
- load (FP+15),r0 ; local wc                                            // wc => r0
- addq #24,r0                                                           // r0 += &viswall_t::actionbits
- load (r0),r1                                                          // wc->actionbits => r1
- movei #128,r2                                                         // AC_CALCTEXTURE => r2
- or r2,r1                                                              // r1 |= r2
- store r1,(r0)                                                         // r1 => wc->actionbits
-
-	load	(FP+15),r0 ; local wc                                         // wc => r0
-	store	r0,(FP) ; arg[]                                               // r0 => arg
-	movei	#_R_SetupCalc,r0
- 	move	pc,RETURNPOINT
-	jump	T,(r0)                                                        // R_SetupCalc(wc)
- 	addq	#6,RETURNPOINT
-
-L124:                                                                // COND: no top/bottom texture
-  load (FP+6), RETURNPOINT ; pop
-  movei #60,scratch
- jump T,(RETURNPOINT)
- add scratch,FP ; delay slot
-   */
+   // does line have top or bottom textures?
+   if(wc->actionbits & (AC_TOPTEXTURE|AC_BOTTOMTEXTURE))
+   {
+      wc->actionbits |= AC_CALCTEXTURE; // set to calculate texture info
+      R_SetupCalc(wc);                  // do calc setup
+   }
 }
 
 //
