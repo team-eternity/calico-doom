@@ -83,107 +83,107 @@ static void R_SetupCalc(viswall_t *wc)
  movei #36,scratch
  sub scratch,FP
 
- movei #_normalangle,r0
- load (r0),r0
- load (FP+9),r1 ; local wc
- addq #12,r1
- load (r1),r1
- sub r1,r0
- move r0,r15 ;(offsetangle)
- movei #-2147483648,r0
- cmp r15,r0 ;(offsetangle)
+ movei #_normalangle,r0       r0 = &normalangle
+ load (r0),r0                 r0 = *r0
+ load (FP+9),r1 ; local wc    r1 = &wc
+ addq #12,r1                  r1 += 12
+ load (r1),r1                 r1 = *r1
+ sub r1,r0                    r0 -= r1
+ move r0,r15 ;(offsetangle)   offsetangle = r0
+ movei #-2147483648,r0        r0 = ANG180
+ cmp r15,r0 ;(offsetangle)    offsetangle <= r0?
  movei #L104,scratch
- jump CC,(scratch)
+ jump CC,(scratch)               goto L104
  nop
 
- move r15,r0 ;(offsetangle)
- neg r0
- move r0,r15 ;(offsetangle)
+ move r15,r0 ;(offsetangle)   r0 = offsetangle
+ neg r0                       r0 = -r0
+ move r0,r15 ;(offsetangle)   offsetangle = r0
 
 L104:
 
- movei #1073741824,r0
- cmp r15,r0 ;(offsetangle)
+ movei #1073741824,r0         r0 = ANG90
+ cmp r15,r0 ;(offsetangle)    offsetangle <= r0?
  movei #L106,scratch
- jump CC,(scratch)
+ jump CC,(scratch)               goto L106
  nop
 
- movei #1073741824,r0
- move r0,r15 ;(offsetangle)
+ movei #1073741824,r0         r0 = ANG90
+ move r0,r15 ;(offsetangle)   offsetangle = r0
 
 L106:
 
- move FP,r0
- addq #8,r0 ; &sineval
- move r15,r1 ;(offsetangle)
- shrq #19,r1
- shlq #2,r1
- movei #_finesine,r2
- add r2,r1
- load (r1),r1
- store r1,(r0)
- movei #_hyp,r1
- load (r1),r1
- store r1,(FP) ; arg[]
- load (r0),r0
+ move FP,r0                                           r0 = FP
+ addq #8,r0 ; &sineval                                r0 += 8
+ move r15,r1 ;(offsetangle)                           r1 = offsetangle
+ shrq #19,r1                                          r1 >>= ANGLETOFINESHIFT
+ shlq #2,r1                                           r1 <<= 2
+ movei #_finesine,r2                                  r2 = finesine
+ add r2,r1                                            r1 += r2
+ load (r1),r1                                         r1 = *r1
+ store r1,(r0)                                        *r0 = r1
+ movei #_hyp,r1                                       r1 = _hyp
+ load (r1),r1                                         r1 = *r1
+ store r1,(FP) ; arg[]                                *FP = r1
+ load (r0),r0                                         r0 = *r0
  or r0,scratch ; scoreboard bug
- store r0,(FP+1) ; arg[]
- movei #_G_FixedMul,r0
- store r28,(FP+3) ; push ;(RETURNPOINT)
- store r16,(FP+4) ; push ;(rw_offset)
+ store r0,(FP+1) ; arg[]                              *(FP+1) = r0
+ movei #_G_FixedMul,r0                                r0 = G_FixedMul
+ store r28,(FP+3) ; push ;(RETURNPOINT)               *(FP+3) = r28
+ store r16,(FP+4) ; push ;(rw_offset)                 *(FP+4) = rw_offset
  movei #L110,RETURNPOINT
- jump T,(r0)
- store r15,(FP+5) ; delay slot push ;(offsetangle)
+ jump T,(r0)                                          call G_FixedMul
+ store r15,(FP+5) ; delay slot push ;(offsetangle)    *(FP+5) = offsetangle
 L110:
- load (FP+4),r16 ; pop ;(rw_offset)
- load (FP+5),r15 ; pop ;(offsetangle)
+ load (FP+4),r16 ; pop ;(rw_offset)                   rw_offset = *(FP+4)
+ load (FP+5),r15 ; pop ;(offsetangle)                 offsetangle = *(FP+5)
  load (FP+3), RETURNPOINT ; pop
- move r29,r16 ;(RETURNVALUE)(rw_offset)
+ move r29,r16 ;(RETURNVALUE)(rw_offset)               rw_offset = r29
 
- movei #_normalangle,r0
- load (r0),r0
- load (FP+9),r1 ; local wc
- addq #12,r1
- load (r1),r1
- sub r1,r0
- movei #-2147483648,r1
- cmp r0,r1
+ movei #_normalangle,r0          r0 = &normalangle
+ load (r0),r0                    r0 = *r0
+ load (FP+9),r1 ; local wc       wc = *(FP+9)
+ addq #12,r1                     wc += 12
+ load (r1),r1                    wc = *(wc)
+ sub r1,r0                       r0 -= r1
+ movei #-2147483648,r1           r1 = ANG180
+ cmp r0,r1                       r0 >= r1?
  movei #L108,scratch
- jump EQ,(scratch)
+ jump EQ,(scratch)                  goto L108
  nop
- jump CS,(scratch)
- nop
+ jump CS,(scratch)                  goto L108
+ nop  
 
- move r16,r0 ;(rw_offset)
- neg r0
- move r0,r16 ;(rw_offset)
+ move r16,r0 ;(rw_offset)        r0 = rw_offset
+ neg r0                          r0 = -r0
+ move r0,r16 ;(rw_offset)        rw_offset = r0
 
 L108:
 
- load (FP+9),r0 ; local wc
- movei #100,r1
- add r1,r0
- load (r0),r1
- move r16,r2 ;(rw_offset)
- add r2,r1
- store r1,(r0)
+ load (FP+9),r0 ; local wc       r0 = *(FP+9)
+ movei #100,r1                   r1 = 100
+ add r1,r0                       r0 += r1
+ load (r0),r1                    r1 = *r0
+ move r16,r2 ;(rw_offset)        r2 = rw_offset
+ add r2,r1                       r1 += r2
+ store r1,(r0)                   *r0 = r1
 
- load (FP+9),r0 ; local wc
- movei #96,r1
- add r1,r0
- movei #_viewangle,r1
- load (r1),r1
- movei #1073741824,r2
- add r2,r1
- movei #_normalangle,r2
- load (r2),r2
- sub r2,r1
- store r1,(r0)
+ load (FP+9),r0 ; local wc       r0 = *(FP+9)
+ movei #96,r1                    r1 = 96
+ add r1,r0                       r0 += r1
+ movei #_viewangle,r1            r1 = &viewangle
+ load (r1),r1                    r1 = *r1
+ movei #1073741824,r2            r2 = ANG90
+ add r2,r1                       r1 += r2
+ movei #_normalangle,r2          r2 = &normalangle
+ load (r2),r2                    r2 = *r2
+ sub r2,r1                       r1 -= r2
+ store r1,(r0)                   *r0 = r1
 
 
 L103:
- movei #36,scratch
- jump T,(RETURNPOINT)
+ movei #36,scratch               // pop stack
+ jump T,(RETURNPOINT)            return;
  add scratch,FP ; delay slot
 */
 }
