@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{34025F0D-62CF-43CF-8E74-34B768659E89}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>calicodoom</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\am_main.c" />
+    <ClCompile Include="..\src\comnjag.c" />
+    <ClCompile Include="..\src\d_main.c" />
+    <ClCompile Include="..\src\f_main.c" />
+    <ClCompile Include="..\src\g_game.c" />
+    <ClCompile Include="..\src\info.c" />
+    <ClCompile Include="..\src\in_main.c" />
+    <ClCompile Include="..\src\jagonly.c" />
+    <ClCompile Include="..\src\j_eeprom.c" />
+    <ClCompile Include="..\src\m_main.c" />
+    <ClCompile Include="..\src\o_main.c" />
+    <ClCompile Include="..\src\p_base.c" />
+    <ClCompile Include="..\src\p_ceilng.c" />
+    <ClCompile Include="..\src\p_change.c" />
+    <ClCompile Include="..\src\p_doors.c" />
+    <ClCompile Include="..\src\p_enemy.c" />
+    <ClCompile Include="..\src\p_floor.c" />
+    <ClCompile Include="..\src\p_inter.c" />
+    <ClCompile Include="..\src\p_lights.c" />
+    <ClCompile Include="..\src\p_map.c" />
+    <ClCompile Include="..\src\p_maputl.c" />
+    <ClCompile Include="..\src\p_mobj.c" />
+    <ClCompile Include="..\src\p_move.c" />
+    <ClCompile Include="..\src\p_plats.c" />
+    <ClCompile Include="..\src\p_pspr.c" />
+    <ClCompile Include="..\src\p_setup.c" />
+    <ClCompile Include="..\src\p_shoot.c" />
+    <ClCompile Include="..\src\p_sight.c" />
+    <ClCompile Include="..\src\p_slide.c" />
+    <ClCompile Include="..\src\p_spec.c" />
+    <ClCompile Include="..\src\p_switch.c" />
+    <ClCompile Include="..\src\p_telept.c" />
+    <ClCompile Include="..\src\p_tick.c" />
+    <ClCompile Include="..\src\p_user.c" />
+    <ClCompile Include="..\src\r_data.c" />
+    <ClCompile Include="..\src\r_main.c" />
+    <ClCompile Include="..\src\r_phase1.c" />
+    <ClCompile Include="..\src\r_phase2.c" />
+    <ClCompile Include="..\src\r_phase3.c" />
+    <ClCompile Include="..\src\r_phase4.c" />
+    <ClCompile Include="..\src\sounds.c" />
+    <ClCompile Include="..\src\sprinfo.c" />
+    <ClCompile Include="..\src\st_main.c" />
+    <ClCompile Include="..\src\s_sound.c" />
+    <ClCompile Include="..\src\tables.c" />
+    <ClCompile Include="..\src\vsprintf.c" />
+    <ClCompile Include="..\src\w_wad.c" />
+    <ClCompile Include="..\src\z_zone.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\doomdata.h" />
+    <ClInclude Include="..\src\doomdef.h" />
+    <ClInclude Include="..\src\info.h" />
+    <ClInclude Include="..\src\music.h" />
+    <ClInclude Include="..\src\p_local.h" />
+    <ClInclude Include="..\src\p_spec.h" />
+    <ClInclude Include="..\src\r_local.h" />
+    <ClInclude Include="..\src\sound.h" />
+    <ClInclude Include="..\src\sounds.h" />
+    <ClInclude Include="..\src\soundst.h" />
+    <ClInclude Include="..\src\st_main.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
