@@ -508,7 +508,7 @@ void A_Punch (player_t *player, pspdef_t *psp)
    if(player->powers[pw_strength])	
       damage *= 10;
    angle = player->mo->angle;
-   angle += (P_Random()-P_Random())<<18;
+   angle += P_SubRandom()<<18;
    P_LineAttack (player->mo, angle, MELEERANGE, MAXINT, damage);
    /* turn to face target */
    if(linetarget)
@@ -530,7 +530,7 @@ void A_Saw (player_t *player, pspdef_t *psp)
 
    damage = ((P_Random ()&7)+1)*3;
    angle  = player->mo->angle;
-   angle += (P_Random()-P_Random())<<18;
+   angle += P_SubRandom()<<18;
    
    /* use meleerange + 1 se the puff doesn't skip the flash */
    P_LineAttack (player->mo, angle, MELEERANGE+1, MAXINT, damage);
@@ -620,7 +620,7 @@ void P_GunShot (mobj_t *mo, boolean accurate)
    damage = ((P_Random ()&3)+1)*4;
    angle  = mo->angle;
    if(!accurate)
-      angle += (P_Random()-P_Random())<<18;
+      angle += P_SubRandom()<<18;
    P_LineAttack(mo, angle, MISSILERANGE, MAXINT, damage);
 }
 
@@ -669,7 +669,7 @@ void A_FireShotgun (player_t *player, pspdef_t *psp)
    {
       damage = ((P_Random()&3)+1)*4;
       angle  = player->mo->angle;
-      angle += (P_Random()-P_Random())<<18;
+      angle += P_SubRandom()<<18;
       P_LineAttack(player->mo, angle, MISSILERANGE, slope, damage);
    }
 }

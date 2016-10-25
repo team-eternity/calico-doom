@@ -146,6 +146,16 @@ int P_Random(void)
    return rndtable[prndindex];
 }
 
+//
+// CALICO: eliminate dependence on order of evaluation in expressions that
+// take the difference between two P_Random() results.
+//
+int P_SubRandom(void)
+{
+   int t = P_Random();
+   return t - P_Random();
+}
+
 int M_Random(void)
 {
    rndindex = (rndindex+1)&0xff;

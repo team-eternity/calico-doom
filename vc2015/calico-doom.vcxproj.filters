@@ -203,5 +203,8 @@
     <ClInclude Include="..\src\st_main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\keywords.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

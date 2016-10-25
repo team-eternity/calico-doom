@@ -129,6 +129,7 @@
     <ClInclude Include="..\src\doomdata.h" />
     <ClInclude Include="..\src\doomdef.h" />
     <ClInclude Include="..\src\info.h" />
+    <ClInclude Include="..\src\keywords.h" />
     <ClInclude Include="..\src\music.h" />
     <ClInclude Include="..\src\p_local.h" />
     <ClInclude Include="..\src\p_spec.h" />
