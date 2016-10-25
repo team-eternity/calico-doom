@@ -699,7 +699,6 @@ boolean R_LatePrep(void)
 
 // EOF
 
-
 /*
 #define	AC_ADDFLOOR      1       000:00000001
 #define	AC_ADDCEILING    2       000:00000010
