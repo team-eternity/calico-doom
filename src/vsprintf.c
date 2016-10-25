@@ -1,3 +1,12 @@
+/*
+
+  CALICO
+
+  String utilites
+
+*/
+
+#include <stdio.h>
 #include "doomdef.h"
 
 /* prints number of characters printed. */
@@ -17,129 +26,33 @@ int mystrlen(char *string)
    return rc;
 }
 
-int D_vsprintf(char *string, const char *format, int *argptr)
+//
+// CALICO: Replaced with call to C library function to eliminate non-portable
+// argument-passing idiom.
+//
+int D_vsnprintf(char *str, size_t nmax, const char *format, va_list ap)
 {
-   int len, i, div, uselong;
-   int fieldsize;
-   unsigned long num;
-   long snum;
-   char padchar;
-   char *str;
-   char *origstring = string;
+   int result;
 
-   while(*format)
+   if(nmax < 1)
    {
-      if(*format != '%')
-         *(string++) = *(format++);
-      else
-      {
-         format++;
-
-         /* set field pad character to 0 if necessary */
-         if(*format == '0')
-         {
-            padchar = '0';
-            format++;
-         }
-         else
-            padchar = ' ';
-
-         /* get the fieldwidth if any */
-         fieldsize = 0;
-         while(*format >= '0' && *format <= '9')
-            fieldsize = fieldsize * 10 + *(format++) - '0';
-
-         /* get rid of 'l' if present */
-         if(*format == 'l')
-         {
-            uselong = 1;
-            format++;
-         }
-         else
-            uselong = 0;
-
-         div = 10;
-         if(*format == 'c')
-         {
-            *(string++) = *argptr++;
-            format++;
-         }
-         else if(*format == 's')
-         {
-            str = (char *)*argptr++;
-            len = mystrlen(str);
-            while(fieldsize-- > len)
-               *(string++) = padchar; /* do field pad */
-            while(*str)
-               *(string++) = *(str++); /* copy string */
-            format++;
-         }
-         else
-         {
-            if(*format == 'o') /* octal */
-            {
-               div = 8;
-               if(uselong)
-                  num = *argptr++;
-               else 
-                  num = *argptr++;
-            }
-            else if(*format == 'x' || *format == 'X')  /* hex */
-            {
-               div = 16;
-               if(uselong)
-                  num = *argptr++;
-               else 
-                  num = *argptr++;
-            }
-            else if(*format == 'i' || *format == 'd' || *format == 'u') /* decimal */
-            {
-               div = 10;
-               if(uselong)
-                  snum = *argptr++;
-               else
-                  snum = *argptr++;
-               if(snum < 0 && *format != 'u') /* handle negative %i or %d */
-               {
-                  *(string++) = '-';
-                  num = -snum;
-                  if(fieldsize)
-                     fieldsize--;
-               } 
-               else
-                  num = snum;
-            }
-            else
-               return -1; /* unrecognized format specifier */
-
-            /* print any decimal or hex integer */
-            len = 0;
-            while(num || fieldsize || !len)
-            {
-               for(i=len ; i ; i--)
-                  string[i] = string[i-1]; /* shift right */
-               
-               if(len && fieldsize && !num)
-                  *string = padchar; /* pad out */
-               else
-               {
-                  /* put in a hex or decimal digit */
-                  *string = (char)(num % div);
-                  *string += *string > 9 ? 'A'-10 : '0';
-                  num /= div;
-               }
-               len++;
-               if(fieldsize)
-                  fieldsize--;
-            }
-            string += len;
-            format++;
-         }
-      }
+      return 0;
    }
-   *string = 0;
 
-   return origstring - string;
+   // vsnprintf() in Windows (and possibly other OSes) doesn't always
+   // append a trailing \0. We have the responsibility of making this
+   // safe by writing into a buffer that is one byte shorter ourselves.
+   result = vsnprintf(str, nmax, format, ap);
+
+   // If truncated, change the final char in the buffer to a \0.
+   // In Windows, a negative result indicates a truncated buffer.
+   if(result < 0 || (size_t)result >= nmax)
+   {
+      str[nmax - 1] = '\0';
+      result = (int)(nmax - 1);
+   }
+
+   return result;
 }
 
 // EOF

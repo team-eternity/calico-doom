@@ -284,9 +284,14 @@ void I_Print8(int x, int y, char *string)
 char errormessage[80];
 
 // CALICO_FIXME: soft locks rather than exits
-void I_Error (char *error, ...) 
+void I_Error(const char *error, ...) 
 {
-   D_vsprintf(errormessage,error,((int *)&error)+1);
+   va_list ap;
+
+   va_start(ap, error);
+   D_vsnprintf(errormessage, sizeof(errormessage), error, ap);
+   va_end(ap);
+
    I_Print8(0, 25, errormessage);
    debugscreenactive = true;
    I_Update();

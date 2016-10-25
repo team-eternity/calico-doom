@@ -3,6 +3,7 @@
 #ifndef DOOMDEF_H__
 #define DOOMDEF_H__
 
+#include <stdarg.h>
 #include "keywords.h"
 
 /* JAGUAR should be defined on the compiler command line for console builds */
@@ -60,7 +61,7 @@ typedef unsigned short inpixel_t;
 #define	NULL 0
 #endif
 
-int D_vsprintf(char *string, const char *format, int *argptr);
+int D_vsnprintf(char *str, size_t nmax, const char *format, va_list ap);
 
 void D_printf(char *str, ...);
 
@@ -619,7 +620,7 @@ boolean I_RefreshLatched(void);
 int     I_GetTime(void);
 
 void I_Update(void);
-void I_Error(char *error, ...);
+void I_Error(const char *error, ...);
 void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale, fixed_t dc_texturemid, inpixel_t *dc_source);
 void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t *ds_source) ;
 void I_Print8(int x, int y, char *string);
