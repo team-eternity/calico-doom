@@ -9,6 +9,10 @@
 #include <stdio.h>
 #include "doomdef.h"
 
+#if defined(_MSC_VER) && (_MSC_VER < 1400) /* not needed for Visual Studio 2008 */
+#define vsnprintf _vsnprintf
+#endif
+
 /* prints number of characters printed. */
 
 int mystrlen(char *string)
