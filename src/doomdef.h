@@ -3,6 +3,8 @@
 #ifndef DOOMDEF_H__
 #define DOOMDEF_H__
 
+#include "keywords.h"
+
 /* JAGUAR should be defined on the compiler command line for console builds */
 /* if MARS isn't defined, assume jaguar version */
 
@@ -536,16 +538,24 @@ void Z_CheckHeap(memzone_t *mainzone);
 void Z_ChangeTag(void *ptr, int tag);
 int  Z_FreeMemory(memzone_t *mainzone);
 
-// CALICO_FIXME: packing pragmas til alignment-free IO implemented
 /*------- */
 /*WADFILE */
 /*------- */
+// CALICO_FIXME: Use packing pragmas til alignment-free IO implemented
+#if defined(CALICO_HAS_PACKING)
+#pragma pack(push, 1)
+#endif
+
 typedef struct
 {
    int  filepos; /* also texture_t * for comp lumps */
    int  size;
    char name[8];
 } lumpinfo_t;
+
+#if defined(CALICO_HAS_PACKING)
+#pragma pack(pop)
+#endif
 
 #define	MAXLUMPS 2048
 
@@ -693,6 +703,7 @@ struct subsector_s *R_PointInSubsector(fixed_t x, fixed_t y);
 /*---- */
 int  M_Random(void);
 int  P_Random(void);
+int  P_SubRandom(void);
 void M_ClearRandom(void);
 void M_ClearBox(fixed_t *box);
 void M_AddToBox(fixed_t *box, fixed_t x, fixed_t y);
@@ -781,7 +792,11 @@ extern unsigned BASEORGY;
 
 /*================= */
 
-// CALICO_FIXME: packing pragma til alignment-free IO implemented
+// CALICO_FIXME: Use packing pragma til alignment-free IO implemented
+#if defined(CALICO_HAS_PACKING)
+#pragma pack(push, 1)
+#endif
+
 typedef struct
 {
    short width;                  /* in pixels */
@@ -791,6 +806,10 @@ typedef struct
    short pad1,pad2,pad3,pad4;    /* future expansion */
    byte  data[8];                /* as much as needed */
 } jagobj_t;
+
+#if defined(CALICO_HAS_PACKING)
+#pragma pack(pop)
+#endif
 
 void DoubleBufferSetup(void);
 void EraseBlock(int x, int y, int width, int height);

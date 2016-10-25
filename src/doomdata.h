@@ -6,11 +6,7 @@
 #ifndef DOOMDATA_H__
 #define DOOMDATA_H__
 
-#ifndef __BYTEBOOL__
-#define __BYTEBOOL__
-typedef enum {false, true} boolean;
-typedef unsigned char byte;
-#endif
+#include "keywords.h"
 
 /*
 ===============================================================================
@@ -36,7 +32,10 @@ enum
    ML_BLOCKMAP
 };
 
-// CALICO_FIXME: Add packing pragmas until alignment-free IO is implemented
+// CALICO_FIXME: Use packing pragmas until alignment-free IO is implemented
+#if defined(CALICO_HAS_PACKING)
+#pragma pack(push, 1)
+#endif
 
 typedef struct
 {
@@ -192,6 +191,10 @@ status
 
 ===============================================================================
 */
+
+#if defined(CALICO_HAS_PACKING)
+#pragma pack(pop)
+#endif
 
 #endif			/* __DOOMDATA__ */
 
