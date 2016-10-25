@@ -1,6 +1,7 @@
 /* marsonly.c */
 
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "doomdef.h"
 #include "r_local.h"
@@ -377,11 +378,10 @@ byte *I_WadBase(void)
 #define	STARTHEAP 0x80000
 #define	ENDHEAP   0x1c8000
 
-// CALICO_FIXME: allocate from C heap
 byte *I_ZoneBase(int *size)
 {
-   *size = ENDHEAP-STARTHEAP; // leave 64k for stack
-   return (byte *)STARTHEAP; 
+   *size = ENDHEAP - STARTHEAP; // leave 64k for stack
+   return malloc(*size);        // CALICO: allocate from C heap
 }
 
 #define TICSCALE 2
