@@ -1,4 +1,5 @@
 *.aps
+*.cal
 *.db
 *.lib
 *.opendb
