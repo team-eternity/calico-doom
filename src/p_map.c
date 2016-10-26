@@ -297,8 +297,8 @@ boolean PIT_RadiusAttack (mobj_t *thing)
    if(!(thing->flags & MF_SHOOTABLE))
       return true;
 
-   dx = abs(thing->x - bombspot->x);
-   dy = abs(thing->y - bombspot->y);
+   dx = D_abs(thing->x - bombspot->x);
+   dy = D_abs(thing->y - bombspot->y);
    dist = dx > dy ? dx : dy;
    dist = (dist - thing->radius) >> FRACBITS;
    if(dist < 0)

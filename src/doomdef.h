@@ -120,10 +120,10 @@ typedef enum
 /* */
 
 void D_memset(void *dest, int val, int count);
-void D_memcpy(void *dest, void *src, int count);
-void D_strncpy(char *dest, char *src, int maxcount);
-int  D_strncasecmp(char *s1, char *s2, int len);
-int  abs(int x);
+void D_memcpy(void *dest, const void *src, int count);
+void D_strncpy(char *dest, const char *src, int maxcount);
+int  D_strncasecmp(const char *s1, const char *s2, int len);
+int  D_abs(int x);
 
 /*
 ===============================================================================
@@ -567,12 +567,12 @@ extern int         numlumps;
 extern void       *lumpcache[MAXLUMPS];
 
 void  W_Init(void);
-int   W_CheckNumForName(char *name);
-int   W_GetNumForName(char *name);
+int   W_CheckNumForName(const char *name);
+int   W_GetNumForName(const char *name);
 int   W_LumpLength(int lump);
 void  W_ReadLump(int lump, void *dest);
 void *W_CacheLumpNum(int lump, int tag);
-void *W_CacheLumpName(char *name, int tag);
+void *W_CacheLumpName(const char *name, int tag);
 
 #define W_POINTLUMPNUM(x) (void*)(wadfileptr + BIGLONG(lumpinfo[x].filepos));
 

@@ -36,7 +36,7 @@ int samples_per_midiclock;     /* multiplier for midi clocks */
 
 int musictics = 0;
 
-#define abs(x) ((x)<0 ? -(x) : (x))
+#define S_abs(x) ((x)<0 ? -(x) : (x))
 
 /*
 ==================
@@ -136,8 +136,8 @@ void S_StartSound(mobj_t *origin, int sound_id)
       vol = 127;
    else
    {
-      dx = abs(origin->x - player->mo->x);
-      dy = abs(origin->y - player->mo->y);
+      dx = S_abs(origin->x - player->mo->x);
+      dy = S_abs(origin->y - player->mo->y);
       dist_approx = dx + dy - ((dx < dy ? dx : dy) >> 1);
       vol = dist_approx >> 20;
       if(vol > 127)

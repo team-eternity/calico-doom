@@ -39,8 +39,8 @@ static fixed_t R_PointToDist(fixed_t x, fixed_t y)
    int     angle;
    fixed_t dx, dy, temp;
    
-   dx = abs(x - viewx);
-   dy = abs(y - viewy);
+   dx = D_abs(x - viewx);
+   dy = D_abs(y - viewy);
    
    if(dy > dx)
    {
@@ -145,7 +145,7 @@ static void R_FinishWallPrep(viswall_t *wc)
    // this is essentially R_StoreWallRange
    // calculate rw_distance for scale calculation
    normalangle = seg->angle + ANG90;
-   offsetangle = abs(normalangle - wc->angle1);
+   offsetangle = D_abs(normalangle - wc->angle1);
    
    if(offsetangle > ANG90)
       offsetangle = ANG90;

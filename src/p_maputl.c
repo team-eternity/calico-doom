@@ -16,8 +16,8 @@
 
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy)
 {
-   dx = abs(dx);
-   dy = abs(dy);
+   dx = D_abs(dx);
+   dy = D_abs(dy);
    if(dx < dy)
       return dx+dy-(dx>>1);
    return dx+dy-(dy>>1);

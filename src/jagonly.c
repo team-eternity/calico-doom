@@ -437,7 +437,7 @@ fixed_t FixedMul(fixed_t a, fixed_t b)
 fixed_t FixedDiv(fixed_t a, fixed_t b) 
 { 
    // CALICO: rewritten to use PC version
-   return (abs(a) >> 14) >= abs(b) ? ((a ^ b) >> 31) ^ MAXINT :
+   return (D_abs(a) >> 14) >= D_abs(b) ? ((a ^ b) >> 31) ^ MAXINT :
       (fixed_t)(((int64_t)a << FRACBITS) / b);
 } 
  
