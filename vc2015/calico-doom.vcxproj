@@ -116,12 +116,18 @@
     <ClCompile Include="..\src\r_phase2.c" />
     <ClCompile Include="..\src\r_phase3.c" />
     <ClCompile Include="..\src\r_phase4.c" />
+    <ClCompile Include="..\src\r_phase5.c" />
+    <ClCompile Include="..\src\r_phase6.c" />
+    <ClCompile Include="..\src\r_phase7.c" />
+    <ClCompile Include="..\src\r_phase8.c" />
+    <ClCompile Include="..\src\r_phase9.c" />
     <ClCompile Include="..\src\sounds.c" />
     <ClCompile Include="..\src\sprinfo.c" />
     <ClCompile Include="..\src\st_main.c" />
     <ClCompile Include="..\src\s_sound.c" />
     <ClCompile Include="..\src\tables.c" />
     <ClCompile Include="..\src\vsprintf.c" />
+    <ClCompile Include="..\src\win32\win32_main.c" />
     <ClCompile Include="..\src\w_wad.c" />
     <ClCompile Include="..\src\z_zone.c" />
   </ItemGroup>

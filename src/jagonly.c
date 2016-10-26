@@ -254,6 +254,8 @@ byte font8[] =
 
 void I_Print8(int x, int y, char *string)
 {
+   // CALICO_FIXME / CALICO_TODO: Jag-specific
+#if 0
    int c;
    byte *source,*dest;
 
@@ -279,6 +281,7 @@ void I_Print8(int x, int y, char *string)
       dest++;
       x++;
    }
+#endif
 }
 
 char errormessage[80];
@@ -1458,7 +1461,7 @@ unsigned I_NetTransfer(unsigned int buttons)
    int  val;
    byte inbytes[6];
    byte outbytes[6];
-   byte consistancy;
+   int  consistancy; // CALICO: truncation not handled properly in original code
    int  i;
 
    outbytes[0] = buttons>>24;
@@ -1469,7 +1472,7 @@ unsigned I_NetTransfer(unsigned int buttons)
    consistancy = players[0].mo->x ^ players[0].mo->y ^ players[1].mo->x ^ players[1].mo->y;
    consistancy = (consistancy>>8) ^ consistancy ^ (consistancy>>16);
 
-   outbytes[4] = consistancy;
+   outbytes[4] = (byte)(consistancy & 0xff);
    outbytes[5] = vblsinframe;
 
    if(consoleplayer)
