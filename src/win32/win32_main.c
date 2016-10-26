@@ -154,6 +154,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR szCmdLine, int sw)
       OutOfMemory();
       return 0;
    }
+   ParseCommandLine(cmdline, argv);
 
    // run application main program
    Jag68k_main();
