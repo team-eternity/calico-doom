@@ -113,7 +113,7 @@ typedef struct
 
 extern stbar_t stbar;
 void valtostr(char *string, int val);
-int  mystrlen(char *string);
+int  mystrlen(const char *string);
 void ST_DrawValue(int x,int y,int value);
 void ST_Num (int x, int y, int num);
 void ST_InitEveryLevel(void);

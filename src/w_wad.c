@@ -104,7 +104,7 @@ void W_Init(void)
    wadfileptr = I_WadBase();
 
    if(D_strncasecmp(((wadinfo_t*)wadfileptr)->identification,"IWAD",4))
-      I_Error ("Wad file doesn't have IWAD id\n");
+      I_Error("Wad file doesn't have IWAD id\n");
 
    numlumps = BIGLONG(((wadinfo_t*)wadfileptr)->numlumps);
 

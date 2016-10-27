@@ -1,6 +1,7 @@
 /* D_main.c  */
  
 #include "doomdef.h" 
+#include "m_argv.h"
  
 unsigned int BT_ATTACK = BT_B;
 unsigned int BT_USE    = BT_C;
@@ -365,9 +366,9 @@ int TIC_Abortable(void)
    if(ticbuttons[0] == (BT_OPTION|BT_STAR|BT_HASH))
    {	
       /* reset eeprom memory */
-      void Jag68k_main(void);
+      void Jag68k_main(int argc, const char *const *argv);
 
-      ClearEEProm ();
+      ClearEEProm();
       pl = W_CacheLumpName("defaults", PU_STATIC);	
       DrawSinglePlaque(pl);
       Z_Free(pl);
@@ -375,7 +376,7 @@ int TIC_Abortable(void)
       ticcount = 0;
       while((junk = ticcount) < 240)
          ;
-      Jag68k_main();
+      Jag68k_main(myargc, myargv);
    }
 
    if((ticbuttons[0] & BT_A) && !(oldticbuttons[0] & BT_A))

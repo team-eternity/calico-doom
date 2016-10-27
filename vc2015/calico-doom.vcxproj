@@ -89,6 +89,7 @@
     <ClCompile Include="..\src\in_main.c" />
     <ClCompile Include="..\src\jagonly.c" />
     <ClCompile Include="..\src\j_eeprom.c" />
+    <ClCompile Include="..\src\m_argv.c" />
     <ClCompile Include="..\src\m_main.c" />
     <ClCompile Include="..\src\o_main.c" />
     <ClCompile Include="..\src\p_base.c" />
@@ -141,6 +142,7 @@
     <ClInclude Include="..\src\info.h" />
     <ClInclude Include="..\src\keywords.h" />
     <ClInclude Include="..\src\music.h" />
+    <ClInclude Include="..\src\m_argv.h" />
     <ClInclude Include="..\src\p_local.h" />
     <ClInclude Include="..\src\p_spec.h" />
     <ClInclude Include="..\src\r_local.h" />

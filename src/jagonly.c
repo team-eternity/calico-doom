@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "doomdef.h"
+#include "m_argv.h"
 #include "r_local.h"
 
 /*
@@ -107,11 +108,15 @@ extern short a_vdb, a_vde, a_hdb, a_hde;
 unsigned BASEORGY;
 
 // CALICO_FIXME: Jag-specific bits need emulation or replacement
-void Jag68k_main(void)
+void Jag68k_main(int argc, const char *const *argv)
 {
 #if 0
    int i;
 #endif
+
+   // CALICO: initialize global command line state
+   myargc = argc;
+   myargv = argv;
 
    debugscreenactive = debugscreenstate;
 
@@ -1529,7 +1534,7 @@ reconnect:
 
    I_NetSetup();
    if(starttype == gt_single)
-      Jag68k_main();
+      Jag68k_main(myargc, myargv);
 
    G_PlayerReborn(0);
    G_PlayerReborn(1);
