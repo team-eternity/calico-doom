@@ -36,6 +36,29 @@ typedef enum { false, true } boolean;
 typedef unsigned char byte;
 
 //
+// Function names
+//
+#if defined(_MSC_VER)
+#if !defined(strcasecmp)
+#define strcasecmp _stricmp
+#endif
+#if !defined(strncasecmp)
+#define strncasecmp _strnicmp
+#endif
+#endif
+
+//
+// Basic macros
+//
+
+// calculate static array length
+#define earrlen(a) (sizeof(a) / sizeof(*a))
+
+// min/max
+#define emin(a, b) ((a) < (b) ? (a) : (b))
+#define emax(a, b) ((a) > (b) ? (a) : (b))
+
+//
 // Structure packing via #pragma pack
 //
 #if defined(_MSC_VER) || defined(__GNUC__)

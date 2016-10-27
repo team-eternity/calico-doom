@@ -133,6 +133,7 @@
     <ClCompile Include="..\src\tables.c" />
     <ClCompile Include="..\src\vsprintf.c" />
     <ClCompile Include="..\src\win32\win32_main.c" />
+    <ClCompile Include="..\src\w_iwad.c" />
     <ClCompile Include="..\src\w_wad.c" />
     <ClCompile Include="..\src\z_zone.c" />
   </ItemGroup>
@@ -150,6 +151,7 @@
     <ClInclude Include="..\src\sounds.h" />
     <ClInclude Include="..\src\soundst.h" />
     <ClInclude Include="..\src\st_main.h" />
+    <ClInclude Include="..\src\w_iwad.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

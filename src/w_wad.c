@@ -4,11 +4,17 @@
   WAD File Management
 */
 
+#include "keywords.h"
 #include "doomdef.h"
 
 //===============
 //   TYPES
 //===============
+
+// CALICO_FIXME: Using packing until alignment-free IO is implemented
+#if defined(CALICO_HAS_PACKING)
+#pragma pack(push, 1)
+#endif
 
 typedef struct
 {
@@ -16,6 +22,10 @@ typedef struct
    int  numlumps;
    int  infotableofs;
 } wadinfo_t;
+
+#if defined(CALICO_HAS_PACKING)
+#pragma pack(pop)
+#endif
 
 byte *wadfileptr;
 
@@ -112,6 +122,36 @@ void W_Init(void)
    lumpinfo = (lumpinfo_t *) (wadfileptr + infotableofs);
 }
 
+// used for stripping out the hi bit of the first character of the
+// name of the lump
+#define HIBIT (1<<7)
+
+//
+// CALICO: For portable lump name comparisons; 7-bit ASCII compare
+//
+int W_strncasecmp(const char *s1, const char *s2, int len)
+{
+   char a, b;
+
+   while(*s1 && *s2)
+   {
+      a = (*s1) & ~HIBIT;
+      b = *s2;
+      if(a != b)
+         return 1;
+      s1++;
+      s2++;
+      if(!--len)
+         return 0;
+   }
+   a = (*s1) & ~HIBIT;
+   b = *s2;
+   if(a != b)
+      return 1;
+   return 0;	
+}
+
+
 /*
 ====================
 =
@@ -124,37 +164,31 @@ void W_Init(void)
 
 int W_CheckNumForName(const char *name)
 {
-   char        name8[12];
-   int         v1, v2;
+   char name8[9];
    lumpinfo_t *lump_p;
 
-   // make the name into two integers for easy compares
-   D_memset(name8, 0, sizeof(name8));
+   D_memset(name8, 0, earrlen(name8));
    D_strncpy(name8, name, 8);
-   name8[8] = 0;  // in case the name was a full 8 chars
+   name8[8] = '\0'; // in case the name was a full 8 chars
    D_strupr(name8); // case insensitive
-
-   v1 = *(int *)name8;
-   v2 = *(int *)&name8[4];
 
    // scan backwards so patch lump files take precedence
    lump_p = lumpinfo + numlumps;
 
-   // used for stripping out the hi bit of the first character of the
-   // name of the lump
+   // CALICO: eliminated int-packing hack
+   while(lump_p-- != lumpinfo)
+   {
+      if(!W_strncasecmp(lump_p->name, name8, 8))
+         return lump_p - lumpinfo;
+   }
 
-   // CALICO_TODO: eliminate quad word packing hack
-#ifdef i386
-#define HIBIT (1<<7)
-#else
-#define HIBIT (1<<31)
-#endif
-
+   /*
+   // make the name into two integers for easy compares
    while(lump_p-- != lumpinfo)
       if(*(int *)&lump_p->name[4] == v2
          &&  (*(int *)lump_p->name & ~HIBIT) == v1)
          return lump_p - lumpinfo;
-
+   */
    return -1;
 }
 

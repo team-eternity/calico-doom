@@ -6,6 +6,7 @@
 #include "doomdef.h"
 #include "m_argv.h"
 #include "r_local.h"
+#include "w_iwad.h"
 
 /*
 
@@ -372,11 +373,15 @@ boolean	I_RefreshLatched(void)
 // Return a pointer to the wadfile.  In a cart environment this will
 // just be a pointer to rom.  In a simulator, load the file from disk.
 //
-// CALICO_FIXME: need to load and map ROM or IWAD file
-//
 byte *I_WadBase(void)
 {
-   return (byte *)0x840000; 
+   byte *wadbase;
+
+   // CALICO: load from disk
+   if(!(wadbase = W_LoadIWAD()))
+      I_Error("I_WadBase: could not load IWAD file");
+
+   return wadbase;
 }
 
 /* 

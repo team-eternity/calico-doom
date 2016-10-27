@@ -189,6 +189,9 @@
     <ClCompile Include="..\src\m_argv.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\w_iwad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\doomdata.h">
@@ -228,6 +231,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\m_argv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\w_iwad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

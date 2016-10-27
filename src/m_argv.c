@@ -39,7 +39,9 @@ const char *const *myargv;
 //
 boolean M_FindArgument(const char *arg)
 {
-   for(int i = 1; i < myargc; i++)
+   int i;
+
+   for(i = 1; i < myargc; i++)
    {
       if(!strcmp(myargv[i], arg))
          return true;
@@ -56,7 +58,9 @@ boolean M_FindArgument(const char *arg)
 //
 int M_GetArgParameters(const char *arg, int count)
 {
-   for(int i = 1; i < myargc; i++)
+   int i;
+
+   for(i = 1; i < myargc; i++)
    {
       if(!strcmp(myargv[i], arg))
       {
