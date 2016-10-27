@@ -167,7 +167,7 @@ int W_CheckNumForName(const char *name)
    char name8[9];
    lumpinfo_t *lump_p;
 
-   D_memset(name8, 0, earrlen(name8));
+   D_memset(name8, 0, sizeof(name8));
    D_strncpy(name8, name, 8);
    name8[8] = '\0'; // in case the name was a full 8 chars
    D_strupr(name8); // case insensitive
@@ -182,13 +182,6 @@ int W_CheckNumForName(const char *name)
          return lump_p - lumpinfo;
    }
 
-   /*
-   // make the name into two integers for easy compares
-   while(lump_p-- != lumpinfo)
-      if(*(int *)&lump_p->name[4] == v2
-         &&  (*(int *)lump_p->name & ~HIBIT) == v1)
-         return lump_p - lumpinfo;
-   */
    return -1;
 }
 

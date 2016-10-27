@@ -9,12 +9,12 @@ int firstflat, lastflat, numflats;
 int numtextures;
 texture_t textures[MAXTEXTURES];
 
-int *flattranslation;    /* for global animation */
-int *texturetranslation; /* for global animation */
+int *flattranslation;    // for global animation
+int *texturetranslation; // for global animation
 
 texture_t *skytexturep;
 
-/*============================================================================ */
+//============================================================================
 
 /*
 ==================
@@ -28,22 +28,22 @@ texture_t *skytexturep;
 
 int *maptex;
 
-void R_InitTextures (void)
+void R_InitTextures(void)
 {
-   maptexture_t	*mtexture;
-   texture_t		*texture;
-   int			i,j,c;
-   int			offset;
-   int			*directory;
+   maptexture_t *mtexture;
+   texture_t    *texture;
+   int           i, j, c;
+   int           offset;
+   int          *directory;
 
 
-   /* */
-   /* load the map texture definitions from textures.lmp */
-   /* */
-   maptex = W_CacheLumpName ("TEXTURE1", PU_STATIC);
+   //
+   // load the map texture definitions from textures.lmp
+   //
+   maptex = W_CacheLumpName("TEXTURE1", PU_STATIC);
    numtextures = LITTLELONG(*maptex);
    directory = maptex+1;
-	
+
    for(i = 0; i < numtextures; i++, directory++)
    {
       offset   = LITTLELONG(*directory);
@@ -55,10 +55,10 @@ void R_InitTextures (void)
       for(j = 0; j < 8; j++)
       {
          c = texture->name[j];
-         if(c >= 'a' && c<='z')
-            texture->name[j] = c - ('a'-'A');
+         if(c >= 'a' && c <= 'z')
+            texture->name[j] = c - ('a' - 'A');
       }
-      texture->data = NULL; /* not cached yet */
+      texture->data = NULL; // not cached yet
       texture->lumpnum = W_CheckNumForName(texture->name);
       if(texture->lumpnum == -1)
          texture->lumpnum = 0;
@@ -66,12 +66,12 @@ void R_InitTextures (void)
 
    Z_Free(maptex);
 
-   /* */
-   /* translation table for global animation */
-   /* */
+   //
+   // translation table for global animation
+   //
    texturetranslation = Z_Malloc((numtextures+1)*4, PU_STATIC, 0);
    for(i = 0; i < numtextures; i++)
-      texturetranslation[i] = i;	
+      texturetranslation[i] = i;
 }
 
 /*
@@ -90,7 +90,7 @@ void R_InitFlats(void)
    lastflat  = W_GetNumForName("F_END") - 1;
    numflats  = lastflat - firstflat + 1;
 
-   /* translation table for global animation */
+   // translation table for global animation
    flattranslation = Z_Malloc((numflats+1)*4, PU_STATIC, 0);
    for(i = 0; i < numflats; i++)
       flattranslation[i] = i;
@@ -107,13 +107,13 @@ void R_InitFlats(void)
 =================
 */
 
-void R_InitData (void)
+void R_InitData(void)
 {
-   R_InitTextures ();
-   R_InitFlats ();
+   R_InitTextures();
+   R_InitFlats();
 }
 
-/*============================================================================= */
+//=============================================================================
 
 /*
 ================
@@ -123,47 +123,32 @@ void R_InitData (void)
 ================
 */
 
-#ifdef i386
-#define HIBIT (1<<7)
-#else
-#define HIBIT (1<<31)
-#endif
-
-void D_strupr(char *s);
-
-int R_FlatNumForName (char *name)
+int R_FlatNumForName(const char *name)
 {
-   int			i;
-   lumpinfo_t	*lump_p;
-   char	name8[12];
-   int		v1,v2;
-   int		c;
+   int         i, c;
+   lumpinfo_t *lump_p;
+   char        name8[8];
 
-   // CALICO_TODO: eliminate quad word hack
-   /* make the name into two integers for easy compares */
-   *(int *)&name8[0] = 0;
-   *(int *)&name8[4] = 0;
+   // CALICO: eliminated packing hack
+   D_memset(name8, 0, sizeof(name8));
+
    for(i = 0; i < 8 && name[i]; i++)
    {
       c = name[i];
       if(c >= 'a' && c <= 'z')
-         c -= 'a'-'A';
+         c -= 'a' - 'A';
       name8[i] = c;
    }
-
-   v1 = *(int *)name8;
-   v2 = *(int *)&name8[4];
-
-   v1 |= HIBIT;
 
    lump_p = &lumpinfo[firstflat];
    for(i = 0; i < numflats; i++, lump_p++)
    {
-      if(*(int *)&lump_p->name[4] == v2 && (*(int *)lump_p->name) == v1)
+      if(!W_strncasecmp(lump_p->name, name8, sizeof(name8)))
          return i;
    }
 
-   I_Error ("R_FlatNumForName: %s not found",name);
+   // CALICO: don't print more than 8 characters
+   I_Error("R_FlatNumForName: %.8s not found", name);
    return -1;
 }
 
@@ -175,36 +160,31 @@ int R_FlatNumForName (char *name)
 ================
 */
 
-int R_CheckTextureNumForName(char *name)
+int R_CheckTextureNumForName(const char *name)
 {
-   int  i, c;
-   char	temp[8];
-   int  v1, v2;
+   int        i, c;
+   char       temp[8];
    texture_t *texture_p;
 
-   if(name[0] == '-') /* no texture marker */
+   if(name[0] == '-') // no texture marker
       return 0;
 
-   // CALICO_TODO: eliminate quad word packing hack
-   *(int *)&temp[0] = 0;
-   *(int *)&temp[4] = 0;
+   // CALICO: eliminated packing hack
+   D_memset(temp, 0, sizeof(temp));
 
    for(i = 0; i < 8 && name[i]; i++)
    {
       c = name[i];
-      if (c >= 'a' && c<='z')
-         c -= ('a'-'A');
+      if(c >= 'a' && c <= 'z')
+         c -= ('a' - 'A');
       temp[i] = c;
    }
 
-   v1 = *(int *)temp;
-   v2 = *(int *)&temp[4];
-		
    texture_p = textures;
 
-   for (i=0 ; i<numtextures ; i++,texture_p++)
+   for(i = 0; i < numtextures; i++, texture_p++)
    {
-      if(*(int *)&texture_p->name[4] == v2 && (*(int *)texture_p->name) == v1)
+      if(!D_strncasecmp(texture_p->name, temp, sizeof(temp)))
          return i;
    }
 
@@ -219,9 +199,9 @@ int R_CheckTextureNumForName(char *name)
 ================
 */
 
-int R_TextureNumForName (char *name)
+int R_TextureNumForName(const char *name)
 {
-   int		i;
+   int i;
 
    i = R_CheckTextureNumForName(name);
    if(i == -1)
