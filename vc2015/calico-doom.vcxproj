@@ -87,6 +87,7 @@
     <ClCompile Include="..\src\g_game.c" />
     <ClCompile Include="..\src\info.c" />
     <ClCompile Include="..\src\in_main.c" />
+    <ClCompile Include="..\src\jagcry.c" />
     <ClCompile Include="..\src\jagonly.c" />
     <ClCompile Include="..\src\j_eeprom.c" />
     <ClCompile Include="..\src\m_argv.c" />

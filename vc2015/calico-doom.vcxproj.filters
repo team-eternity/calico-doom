@@ -192,6 +192,9 @@
     <ClCompile Include="..\src\w_iwad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\jagcry.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\doomdata.h">
