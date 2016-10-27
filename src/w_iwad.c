@@ -155,7 +155,7 @@ static wfiletype_e W_isROM(FILE *f, long *offset)
 }
 
 //
-// Check file extension of the path to determine format
+// Determine format of input file
 //
 static wfiletype_e W_checkFileFormat(FILE *f, long *offset)
 {

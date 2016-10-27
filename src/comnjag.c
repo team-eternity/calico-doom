@@ -121,7 +121,7 @@ int cx = 1, cy = 1;
 ==================
 */
 
-void D_printf (char *str, ...)
+void D_printf(const char *str, ...)
 {
    static char buf[256];
    va_list ap;

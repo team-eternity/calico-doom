@@ -35,6 +35,9 @@
 
 extern void Jag68k_main(int argc, const char *const *argv);
 
+//
+// Remove slash characters from escaped quotation marks
+//
 static void UnEscapeQuotes(char *arg)
 {
    char *last = NULL;
@@ -127,16 +130,25 @@ static int ParseCommandLine(char *cmdline, char **argv)
    return argc;
 }
 
+//
+// Show an error dialog
+//
 static void ShowError(const char *title, const char *message)
 {
    MessageBoxA(NULL, message, title, MB_ICONEXCLAMATION | MB_OK);
 }
 
+//
+// Show an out-of-memory error dialog
+//
 static void OutOfMemory(void)
 {
    ShowError("Fatal Error", "Out of memory");
 }
 
+//
+// strdup polyfill
+//
 static char *mystrdup(const char *instr)
 {
    size_t  len = strlen(instr) + 1;

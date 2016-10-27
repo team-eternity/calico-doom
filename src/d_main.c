@@ -262,7 +262,7 @@ int MiniLoop(void (*start)(void), void (*stop)(void),
 {
    int exit;
    int buttons;
-		
+
    /* */
    /* setup (cache graphics, etc) */
    /* */
@@ -293,7 +293,7 @@ int MiniLoop(void (*start)(void), void (*stop)(void),
          if(vblsinframe > 8)
             vblsinframe = 8;
       }
-					
+
       // get buttons for next tic
       oldticbuttons[0] = ticbuttons[0];
       oldticbuttons[1] = ticbuttons[1];
@@ -315,7 +315,7 @@ int MiniLoop(void (*start)(void), void (*stop)(void),
 
       if(demorecording)
          *demo_p++ = buttons;
-		
+
       if((demorecording || demoplayback) && (buttons & BT_PAUSE))
          exit = ga_completed;
 
@@ -364,7 +364,7 @@ int TIC_Abortable(void)
       return 1; /* go on to next demo */
 
    if(ticbuttons[0] == (BT_OPTION|BT_STAR|BT_HASH))
-   {	
+   {
       /* reset eeprom memory */
       void Jag68k_main(int argc, const char *const *argv);
 
@@ -418,7 +418,7 @@ void DRAW_Title(void)
 void START_Credits(void)
 {
    backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
-   DoubleBufferSetup ();
+   DoubleBufferSetup();
    titlepic = W_CacheLumpName("credits",PU_STATIC);
 }
 
@@ -508,17 +508,17 @@ gametype_t starttype  = gt_single;
 //
 void D_DoomMain(void) 
 {    
-   D_printf ("C_Init\n");
+   D_printf("C_Init\n");
    C_Init(); // set up object list / etc
-   D_printf ("Z_Init\n");
+   D_printf("Z_Init\n");
    Z_Init(); 
-   D_printf ("W_Init\n");
+   D_printf("W_Init\n");
    W_Init();
-   D_printf ("I_Init\n");
+   D_printf("I_Init\n");
    I_Init(); 
-   D_printf ("R_Init\n");
+   D_printf("R_Init\n");
    R_Init(); 
-   D_printf ("P_Init\n");
+   D_printf("P_Init\n");
    P_Init(); 
 
    D_printf("S_Init\n");
