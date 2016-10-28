@@ -319,7 +319,7 @@ void I_Init(void)
    int	i;
 #endif
 
-   palette8 = W_CacheLumpName("CRYPAL",PU_STATIC);
+   palette8 = W_CacheLumpName("CRYPAL", PU_STATIC);
 
 #if 0
    for(i = 0; i < 256; i++)
@@ -338,7 +338,7 @@ void I_DrawSbar(void)
       return;
 
    frag = W_CacheLumpName("STBARNET", PU_STATIC);
-	
+
    dest   = (unsigned int *)((byte *)sbar->data + 240);
    source = (unsigned int *)frag->data;
 
@@ -353,7 +353,7 @@ void I_DrawSbar(void)
    Z_Free(frag);
 }
 
-boolean	I_RefreshCompleted(void)
+boolean I_RefreshCompleted(void)
 {
    // CALICO_FIXME: Jag-specific
 #if 0
@@ -363,7 +363,7 @@ boolean	I_RefreshCompleted(void)
 #endif
 }
 
-boolean	I_RefreshLatched(void)
+boolean I_RefreshLatched(void)
 {
    // CALICO_FIXME: Jag-specific
    return phasetime[3] != 0;
@@ -393,8 +393,8 @@ byte *I_WadBase(void)
 ==================== 
 */ 
  
-#define	STARTHEAP 0x80000
-#define	ENDHEAP   0x1c8000
+#define STARTHEAP 0x80000
+#define ENDHEAP   0x1c8000
 
 byte *I_ZoneBase(int *size)
 {
@@ -478,7 +478,7 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
 #endif 
 
    dest = (pixel_t *)(framebuffer_p + dc_yl*320 + dc_x*2);  
-	
+
    do 
    { 
       *dest = dc_source[(frac>>FRACBITS)&127]; 
@@ -519,7 +519,7 @@ void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 
 //=============================================================================
 
-#define	GPULINE (BASEORGY+SCREENHEIGHT+1)
+#define GPULINE (BASEORGY+SCREENHEIGHT+1)
 int lastticcount;
 int lasttics;
 
@@ -847,7 +847,6 @@ void DoubleBufferSetup(void)
 
 void EraseBlock(int x, int y, int width, int height)
 {
-
    if (x<0)
    {
       width += x;
@@ -934,7 +933,7 @@ void DrawJagobj(jagobj_t *jo, int x, int y)
 
    if(width < 1 || height < 1)
       return;
-	
+
    // CALICO_FIXME: Jag-specific
 #ifdef JAGUAR
 		
@@ -1021,7 +1020,7 @@ void UpdateBuffer(void)
 
 // CALICO_FIXME: Jag-specific
 void DoubleBufferObjList(void)
-{	
+{
 #if 0
    int		link;
    int		pwidth;
@@ -1162,12 +1161,12 @@ void DoubleBufferObjList(void)
 //
 //=============================================================================
 
-#define	IDWORD (('D'<<8)+'1')
+#define IDWORD (('D'<<8)+'1')
 
 unsigned short eeread (int address);
 int eewrite (int data, int address);
 
-#define	EEWORDS	8 /* MUST BE EVEN!!!!!! */
+#define EEWORDS 8 // MUST BE EVEN!!!!!!
 
 unsigned short eeprombuffer[EEWORDS];
 
@@ -1180,7 +1179,7 @@ void ClearEEProm(void)
    controltype = 0;
    maxlevel    = 1;
 
-   WriteEEProm();	
+   WriteEEProm();
 }
 
 void ReadEEProm(void)
@@ -1202,7 +1201,7 @@ void ReadEEProm(void)
       // checksum failure, clear eeprom 
       ClearEEProm();
    }
-	
+
    startskill = eeprombuffer[1];
    if(startskill > sk_nightmare)
       ClearEEProm();
@@ -1343,7 +1342,7 @@ void Player0Setup(void)
    sendcount = 0;
    idbyte = startmap + 24*startskill + 128*(starttype==2);
 
-   I_Print8(1,1,"waiting...");
+   I_Print8(1, 1, "waiting...");
    consoleplayer = 0;
 
    /* wait until we see a 0x22 from other side */
@@ -1352,14 +1351,14 @@ void Player0Setup(void)
       if(joystick1 == JP_OPTION)
       {
          starttype = gt_single;
-         return;		/* abort */
+         return;    // abort
       }
 
       wait(1);
       val = GetSerialChar();
       PrintHex(20,5,val);
       if(val == 0x22)
-         return;		/* ready to go */
+         return;    // ready to go
 
       PutSerialChar (idbyte);
       PrintHex(20, 6, idbyte);
@@ -1381,7 +1380,7 @@ void Player1Setup(void)
       if(joystick1 == JP_OPTION)
       {
          starttype = gt_single;
-         return;		/* abort */
+         return;    // abort
       }
       val = GetSerialChar ();
       if(val == -1)
@@ -1406,11 +1405,11 @@ void Player1Setup(void)
    val %= 24;
    startmap = val;
 
-   /* we are player 1.  send an acknowledge byte */
-   consoleplayer = 1;	
+   // we are player 1.  send an acknowledge byte
+   consoleplayer = 1;
 
    PutSerialChar(0x22);
-   PutSerialChar(0x22);	
+   PutSerialChar(0x22);
 }
 
 void DrawSinglePlaque(jagobj_t *pl);
@@ -1419,14 +1418,14 @@ int listen1, listen2;
 
 void I_NetSetup(void)
 {
-   jagobj_t	*pl;
+   jagobj_t *pl;
 
-   DoubleBufferSetup ();
-   UpdateBuffer ();
+   DoubleBufferSetup();
+   UpdateBuffer();
 
-   pl = W_CacheLumpName ("connect", PU_STATIC);	
-   DrawSinglePlaque (pl);
-   Z_Free (pl);
+   pl = W_CacheLumpName("connect", PU_STATIC);	
+   DrawSinglePlaque(pl);
+   Z_Free(pl);
 
    // CALICO_FIXME: Jag-specific
 #if 0
@@ -1444,7 +1443,7 @@ void I_NetSetup(void)
 
    // wait a bit
    wait(4);
-	
+
    // if a character is allready waiting, we are player 1
    listen1 = GetSerialChar();
    listen2 = GetSerialChar();
@@ -1487,7 +1486,7 @@ unsigned I_NetTransfer(unsigned int buttons)
 
    if(consoleplayer)
    {
-      /* player 1 waits before sending */
+      // player 1 waits before sending
       for(i = 0; i <= 5; i++)
       {
          val = WaitGetSerialChar ();
@@ -1497,11 +1496,11 @@ unsigned I_NetTransfer(unsigned int buttons)
          inbytes[i] = val;
          PutSerialChar (outbytes[i]);
       }
-      vblsinframe = inbytes[5]; /* take gamevbls from other player */
+      vblsinframe = inbytes[5]; // take gamevbls from other player
    }
    else
    {
-      /* player 0 sends first */
+      // player 0 sends first
       for(i = 0; i <= 5; i++)
       {
          PutSerialChar(outbytes[i]);
@@ -1511,11 +1510,11 @@ unsigned I_NetTransfer(unsigned int buttons)
          inbytes[i] = val;
       }
    }
-	
+
    // check for consistancy error
    if(inbytes[4] != outbytes[4])
    {
-      jagobj_t	*pl;
+      jagobj_t *pl;
 
       S_Clear();
       pl = W_CacheLumpName("neterror", PU_STATIC);	
@@ -1525,7 +1524,7 @@ unsigned I_NetTransfer(unsigned int buttons)
       wait(200);
       goto reconnect;
    }
-		
+
    val = (inbytes[0]<<24) + (inbytes[1]<<16) + (inbytes[2]<<8) + inbytes[3];
 
    return val;
@@ -1535,7 +1534,7 @@ reconnect:
    S_Clear();
 
    if(consoleplayer)
-      wait(15); /* let player 0 wait again */
+      wait(15); // let player 0 wait again
 
    I_NetSetup();
    if(starttype == gt_single)
