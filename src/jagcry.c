@@ -28,12 +28,13 @@
 
 #include <stdint.h>
 
+// Main CRY translation table
 uint32_t CRYToRGB[0x10000];
 
 //
 // Red components for CRY to RGB conversion
 //
-static uint8_t cryred[16][16] = 
+static const uint8_t cryred[16][16] = 
 {
    { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0  },
    { 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 19, 0  },
@@ -56,7 +57,7 @@ static uint8_t cryred[16][16] =
 //
 // Green components for CRY to RGB conversion
 //
-static uint8_t crygreen[16][16] =
+static const uint8_t crygreen[16][16] =
 {
    { 0,  17, 34, 51,68, 85, 102,119,136,153,170,187,204,221,238,255 },
    { 0,  19, 38, 57,77, 96, 115,134,154,173,192,211,231,250,255,255 },
@@ -79,7 +80,7 @@ static uint8_t crygreen[16][16] =
 //
 // Blue components for CRY to RGB conversion
 //
-static uint8_t cryblue[16][16] = 
+static const uint8_t cryblue[16][16] = 
 {
    { 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255 },
    { 255,255,255,255,255,255,255,255,255,255,255,255,255,255,240,221 },
@@ -99,7 +100,6 @@ static uint8_t cryblue[16][16] =
    { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   }
 };
 
-#if 0
 void CRY_BuildRGBTable(void)
 {
    uint32_t i;
@@ -111,7 +111,7 @@ void CRY_BuildRGBTable(void)
       uint32_t intensity = (i & 0x00FF);
 
       uint32_t r = (((uint32_t)cryred  [cyan][red]) * intensity) >> 8;
-      uint32_t g = (((uint32_t)crygreen[cyan][red]) * intensity) >> 8,
+      uint32_t g = (((uint32_t)crygreen[cyan][red]) * intensity) >> 8;
       uint32_t b = (((uint32_t)cryblue [cyan][red]) * intensity) >> 8;
 
       // TODO: decide what color format to use
@@ -119,7 +119,6 @@ void CRY_BuildRGBTable(void)
       //CRYToRGB[i] = 0x000000FF | (r << 24) | (g << 16) | (b << 8);
    }
 }
-#endif
 
 // EOF
 
