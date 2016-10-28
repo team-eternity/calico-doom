@@ -114,9 +114,8 @@ void CRY_BuildRGBTable(void)
       uint32_t g = (((uint32_t)crygreen[cyan][red]) * intensity) >> 8;
       uint32_t b = (((uint32_t)cryblue [cyan][red]) * intensity) >> 8;
 
-      // TODO: decide what color format to use
-      //CRYToRGB[i] = 0xFF000000 | (b << 16) | (g << 8) | r;
-      //CRYToRGB[i] = 0x000000FF | (r << 24) | (g << 16) | (b << 8);
+      // CALICO_TODO: use a color macro once I have one in the project
+      CRYToRGB[i] = 0xFF000000 | (b << 16) | (g << 8) | r;
    }
 }
 
