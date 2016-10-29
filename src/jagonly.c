@@ -329,6 +329,8 @@ void I_Init(void)
 
 void I_DrawSbar(void)
 {
+   // CALICO_FIXME: requires working video
+#if 0
    jagobj_t     *frag;
    int           x, y;
    unsigned int *source, *dest;
@@ -351,6 +353,7 @@ void I_DrawSbar(void)
    }
 
    Z_Free(frag);
+#endif
 }
 
 boolean I_RefreshCompleted(void)
@@ -802,16 +805,17 @@ void I_Update(void)
    lastticcount = ticcount;
 #endif
 }
- 
+
+static byte tempbuffer[0x10000];
+
 // 
 // Return a pointer to a 64k or so temp work buffer for level setup uses
 // (non-displayed frame buffer)
 //
-// CALICO_FIXME: make this do something else besides reuse the screens[] area
-//
 byte *I_TempBuffer(void)
 {
-   return (byte *)screens[workpage];
+   // CALICO: use a dedicated tempbuffer
+   return tempbuffer;
 }
 
 //=============================================================================
@@ -837,11 +841,15 @@ void DoubleBufferSetup(void)
    while(!I_RefreshCompleted())
       ;
 
+   // CALICO_FIXME: Jag-specific
+#if 0
    bufferpage  = (byte *)(workingscreen = screens[workpage]);
    displaypage = (byte *)(screens[!workpage]);
 
    D_memset(bufferpage,  0, 320*200);
    D_memset(debugscreen, 0,  32*224);
+#endif
+
    cy = 4;
 }
 
@@ -895,7 +903,10 @@ void EraseBlock(int x, int y, int width, int height)
       dest = bufferpage + 320 * y + x;
       for(; height; height--)
       {
+         // CALICO_TODO: requires working drawing code
+#if 0
          D_memset(dest, 0, width);
+#endif
          dest += 320;
       }
    }
@@ -980,7 +991,10 @@ void DrawJagobj(jagobj_t *jo, int x, int y)
       dest = bufferpage + 320 * y + x;
       for(; height; height--)
       {
+         // CALICO_FIXME: requires working video
+#if 0
          D_memcpy(dest, source, width);
+#endif
          source += rowsize;
          dest += 320;
       }

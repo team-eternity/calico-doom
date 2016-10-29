@@ -339,7 +339,8 @@ int P_Ticker(void)
  
 void DrawPlaque(jagobj_t *pl)
 {
-   // CALICO_TODO: non-portable
+   // CALICO_TODO: non-portable, requires working video
+#if 0
    int    x,y,w;
    short  *sdest;
    byte   *bdest, *source;
@@ -379,6 +380,7 @@ void DrawPlaque(jagobj_t *pl)
          sdest += 160;
       }
    }
+#endif
 }
 
 /* 

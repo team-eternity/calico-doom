@@ -421,10 +421,11 @@ clipsolid:
 void R_Subsector(int num)
 {
    subsector_t *sub = &subsectors[num];
-   sector_t    *frontsector = sub->sector;
    seg_t       *line, *stopline;
    int          count;
-
+   
+   frontsector = sub->sector;
+   
    *lastvissubsector = sub;
    ++lastvissubsector;
 

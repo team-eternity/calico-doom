@@ -420,8 +420,9 @@ int G_PlayDemoPtr(int *demo)
 
    demobuffer = demo;
 
-   skill = *demo++;
-   map   = *demo++;
+   // CALICO: these must be corrected for endianness (src format is big-endian)
+   skill = BIGLONG(*demo++);
+   map   = BIGLONG(*demo++);
 
    demo_p = demo;
 
@@ -447,21 +448,22 @@ void G_RecordDemo(void)
 {
    demo_p = demobuffer = Z_Malloc(0x8000, PU_STATIC, NULL);
 
-   *demo_p++ = startskill;
-   *demo_p++ = startmap;
+   // CALICO: these must be corrected for endianness (dst format is big-endian)
+   *demo_p++ = BIGLONG(startskill);
+   *demo_p++ = BIGLONG(startmap);
 
-   G_InitNew (startskill, startmap, gt_single);
-   G_DoLoadLevel ();  
+   G_InitNew(startskill, startmap, gt_single);
+   G_DoLoadLevel();  
    demorecording = true; 
-   MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer);
+   MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
    demorecording = false;
 
-   D_printf("w %x,%x",demobuffer,demo_p);
+   D_printf("w %x,%x", demobuffer, demo_p);
 
    while(1)
    {
       G_PlayDemoPtr(demobuffer);
-      D_printf("w %x,%x",demobuffer,demo_p);
+      D_printf("w %x,%x", demobuffer, demo_p);
    }
 }
 
