@@ -344,6 +344,47 @@ L81:
    */
 }
 
+#if 0
+#define LENSHIFT 4 // this must be log2(LOOKAHEAD_SIZE)
+
+unsigned char *decomp_input;
+unsigned char *decomp_output;
+extern int     decomp_start;
+
+void decode(unsigned char *input, unsigned char *output)
+{
+   int getidbyte = 0;
+   int len;
+   int pos;
+   int i;
+   unsigned char *source;
+   int idbyte = 0;
+
+   while(1)
+   {
+      // get a new idbyte if necessary
+      if (!getidbyte) idbyte = *input++;
+      getidbyte = (getidbyte + 1) & 7;
+
+      if (idbyte&1)
+      {
+         // decompress
+         pos = *input++ << LENSHIFT;
+         pos = pos | (*input >> LENSHIFT);
+         source = output - pos - 1;
+         len = (*input++ & 0xf)+1;
+         if (len==1) break;
+         for (i=0 ; i<len ; i++)
+            *output++ = *source++;
+      } else {
+         *output++ = *input++;
+      }
+
+      idbyte = idbyte >> 1;
+   }
+}
+#endif
+
 static void R_decode(byte *input, pixel_t *out)
 {
    // CALICO_TODO:
@@ -368,78 +409,78 @@ palette			.equr	r13
 	load	(FP+1),ptr_output
 
 	movei	#W_RL_main, lbl_main
-	moveq	#$f,const_f
+	moveq	#$f,const_f                               const_f = 0xf;
 
 ; getidbyte = 0
-	moveq	#1, getidbyte
-	movei	#_vgatojag,palette
+	moveq	#1, getidbyte                             getidbyte = 1
+	movei	#_vgatojag,palette                        palette   = vgatojag
 	
 ;	Main decompression loop
 
 	
-	subq	#1,getidbyte
-W_RL_main:
-	jr		EQ,w_loadidbyte	
+	subq	#1,getidbyte                              getidbyte -= 1 (now 0)
+W_RL_main:                                      while(1) {
+	jr		EQ,w_loadidbyte	                        if(!getidbyte) goto w_loadidbyte;
 	
 ; test low bit of idbyte
 W_RL_testidbyte:
-	btst	#0, idbyte		; a harmless delay slot
-	jr		NE, W_RL_uncompress
-	shrq	#1, idbyte		; delay slot
+	btst	#0, idbyte		; a harmless delay slot   if(idbyte & 1)              if (idbyte&1) {...
+	jr		NE, W_RL_uncompress                          idbyte >>= 1;                 
+	shrq	#1, idbyte		; delay slot                  goto W_RL_uncompress       idbyte = idbyte >> 1;
 	
-; copy one character
-	loadb	(ptr_input), r0
-	addq	#1, ptr_input
-	shlq	#2,r0
-	add		palette,r0
-	load	(r0),r0			; convert to 16 bit cry
-	storew	r0, (ptr_output)
-	addq	#2, ptr_output
-	jump	T, (lbl_main)
-	subq	#1,getidbyte	; delay slot
+; copy one character                                                          } else {
+	loadb	(ptr_input), r0                           r0 = *ptr_input;              idbyte = idbyte >> 1; // is in delay slot above, so executes regardless of jump.
+	addq	#1, ptr_input                             ++ptr_input;                  *output++ = *input++;
+	shlq	#2,r0                                     r0 <<= 2;                  
+	add		palette,r0                             r0 += &palette;
+	load	(r0),r0			; convert to 16 bit cry    r0 = *r0;
+	storew	r0, (ptr_output)                       *ptr_output = r0
+	addq	#2, ptr_output                            ++ptr_output;
+	jump	T, (lbl_main)                             getidbyte -= 1;               --getidbyte; continue;
+	subq	#1,getidbyte	; delay slot               goto lbl_main;             }
 
-; load idbyte and reset getidbyte
-w_loadidbyte:
-	loadb	(ptr_input), idbyte
-	addq	#1, ptr_input
-	jr		T,W_RL_testidbyte
-	moveq	#8,getidbyte	; delay slot
+; load idbyte and reset getidbyte                                             if (!getidbyte) idbyte = *input++;
+w_loadidbyte:                                      w_loadidbyte:
+	loadb	(ptr_input), idbyte                       idbyte = *ptr_input;
+	addq	#1, ptr_input                             ++ptr_input;
+	jr		T,W_RL_testidbyte                         getidbyte = 8;             getidbyte = (getidbyte + 1) & 7; // going down instead of up in asm.
+	moveq	#8,getidbyte	; delay slot               (jump...)
 		
 W_RL_uncompress:
 
 ; get the position offset
 
-	loadb	(ptr_input), r0
-	addq	#1, ptr_input
-	shlq	#4, r0
-	loadb	(ptr_input), pos
-	shrq	#4, pos
-	or	r0, pos
+	loadb	(ptr_input), r0                           r0 = *ptr_input;           pos = *input++ << LENSHIFT;
+	addq	#1, ptr_input                             ++ptr_input;
+	shlq	#4, r0                                    r0 <<= 4;
+	loadb	(ptr_input), pos                          pos = *ptr_input;
+	shrq	#4, pos                                   pos <<= 4;
+	or	r0, pos                                      por |= r0;                 pos = pos | (*input >> LENSHIFT);
 
 ; add position offset to the output and store in ptr_source
-	addq	#1,pos
-	move	ptr_output, ptr_source
-	sub		pos, ptr_source
-	sub		pos, ptr_source
+	addq	#1,pos                                    pos += 1;
+	move	ptr_output, ptr_source                    ptr_source = ptr_output;
+	sub		pos, ptr_source                        ptr_source -= pos;
+	sub		pos, ptr_source                        ptr_source -= pos;         source = output - pos - 1;
 
 ; get the length
 
-	loadb	(ptr_input), len
-	addq	#1, ptr_input
-	and		const_f, len
-	jump	EQ, (RETURNPOINT)		; if byte & 0xf == 0, done	
-	loadw	(ptr_source), r0
+	loadb	(ptr_input), len                          len = *ptr_input;
+	addq	#1, ptr_input                             ++ptr_input;
+	and		const_f, len                           len &= const_f; (0xf)      len = (*input++ & 0xf)+1;
+	jump	EQ, (RETURNPOINT)		; if byte & 0xf == 0, done	                     if (len==1) break;
+	loadw	(ptr_source), r0                          r0 = *ptr_source;
 	
-W_RL_copyloop:
-	addq	#2, ptr_source
-	storew	r0, (ptr_output)
-	subq	#1, len
-	addqt	#2, ptr_output
-	jr		PL, W_RL_copyloop
-	loadw	(ptr_source), r0	; delay slot
+W_RL_copyloop:                                                                for (i=0 ; i<len ; i++)
+	addq	#2, ptr_source                            ptr_source += 2;              *output++ = *source++;
+	storew	r0, (ptr_output)                       *ptr_output = r0;
+	subq	#1, len                                   len -= 1;
+	addqt	#2, ptr_output                            ++ptr_output;
+	jr		PL, W_RL_copyloop                         r0 = *ptr_source;
+	loadw	(ptr_source), r0	; delay slot            (jump...)
 
-	jump	T, (lbl_main)
-	subq	#1,getidbyte	; delay slot
+	jump	T, (lbl_main)                             (loop...)
+	subq	#1,getidbyte	; delay slot               getidbyte -= 1;            --getidbyte; continue;   
    */
 }
 
