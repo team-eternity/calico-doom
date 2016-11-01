@@ -7,6 +7,27 @@
 #include "doomdef.h"
 #include "r_local.h"
 
+// Doom palette to CRY lookup (hardcoded for efficiency on the Jag ASIC?)
+static pixel_t vgatojag[] =
+{
+       1, 51487, 55319, 30795, 30975, 30747, 30739, 30731, 30727, 43831, 44075, 48415, 53015, 47183, 47175, 51263, 
+   38655, 38647, 42995, 42731, 42727, 42719, 46811, 46803, 46795, 46535, 46527, 46523, 46515, 50607, 50599, 50339, 
+   50331, 54423, 54415, 54155, 54147, 54143, 53879, 57971, 57963, 57703, 57695, 57691, 57683, 61519, 61511, 61507, 
+   34815, 34815, 39167, 38911, 38911, 43263, 43007, 43007, 47359, 47351, 47087, 47079, 47071, 51415, 51407, 51147, 
+   51391, 51379, 51371, 51363, 51355, 51343, 51335, 51327, 51319, 51307, 51295, 51539, 51531, 51519, 51763, 51755, 
+   30959, 30951, 30943, 30939, 30931, 30923, 30919, 30911, 30903, 30899, 30891, 30887, 30879, 30871, 30867, 30859, 
+   30851, 30847, 30839, 30831, 30827, 30819, 30811, 30807, 30799, 30791, 30787, 30779, 30775, 30767, 30759, 30755, 
+   36095, 36079, 36063, 36047, 36031, 36015, 35999, 35987, 35971, 35955, 35939, 35923, 35907, 40243, 35875, 40215, 
+   39103, 39095, 39087, 39079, 39071, 43163, 43155, 43147, 43139, 43131, 43127, 43119, 43111, 43103, 43095, 47187, 
+   43167, 43151, 43139, 47479, 47463, 47451, 47183, 51523, 39295, 39283, 39275, 35171, 43607, 39503, 39495, 39487, 
+   48127, 52203, 56279, 56003, 60079, 59547, 63367, 63091, 30975, 34815, 38911, 42751, 46591, 50431, 54271, 58111, 
+   61695, 61679, 61667, 61655, 61643, 61631, 61619, 61607, 61595, 61579, 61567, 61555, 61543, 61531, 61519, 61507, 
+   30719, 26623, 22527, 18175, 17919, 13567,  9215,  4607,   255,   227,   203,   179,   155,   131,   107,    83, 
+   30975, 34815, 39167, 43263, 47359, 51455, 55295, 59391, 59379, 63467, 59103, 63447, 63179, 63171, 63159, 63151, 
+   30975, 35071, 39423, 48127, 52479, 56831, 61183, 65535, 63143, 62879, 62867, 62599, 47183, 51267, 51255, 55087,
+      83,    71,    59,    47,    35,    23,    11,     1, 30975, 30975, 29951, 28927, 28879, 32927, 32879, 42663
+};
+
 static void R_Malloc(void)
 {
    // CALICO_TODO
@@ -345,12 +366,6 @@ L81:
 }
 
 #if 0
-#define LENSHIFT 4 // this must be log2(LOOKAHEAD_SIZE)
-
-unsigned char *decomp_input;
-unsigned char *decomp_output;
-extern int     decomp_start;
-
 void decode(unsigned char *input, unsigned char *output)
 {
    int getidbyte = 0;
@@ -385,103 +400,44 @@ void decode(unsigned char *input, unsigned char *output)
 }
 #endif
 
-static void R_decode(byte *input, pixel_t *out)
+#define LENSHIFT 4 // this must be log2(LOOKAHEAD_SIZE)
+
+//
+// Decompress an lzss-compressed lump
+//
+static void R_decode(byte *input, pixel_t *output)
 {
-   // CALICO_TODO:
-   /*
-getidbyte       .equr   r4
-idbyte          .equr   r5
-ptr_input       .equr   r6
-ptr_output      .equr   r7
-pos             .equr   r8
-ptr_source      .equr   r9
-len             .equr   r10
-lbl_main        .equr   r11
-const_f			.equr	r12
-palette			.equr	r13
+   int getidbyte = 0;
+   int len;
+   int pos;
+   int i;
+   pixel_t *source;
+   int idbyte = 0;
 
-;void R_decode(unsigned char *input, pixel_t *out)
-;   decompress an lzss-compressed lump
-		
-;	Initialize vairables
+   while(1)
+   {
+      // get a new idbyte if necessary
+      if(!getidbyte)
+         idbyte = *input++;
+      getidbyte = (getidbyte + 1) & 7;
 
-	load	(FP),ptr_input
-	load	(FP+1),ptr_output
+      if(idbyte&1)
+      {
+         // decompress
+         pos = *input++ << LENSHIFT;
+         pos = pos | (*input >> LENSHIFT);
+         source = output - pos - 1;
+         len = (*input++ & 0xf)+1;
+         if(len == 1)
+            break;
+         for(i = 0; i < len; i++)
+            *output++ = *source++;
+      } 
+      else 
+         *output++ = vgatojag[*input++];
 
-	movei	#W_RL_main, lbl_main
-	moveq	#$f,const_f                               const_f = 0xf;
-
-; getidbyte = 0
-	moveq	#1, getidbyte                             getidbyte = 1
-	movei	#_vgatojag,palette                        palette   = vgatojag
-	
-;	Main decompression loop
-
-	
-	subq	#1,getidbyte                              getidbyte -= 1 (now 0)
-W_RL_main:                                      while(1) {
-	jr		EQ,w_loadidbyte	                        if(!getidbyte) goto w_loadidbyte;
-	
-; test low bit of idbyte
-W_RL_testidbyte:
-	btst	#0, idbyte		; a harmless delay slot   if(idbyte & 1)              if (idbyte&1) {...
-	jr		NE, W_RL_uncompress                          idbyte >>= 1;                 
-	shrq	#1, idbyte		; delay slot                  goto W_RL_uncompress       idbyte = idbyte >> 1;
-	
-; copy one character                                                          } else {
-	loadb	(ptr_input), r0                           r0 = *ptr_input;              idbyte = idbyte >> 1; // is in delay slot above, so executes regardless of jump.
-	addq	#1, ptr_input                             ++ptr_input;                  *output++ = *input++;
-	shlq	#2,r0                                     r0 <<= 2;                  
-	add		palette,r0                             r0 += &palette;
-	load	(r0),r0			; convert to 16 bit cry    r0 = *r0;
-	storew	r0, (ptr_output)                       *ptr_output = r0
-	addq	#2, ptr_output                            ++ptr_output;
-	jump	T, (lbl_main)                             getidbyte -= 1;               --getidbyte; continue;
-	subq	#1,getidbyte	; delay slot               goto lbl_main;             }
-
-; load idbyte and reset getidbyte                                             if (!getidbyte) idbyte = *input++;
-w_loadidbyte:                                      w_loadidbyte:
-	loadb	(ptr_input), idbyte                       idbyte = *ptr_input;
-	addq	#1, ptr_input                             ++ptr_input;
-	jr		T,W_RL_testidbyte                         getidbyte = 8;             getidbyte = (getidbyte + 1) & 7; // going down instead of up in asm.
-	moveq	#8,getidbyte	; delay slot               (jump...)
-		
-W_RL_uncompress:
-
-; get the position offset
-
-	loadb	(ptr_input), r0                           r0 = *ptr_input;           pos = *input++ << LENSHIFT;
-	addq	#1, ptr_input                             ++ptr_input;
-	shlq	#4, r0                                    r0 <<= 4;
-	loadb	(ptr_input), pos                          pos = *ptr_input;
-	shrq	#4, pos                                   pos <<= 4;
-	or	r0, pos                                      por |= r0;                 pos = pos | (*input >> LENSHIFT);
-
-; add position offset to the output and store in ptr_source
-	addq	#1,pos                                    pos += 1;
-	move	ptr_output, ptr_source                    ptr_source = ptr_output;
-	sub		pos, ptr_source                        ptr_source -= pos;
-	sub		pos, ptr_source                        ptr_source -= pos;         source = output - pos - 1;
-
-; get the length
-
-	loadb	(ptr_input), len                          len = *ptr_input;
-	addq	#1, ptr_input                             ++ptr_input;
-	and		const_f, len                           len &= const_f; (0xf)      len = (*input++ & 0xf)+1;
-	jump	EQ, (RETURNPOINT)		; if byte & 0xf == 0, done	                     if (len==1) break;
-	loadw	(ptr_source), r0                          r0 = *ptr_source;
-	
-W_RL_copyloop:                                                                for (i=0 ; i<len ; i++)
-	addq	#2, ptr_source                            ptr_source += 2;              *output++ = *source++;
-	storew	r0, (ptr_output)                       *ptr_output = r0;
-	subq	#1, len                                   len -= 1;
-	addqt	#2, ptr_output                            ++ptr_output;
-	jr		PL, W_RL_copyloop                         r0 = *ptr_source;
-	loadw	(ptr_source), r0	; delay slot            (jump...)
-
-	jump	T, (lbl_main)                             (loop...)
-	subq	#1,getidbyte	; delay slot               getidbyte -= 1;            --getidbyte; continue;   
-   */
+      idbyte = idbyte >> 1;
+   }
 }
 
 static void R_LoadPixels(void)
