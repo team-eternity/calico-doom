@@ -4,6 +4,8 @@
   Renderer phase 8 - Sprites
 */
 
+#include "r_local.h"
+
 static void R_DrawVisSprite(void)
 {
    // CALICO_TODO
@@ -271,58 +273,32 @@ L414:
    */
 }
 
-static void R_SegBehindPoint(void)
+//
+// Compare the vissprite to a viswall. Similar to R_PointOnSegSide, but less accurate.
+//
+static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)
 {
-   // CALICO_TODO
-   /*
-sb_ds	.equr	r23
-sb_dx	.equr	r16
-sb_dy	.equr	r17
-sb_x1	.equr	r18
-sb_y1	.equr	r19
-sb_sdx	.equr	r20
-sb_sdy	.equr	r21
-sb_v	.equr	r22
+   fixed_t x1, y1, sdx, sdy;
 
-	load	(FP+1),sb_dx
-	load	(FP+2),sb_dy
-	
-	load	(FP),sb_ds			; viswall
-	load	(sb_ds),sb_ds		; viswall->seg
-	load	(sb_ds),sb_v		; viswall->seg->v1
-	load	(sb_v),sb_x1
-	addq	#4,sb_v
-	load	(sb_v),sb_y1
-	
-	load	(FP),sb_ds			; viswall
-	load	(sb_ds),sb_ds		; viswall->seg
-	addq	#4,sb_ds
-	load	(sb_ds),sb_v		; viswall->seg->v2
-	load	(sb_v),sb_sdx
-	addq	#4,sb_v
-	load	(sb_v),sb_sdy
-	
-	sub		sb_x1,sb_sdx
-	sub		sb_y1,sb_sdy
-	
-	sub		sb_x1,sb_dx
-	sub		sb_y1,sb_dy
-	
-	sharq	#16,sb_sdx
-	sharq	#16,sb_sdy
-	sharq	#16,sb_dx
-	sharq	#16,sb_dy
-		
-	imult	sb_sdy,sb_dx
-	imult	sb_dy,sb_sdx
- 	
-	cmp		sb_sdx,sb_dx
-	jump	S_LT,(RETURNPOINT)
-	moveq	#1,RETURNVALUE
+   x1  = viswall->seg->v1->x;
+   y1  = viswall->seg->v1->y;
+   sdx = viswall->seg->v2->x;
+   sdy = viswall->seg->v2->y;
 
-	jump	T,(RETURNPOINT)
-	moveq	#0,RETURNVALUE
-   */
+   sdx -= x1;
+   sdy -= y1;
+   dx  -= x1;
+   dy  -= y1;
+
+   sdx /= FRACUNIT;
+   sdy /= FRACUNIT;
+   dx  /= FRACUNIT;
+   dy  /= FRACUNIT;
+
+   dx  *= sdy;
+   sdx *=  dy;
+
+   return (dx < sdx);
 }
 
 static void R_ClipVisSprite(void)

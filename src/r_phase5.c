@@ -365,41 +365,6 @@ L81:
    */
 }
 
-#if 0
-void decode(unsigned char *input, unsigned char *output)
-{
-   int getidbyte = 0;
-   int len;
-   int pos;
-   int i;
-   unsigned char *source;
-   int idbyte = 0;
-
-   while(1)
-   {
-      // get a new idbyte if necessary
-      if (!getidbyte) idbyte = *input++;
-      getidbyte = (getidbyte + 1) & 7;
-
-      if (idbyte&1)
-      {
-         // decompress
-         pos = *input++ << LENSHIFT;
-         pos = pos | (*input >> LENSHIFT);
-         source = output - pos - 1;
-         len = (*input++ & 0xf)+1;
-         if (len==1) break;
-         for (i=0 ; i<len ; i++)
-            *output++ = *source++;
-      } else {
-         *output++ = *input++;
-      }
-
-      idbyte = idbyte >> 1;
-   }
-}
-#endif
-
 #define LENSHIFT 4 // this must be log2(LOOKAHEAD_SIZE)
 
 //
