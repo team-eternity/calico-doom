@@ -298,7 +298,7 @@ static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)
    dx  *= sdy;
    sdx *=  dy;
 
-   return (dx < sdx);
+   return (sdx < dx);
 }
 
 static void R_ClipVisSprite(void)
