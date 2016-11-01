@@ -509,298 +509,299 @@ void R_Cache(void)
    /*
 subq #24,FP
 
- movei #_viswalls,r0
- move r0,r15 ;(wall)
+ movei #_viswalls,r0  r0 = viswalls;
+ move r0,r15 ;(wall)  wall = r0
 
- movei #L55,r0
+ movei #L55,r0        goto L55
  jump T,(r0)
  nop
 
-L52:
+L52: // loop start
 
- move r15,r0 ;(wall)
- addq #24,r0
- load (r0),r0
- moveq #4,r1
- and r1,r0
- moveq #0,r1
- cmp r0,r1
- movei #L56,scratch
+ move r15,r0 ;(wall)  r0 = wall;
+ addq #24,r0          r0 += &viswall_t::actionbits;
+ load (r0),r0         r0 = *r0;
+ moveq #4,r1          r1 = AC_TOPTEXTURE;
+ and r1,r0            r0 &= r1;
+ moveq #0,r1          r1 = 0;
+ cmp r0,r1            if(r0 == r1)
+ movei #L56,scratch     goto L56;
  jump EQ,(scratch)
  nop
- movei #40,r0
- move r15,r1 ;(wall)
- add r0,r1
- load (r1),r0
- addq #16,r0
- load (r0),r0
- movei #4096,r1
- cmp r0,r1
- movei #L56,scratch
+ movei #40,r0         r0 = &viswall_t::t_texture;
+ move r15,r1 ;(wall)  r1 = wall;
+ add r0,r1            r1 += r0;
+ load (r1),r0         r0 = *r1;
+ addq #16,r0          r0 += &texture_t::data;
+ load (r0),r0         r0 = *r0;
+ movei #4096,r1       r1 = 4096;
+ cmp r0,r1            if(r0 >= r1)
+ movei #L56,scratch     goto L56;
  jump EQ,(scratch)
  nop
  jump MI,(scratch)
  nop
 
- movei #40,r0
- move r15,r1 ;(wall)
- add r0,r1
- load (r1),r0
- addq #16,r0
- load (r0),r1
- store r1,(FP) ; arg[]
- movei #_R_LoadPixels,r1
- store r28,(FP+1) ; push ;(RETURNPOINT)
- store r16,(FP+2) ; push ;(spr)
- store r15,(FP+3) ; push ;(wall)
+ movei #40,r0         r0 = &viswall_t::t_texture;
+ move r15,r1 ;(wall)  r1 = wall;
+ add r0,r1            r1 += r0;
+ load (r1),r0         r0 = *r1;
+ addq #16,r0          r0 += &texture_t::data;
+ load (r0),r1                             r1 = *r0;
+ store r1,(FP) ; arg[]                    *FP = r1;
+ movei #_R_LoadPixels,r1                  r1 = R_LoadPixels;
+ store r28,(FP+1) ; push ;(RETURNPOINT)   *(FP+1) = RETURNPOINT;
+ store r16,(FP+2) ; push ;(spr)           *(FP+2) = spr;
+ store r15,(FP+3) ; push ;(wall)          *(FP+3) = wall;
  movei #L75,RETURNPOINT
- jump T,(r1)
- store r0,(FP+4) ; delay slot push
+ jump T,(r1)                              call R_LoadPixels
+ store r0,(FP+4) ; delay slot push          *(FP+4) = r0;
 L75:
- load (FP+2),r16 ; pop ;(spr)
- load (FP+3),r15 ; pop ;(wall)
- load (FP+4),r0 ; pop
- load (FP+1), RETURNPOINT ; pop
- move r29,r1 ;(RETURNVALUE)
- store r1,(r0)
+ load (FP+2),r16 ; pop ;(spr)             r16 = spr;
+ load (FP+3),r15 ; pop ;(wall)            r15 = wall;
+ load (FP+4),r0 ; pop                     r0  = *(FP+4);
+ load (FP+1), RETURNPOINT ; pop           RETURNPOINT = *(FP+1);
+ move r29,r1 ;(RETURNVALUE)               r1 = RETURNVALUE;
+ store r1,(r0)                            *r0 = r1; // wall->t_texture->data = R_LoadPixels(...);
 
-L56:
+L56: // !(actionbits & AC_TOPTEXTURE)
 
- move r15,r0 ;(wall)
- addq #24,r0
- load (r0),r0
- moveq #8,r1
- and r1,r0
- moveq #0,r1
- cmp r0,r1
- movei #L58,scratch
+ move r15,r0 ;(wall)  r0 = wall;
+ addq #24,r0          r0 += &viswall_t::actionbits;
+ load (r0),r0         r0 = *r0;
+ moveq #8,r1          r1 = AC_BOTTOMTEXTURE;
+ and r1,r0            r0 &= r1;
+ moveq #0,r1          r1 = 0;
+ cmp r0,r1            if(r0 == r1)
+ movei #L58,scratch     goto L58;
  jump EQ,(scratch)
  nop
- movei #56,r0
- move r15,r1 ;(wall)
- add r0,r1
- load (r1),r0
- addq #16,r0
- load (r0),r0
- movei #4096,r1
- cmp r0,r1
- movei #L58,scratch
+ movei #56,r0         r0 = &viswall_t::b_texture;
+ move r15,r1 ;(wall)  r1 = wall;
+ add r0,r1            r1 += r0;
+ load (r1),r0         r0 = *r1;
+ addq #16,r0          r0 += &texture_t::data;
+ load (r0),r0         *r0 = r0;
+ movei #4096,r1       r1 = 4096;
+ cmp r0,r1            if(r0 >= r1)
+ movei #L58,scratch     goto L58;
  jump EQ,(scratch)
  nop
  jump MI,(scratch)
  nop
 
- movei #56,r0
- move r15,r1 ;(wall)
- add r0,r1
- load (r1),r0
- addq #16,r0
- load (r0),r1
- store r1,(FP) ; arg[]
- movei #_R_LoadPixels,r1
- store r28,(FP+1) ; push ;(RETURNPOINT)
- store r16,(FP+2) ; push ;(spr)
- store r15,(FP+3) ; push ;(wall)
+ movei #56,r0                             r0 = &viswall_t::b_texture;
+ move r15,r1 ;(wall)                      r1 = wall;
+ add r0,r1                                r1 += r0;
+ load (r1),r0                             r0 = *r1;
+ addq #16,r0                              r0 += &texture_t::data;
+ load (r0),r1                             r1 = *r0;
+ store r1,(FP) ; arg[]                    *(FP) = r1;
+ movei #_R_LoadPixels,r1                  r1 = R_LoadPixels;
+ store r28,(FP+1) ; push ;(RETURNPOINT)   *(FP+1) = RETURNPOINT;
+ store r16,(FP+2) ; push ;(spr)           *(FP+2) = spr;
+ store r15,(FP+3) ; push ;(wall)          *(FP+3) = wall;
  movei #L76,RETURNPOINT
- jump T,(r1)
- store r0,(FP+4) ; delay slot push
+ jump T,(r1)                              call R_LoadPixels;
+ store r0,(FP+4) ; delay slot push          *(FP+4) = r0;
 L76:
- load (FP+2),r16 ; pop ;(spr)
- load (FP+3),r15 ; pop ;(wall)
- load (FP+4),r0 ; pop
- load (FP+1), RETURNPOINT ; pop
- move r29,r1 ;(RETURNVALUE)
- store r1,(r0)
+ load (FP+2),r16 ; pop ;(spr)             spr = *(FP+2);
+ load (FP+3),r15 ; pop ;(wall)            wall = *(FP+3);
+ load (FP+4),r0 ; pop                     r0 = *(FP+4);
+ load (FP+1), RETURNPOINT ; pop           RETURNPOINT = *(FP+1);
+ move r29,r1 ;(RETURNVALUE)               r1 = RETURNVALUE;
+ store r1,(r0)                            *r0 = r1; // wall->b_texture->data = R_LoadPixels(...)
 
-L58:
+L58: // !(actionbits & AC_BOTTOMTEXTURE)
 
- move r15,r0 ;(wall)
- addq #16,r0
- load (r0),r0
- movei #4096,r1
- cmp r0,r1
- movei #L60,scratch
+ move r15,r0 ;(wall)  r0 = wall;
+ addq #16,r0          r0 += &viswall_t::floorpic;
+ load (r0),r0         r0 = *r0;
+ movei #4096,r1       r1 = 4096;
+ cmp r0,r1            if(r0 >= r1)
+ movei #L60,scratch     goto L60;
  jump EQ,(scratch)
  nop
  jump MI,(scratch)
  nop
 
- move r15,r0 ;(wall)
- addq #16,r0
- load (r0),r1
- store r1,(FP) ; arg[]
- movei #_R_LoadPixels,r1
- store r28,(FP+1) ; push ;(RETURNPOINT)
- store r16,(FP+2) ; push ;(spr)
- store r15,(FP+3) ; push ;(wall)
+ move r15,r0 ;(wall)                      r0 = wall;
+ addq #16,r0                              r0 += &viswall_t::floorpic;
+ load (r0),r1                             r1 = *r0;
+ store r1,(FP) ; arg[]                    *(FP) = r1;
+ movei #_R_LoadPixels,r1                  r1 = R_LoadPixels;
+ store r28,(FP+1) ; push ;(RETURNPOINT)   *(FP+1) = RETURNPOINT;
+ store r16,(FP+2) ; push ;(spr)           *(FP+2) = spr;
+ store r15,(FP+3) ; push ;(wall)          *(FP+3) = wall;
  movei #L77,RETURNPOINT
- jump T,(r1)
- store r0,(FP+4) ; delay slot push
+ jump T,(r1)                              call R_LoadPixels
+ store r0,(FP+4) ; delay slot push          *(FP+4) = r0;
 L77:
- load (FP+2),r16 ; pop ;(spr)
- load (FP+3),r15 ; pop ;(wall)
- load (FP+4),r0 ; pop
- load (FP+1), RETURNPOINT ; pop
- move r29,r1 ;(RETURNVALUE)
- store r1,(r0)
+ load (FP+2),r16 ; pop ;(spr)             spr = *(FP+2);
+ load (FP+3),r15 ; pop ;(wall)            wall = *(FP+3);
+ load (FP+4),r0 ; pop                     r0 = *(FP+4);
+ load (FP+1), RETURNPOINT ; pop           RETURNPOINT + *(FP+1);
+ move r29,r1 ;(RETURNVALUE)               r1 = RETURNVALUE;
+ store r1,(r0)                            *r0 = r1; // wall->floorpic = R_LoadPixels(...);
 
-L60:
+L60: // wall->floorpic >= 4096 (ie, != NULL)
 
- move r15,r0 ;(wall)
- addq #20,r0
- load (r0),r0
- movei #-1,r1
- cmp r0,r1
- movei #L62,scratch
+ move r15,r0 ;(wall)  r0 = wall;
+ addq #20,r0          r0 += &viswall_t::ceilingpic;
+ load (r0),r0         r0 = *r0;
+ movei #-1,r1         r1 = -1;
+ cmp r0,r1            if(r0 != r1)
+ movei #L62,scratch     goto L62;
  jump NE,(scratch)
  nop
 
- movei #_skytexturep,r0
- load (r0),r0
- addq #16,r0
- load (r0),r0
- movei #4096,r1
- cmp r0,r1
- movei #L63,scratch
+ movei #_skytexturep,r0  r0 = skytexturep;
+ load (r0),r0            r0 = *r0;
+ addq #16,r0             r0 = &texture_t::data;
+ load (r0),r0            r0 = *r0;
+ movei #4096,r1          r1 = 4096;
+ cmp r0,r1               if(r0 >= r1)
+ movei #L63,scratch        goto L63;
  jump EQ,(scratch)
  nop
  jump MI,(scratch)
  nop
 
- movei #_skytexturep,r0
- load (r0),r0
- addq #16,r0
- load (r0),r1
- store r1,(FP) ; arg[]
- movei #_R_LoadPixels,r1
- store r28,(FP+1) ; push ;(RETURNPOINT)
- store r16,(FP+2) ; push ;(spr)
- store r15,(FP+3) ; push ;(wall)
+ movei #_skytexturep,r0                   r0 = skytexturep;
+ load (r0),r0                             r0 = *r0;
+ addq #16,r0                              r0 += &texture_t::data;
+ load (r0),r1                             r1 = *r0;
+ store r1,(FP) ; arg[]                    *(FP) = r1;
+ movei #_R_LoadPixels,r1                  r1 = R_LoadPixels;
+ store r28,(FP+1) ; push ;(RETURNPOINT)   *(FP+1) = RETURNPOINT;
+ store r16,(FP+2) ; push ;(spr)           *(FP+2) = spr;
+ store r15,(FP+3) ; push ;(wall)          *(FP+3) = wall;
  movei #L78,RETURNPOINT
- jump T,(r1)
- store r0,(FP+4) ; delay slot push
+ jump T,(r1)                              call R_LoadPixels;
+ store r0,(FP+4) ; delay slot push          *(FP+4) = r0;
 L78:
- load (FP+2),r16 ; pop ;(spr)
- load (FP+3),r15 ; pop ;(wall)
- load (FP+4),r0 ; pop
- load (FP+1), RETURNPOINT ; pop
- move r29,r1 ;(RETURNVALUE)
- store r1,(r0)
+ load (FP+2),r16 ; pop ;(spr)             spr = *(FP+2);
+ load (FP+3),r15 ; pop ;(wall)            wall = *(FP+3);
+ load (FP+4),r0 ; pop                     r0 = *(FP+4);
+ load (FP+1), RETURNPOINT ; pop           RETURNPOINT = *(FP+1);
+ move r29,r1 ;(RETURNVALUE)               r1 = RETURNVALUE;
+ store r1,(r0)                            *r0 = r1; // skytexturep->data = R_LoadPixels(...);
 
  movei #L63,r0
  jump T,(r0)
  nop
 
-L62:
+L62: // wall->floorpic != -1, ie., NOT sky ceiling
 
- move r15,r0 ;(wall)
- addq #20,r0
- load (r0),r0
- movei #4096,r1
- cmp r0,r1
- movei #L66,scratch
+ move r15,r0 ;(wall)  r0 = wall;
+ addq #20,r0          r0 += &viswall_t::ceilingpic;
+ load (r0),r0         r0 = *r0;
+ movei #4096,r1       r1 = 4096;
+ cmp r0,r1            if(r0 >= r1)
+ movei #L66,scratch     goto L66;
  jump EQ,(scratch)
  nop
  jump MI,(scratch)
  nop
 
- move r15,r0 ;(wall)
- addq #20,r0
- load (r0),r1
- store r1,(FP) ; arg[]
- movei #_R_LoadPixels,r1
- store r28,(FP+1) ; push ;(RETURNPOINT)
- store r16,(FP+2) ; push ;(spr)
- store r15,(FP+3) ; push ;(wall)
+ move r15,r0 ;(wall)                      r0 = wall;
+ addq #20,r0                              r0 += &viswall_t::ceilingpic;
+ load (r0),r1                             r1 = *r0;
+ store r1,(FP) ; arg[]                    *(FP) = r1;
+ movei #_R_LoadPixels,r1                  r1 = R_LoadPixels;
+ store r28,(FP+1) ; push ;(RETURNPOINT)   *(FP+1) = RETURNPOINT;
+ store r16,(FP+2) ; push ;(spr)           *(FP+2) = spr;
+ store r15,(FP+3) ; push ;(wall)          *(FP+3) = wall;
  movei #L79,RETURNPOINT
- jump T,(r1)
- store r0,(FP+4) ; delay slot push
+ jump T,(r1)                              call R_LoadPixels;
+ store r0,(FP+4) ; delay slot push          *(FP+4) = r0;
 L79:
- load (FP+2),r16 ; pop ;(spr)
- load (FP+3),r15 ; pop ;(wall)
- load (FP+4),r0 ; pop
- load (FP+1), RETURNPOINT ; pop
- move r29,r1 ;(RETURNVALUE)
- store r1,(r0)
+ load (FP+2),r16 ; pop ;(spr)             spr = *(FP+2);
+ load (FP+3),r15 ; pop ;(wall)            wall = *(FP+3);
+ load (FP+4),r0 ; pop                     r0 = *(FP+4);
+ load (FP+1), RETURNPOINT ; pop           RETURNPOINT = *(FP+1);
+ move r29,r1 ;(RETURNVALUE)               r1 = RETURNVALUE;
+ store r1,(r0)                            *r0 = r1; // viswall->ceilingpic = R_LoadPixels(...);
 
-L66:
+L66: // wall->ceilingpic >= 4096 (ie, != NULL)
 
-L63:
+L63: // skytexturep->data >= 4096 (ie, != NULL)
 
 L53:
 
- movei #112,r0
- move r15,r1 ;(wall)
- add r0,r1
- move r1,r15 ;(wall)
+ // increment pointer
+ movei #112,r0           r0 = sizeof(viswall_t)
+ move r15,r1 ;(wall)     r1 = wall;
+ add r0,r1               r1 += r0;
+ move r1,r15 ;(wall)     wall = r1;
 
-L55:
+L55: // loop end
 
- move r15,r0 ;(wall)
- movei #_lastwallcmd,r1
- load (r1),r1
- cmp r0,r1
- movei #L52,scratch
+ move r15,r0 ;(wall)     r0 = wall;
+ movei #_lastwallcmd,r1  r1 = lastwallcmd;
+ load (r1),r1            r1 = *r1;
+ cmp r0,r1               if(r0 < r1)
+ movei #L52,scratch         goto L52; // loop
  jump U_LT,(scratch)
  nop
 
- movei #_vissprites,r0
- move r0,r16 ;(spr)
+ movei #_vissprites,r0   r0 = vissprites;
+ move r0,r16 ;(spr)      r16 = r0;
 
- movei #L71,r0
+ movei #L71,r0           goto L71
  jump T,(r0)
  nop
 
-L68:
+L68: // loop start
 
- movei #56,r0
- move r16,r1 ;(spr)
- add r0,r1
- load (r1),r0
- movei #4096,r1
- cmp r0,r1
- movei #L72,scratch
+ movei #56,r0            r0 = &vissprite_t::pixels;
+ move r16,r1 ;(spr)      r1 = spr;
+ add r0,r1               r1 += r0;
+ load (r1),r0            r0 = *r1;
+ movei #4096,r1          r1 = 4096;
+ cmp r0,r1               if(r0 >= r1)
+ movei #L72,scratch        goto L72;
  jump EQ,(scratch)
  nop
  jump MI,(scratch)
  nop
 
- movei #56,r0
- move r16,r1 ;(spr)
- add r0,r1
- load (r1),r0
- store r0,(FP) ; arg[]
- movei #_R_LoadPixels,r0
- store r28,(FP+1) ; push ;(RETURNPOINT)
- store r16,(FP+2) ; push ;(spr)
- store r15,(FP+3) ; push ;(wall)
- movei #L80,RETURNPOINT
- jump T,(r0)
- store r1,(FP+4) ; delay slot push
+ movei #56,r0                             r0 = &vissprite_t::pixels;
+ move r16,r1 ;(spr)                       r1 = spr;
+ add r0,r1                                r1 += r0;
+ load (r1),r0                             r0 = *r1;
+ store r0,(FP) ; arg[]                    *(FP) = r0;
+ movei #_R_LoadPixels,r0                  r0 = R_LoadPixels;
+ store r28,(FP+1) ; push ;(RETURNPOINT)   *(FP+1) = RETURNPOINT;
+ store r16,(FP+2) ; push ;(spr)           *(FP+2) = spr;
+ store r15,(FP+3) ; push ;(wall)          *(FP+3) = wall;
+ movei #L80,RETURNPOINT                  
+ jump T,(r0)                              call R_LoadPixels;
+ store r1,(FP+4) ; delay slot push          *(FP+4) = r1;
 L80:
- load (FP+2),r16 ; pop ;(spr)
- load (FP+3),r15 ; pop ;(wall)
- load (FP+4),r1 ; pop
- load (FP+1), RETURNPOINT ; pop
- move r29,r0 ;(RETURNVALUE)
- store r0,(r1)
+ load (FP+2),r16 ; pop ;(spr)             spr = *(FP+2);
+ load (FP+3),r15 ; pop ;(wall)            wall = *(FP+3);
+ load (FP+4),r1 ; pop                     r1 = *(FP+4);
+ load (FP+1), RETURNPOINT ; pop           RETURNPOINT = *(FP+1);
+ move r29,r0 ;(RETURNVALUE)               r0 = RETURNVALUE;
+ store r0,(r1)                            *r1 = r0; // spr->pixels = R_LoadPixels(...);
 
-L72:
+L72: // spr->pixels >= 4096 (ie, != NULL)
 
-L69:
+L69: // pointer increment
 
- movei #60,r0
- move r16,r1 ;(spr)
- add r0,r1
- move r1,r16 ;(spr)
+ movei #60,r0        r0 = sizeof(vissprite_t);
+ move r16,r1 ;(spr)  r1 = spr;
+ add r0,r1           r1 += r0;
+ move r1,r16 ;(spr)  spr = r1;
 
-L71:
+L71: // loop end
 
- move r16,r0 ;(spr)
- movei #_vissprite_p,r1
- load (r1),r1
- cmp r0,r1
- movei #L68,scratch
+ move r16,r0 ;(spr)      r0 = spr;
+ movei #_vissprite_p,r1  r1 = vissprite_p;
+ load (r1),r1            r1 = *r1;
+ cmp r0,r1               if(r0 < r1)
+ movei #L68,scratch        goto L68; // loop
  jump U_LT,(scratch)
  nop
 
@@ -812,8 +813,7 @@ L71:
  movei #_gpucodestart,r0
  movei #_ref6_start,r1
  store r1,(r0)
-
-
+ 
 L51:
  jump T,(RETURNPOINT)
  addq #24,FP ; delay slot
