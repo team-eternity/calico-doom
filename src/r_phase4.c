@@ -190,27 +190,57 @@ static void R_FinishSprite(vissprite_t *vis)
    // column pixel data is in the next lump
    vis->pixels = R_CheckPixels(lump + 1);
 
+#if 0
+typedef struct vissprite_s
+{
+ 0:  int     x1;
+ 4:  int     x2;
+ 8:  fixed_t startfrac;
+12:  fixed_t xscale;
+16:  fixed_t xiscale;
+20:  fixed_t yscale;
+24:  fixed_t yiscale;
+28:  fixed_t texturemid;
+32:  patch_t *patch;
+36:  int     colormap;
+40:  fixed_t gx;
+44:  fixed_t gy;
+48:  fixed_t gz;
+52:  fixed_t gzt;
+56:  pixel_t *pixels;
+} vissprite_t;
+
+typedef struct 
+{ 
+0:  short width;
+2:  short height;
+4:  short leftoffset;
+6:  short topoffset;
+8:  unsigned short columnofs[8];
+} patch_t; 
+#endif
+
 /* 
- load (FP+14),r0 ; local vis
- load (r0),r1
- move r1,r16 ;(tx)
- addq #12,r0
- load (r0),r0
- move r0,r19 ;(xscale)
- move r17,r0 ;(patch)
- addq #4,r0
- loadw (r0),r0
- movei #$ffff8000,scratch
+ load (FP+14),r0 ; local vis                r0 = *(FP+14); // vis
+ load (r0),r1                               r1 = *r0; // vis->x1
+ move r1,r16 ;(tx)                          r16 = r1; // tx
+ addq #12,r0                                r0 += &vissprite_t::xscale;
+ load (r0),r0                               r0 = *r0;
+ move r0,r19 ;(xscale)                      r19 = r0; // xscale
+ move r17,r0 ;(patch)                       r0 = r17; // patch
+ addq #4,r0                                 r0 += &patch_t::leftoffset;
+ loadw (r0),r0                              r0 = *r0;
+ movei #$ffff8000,scratch                   *sign extend and truncate to signed short*
  add scratch,r0
  xor scratch,r0
- shlq #16,r0
- move r16,r1 ;(tx)
- sub r0,r1
- move r1,r16 ;(tx)
- store r16,(FP) ; arg[] ;(tx)
- or r19,scratch ; scoreboard bug ;(xscale)
- store r19,(FP+1) ; arg[] ;(xscale)
- movei #_G_FixedMul,r0
+ shlq #16,r0                                r0 <<= FRACBITS;
+ move r16,r1 ;(tx)                          r1 = r16; // tx
+ sub r0,r1                                  r1 -= r0;
+ move r1,r16 ;(tx)                          r16 = r1; // tx
+ store r16,(FP) ; arg[] ;(tx)               *(FP) = r16;
+ or r19,scratch ; scoreboard bug ;(xscale)  
+ store r19,(FP+1) ; arg[] ;(xscale)         *(FP+1) = xscale;
+ movei #_G_FixedMul,r0                      r0 = G_FixedMul;
  store r28,(FP+2) ; push ;(RETURNPOINT)
  store r22,(FP+3) ; push ;(80)
  store r21,(FP+4) ; push ;(77)
@@ -220,8 +250,8 @@ static void R_FinishSprite(vissprite_t *vis)
  store r17,(FP+8) ; push ;(patch)
  store r16,(FP+9) ; push ;(tx)
  movei #L88,RETURNPOINT
- jump T,(r0)
- store r15,(FP+10) ; delay slot push ;(x1)
+ jump T,(r0)                                call G_FixedMul;
+ store r15,(FP+10) ; delay slot push ;(x1)  
 L88:
  load (FP+3),r22 ; pop ;(80)
  load (FP+4),r21 ; pop ;(77)
@@ -232,42 +262,42 @@ L88:
  load (FP+9),r16 ; pop ;(tx)
  load (FP+10),r15 ; pop ;(x1)
  load (FP+2), RETURNPOINT ; pop
- movei #5242880,r0
- move r29,r1 ;(RETURNVALUE)
- add r0,r1
- move r1,r0
- sharq #16,r0
- move r0,r15 ;(x1)
- movei #160,r0
- cmp r15,r0 ;(x1)
- movei #L73,scratch
+ movei #5242880,r0                          r0 = 80*FRACUNIT;
+ move r29,r1 ;(RETURNVALUE)                 r1 = r29;
+ add r0,r1                                  r1 += r0;
+ move r1,r0                                 r0 = r1;
+ sharq #16,r0                               r0 >>= FRACBITS;
+ move r0,r15 ;(x1)                          r15 = r0; // x1
+ movei #160,r0                              r0 = 160;
+ cmp r15,r0 ;(x1)                           if(r15 <= r0)
+ movei #L73,scratch                            goto L73;
  jump PL,(scratch)
  nop
 
- load (FP+14),r0 ; local vis
- addq #32,r0
- moveq #0,r1
- store r1,(r0)
+ load (FP+14),r0 ; local vis                r0 = *(FP+14); // vis
+ addq #32,r0                                r0 += &vissprite_t::patch;
+ moveq #0,r1                                r1 = 0;
+ store r1,(r0)                              *r0 = r1;
 
 
- movei #L72,r0
+ movei #L72,r0                              goto L72;
  jump T,(r0)
  nop
 
 L73:
 
- loadw (r17),r0 ;(patch)
- movei #$ffff8000,scratch
+ loadw (r17),r0 ;(patch)                    r0 = *r17; // patch->width
+ movei #$ffff8000,scratch                   *sign extend and truncate to signed short*
  add scratch,r0
  xor scratch,r0
- shlq #16,r0
- move r16,r1 ;(tx)
- add r0,r1
- move r1,r16 ;(tx)
- store r16,(FP) ; arg[] ;(tx)
- or r19,scratch ; scoreboard bug ;(xscale)
- store r19,(FP+1) ; arg[] ;(xscale)
- movei #_G_FixedMul,r0
+ shlq #16,r0                                r0 <<= FRACBITS;
+ move r16,r1 ;(tx)                          r1 = r16; // tx
+ add r0,r1                                  r1 += r0;
+ move r1,r16 ;(tx)                          r16 = r1; // tx
+ store r16,(FP) ; arg[] ;(tx)               *(FP) = r16;
+ or r19,scratch ; scoreboard bug ;(xscale)  
+ store r19,(FP+1) ; arg[] ;(xscale)         *(FP+1) = r19; // xscale
+ movei #_G_FixedMul,r0                      r0 = G_FixedMul;
  store r28,(FP+2) ; push ;(RETURNPOINT)
  store r22,(FP+3) ; push ;(80)
  store r21,(FP+4) ; push ;(77)
@@ -277,8 +307,8 @@ L73:
  store r17,(FP+8) ; push ;(patch)
  store r16,(FP+9) ; push ;(tx)
  movei #L89,RETURNPOINT
- jump T,(r0)
- store r15,(FP+10) ; delay slot push ;(x1)
+ jump T,(r0)                                call G_FixedMul;
+ store r15,(FP+10) ; delay slot push ;(x1)  
 L89:
  load (FP+3),r22 ; pop ;(80)
  load (FP+4),r21 ; pop ;(77)
@@ -289,153 +319,153 @@ L89:
  load (FP+9),r16 ; pop ;(tx)
  load (FP+10),r15 ; pop ;(x1)
  load (FP+2), RETURNPOINT ; pop
- movei #5242880,r0
- move r29,r1 ;(RETURNVALUE)
- add r0,r1
- move r1,r0
- sharq #16,r0
- subq #1,r0
- move r0,r18 ;(x2)
- moveq #0,r0
- cmp r18,r0 ;(x2)
- movei #L75,scratch
+ movei #5242880,r0                          r0 = 80*FRACUNIT;
+ move r29,r1 ;(RETURNVALUE)                 r1 = RETURNVALUE;
+ add r0,r1                                  r1 += r0;
+ move r1,r0                                 r0 = r1;
+ sharq #16,r0                               r0 >>= FRACBITS;
+ subq #1,r0                                 r0 -= 1;
+ move r0,r18 ;(x2)                          r18 = r0; // x2
+ moveq #0,r0                                r0 = 0;
+ cmp r18,r0 ;(x2)                           if(r18 >= r0)
+ movei #L75,scratch                            goto L75;
  jump EQ,(scratch)
  nop
  jump MI,(scratch)
  nop
 
- load (FP+14),r0 ; local vis
- addq #32,r0
- moveq #0,r1
- store r1,(r0)
+ load (FP+14),r0 ; local vis                r0 = *(FP+14); // vis
+ addq #32,r0                                r0 += &vissprite_t::patch;
+ moveq #0,r1                                r1 = 0;
+ store r1,(r0)                              *r0 = r1;
 
 
- movei #L72,r0
+ movei #L72,r0                              goto L72;
  jump T,(r0)
  nop
 
 L75:
 
- load (FP+14),r0 ; local vis
- movei #52,r1
- move r0,r2
- add r1,r2
- movei #48,r1
- add r1,r0
- load (r0),r0
- move r17,r1 ;(patch)
- addq #6,r1
- loadw (r1),r1
- movei #$ffff8000,scratch
+ load (FP+14),r0 ; local vis                r0 = *(FP+14);
+ movei #52,r1                               r1 = &vissprite_t::gzt;
+ move r0,r2                                 r2 = r0;
+ add r1,r2                                  r2 += r1;
+ movei #48,r1                               r1 = &vissprite_t::gz;
+ add r1,r0                                  r0 += r1;
+ load (r0),r0                               r0 = *r0;
+ move r17,r1 ;(patch)                       r1 = r17; // patch
+ addq #6,r1                                 r1 += &patch_t::topoffset;
+ loadw (r1),r1                              r1 = *r1;
+ movei #$ffff8000,scratch                   *sign extend and truncate to signed short*
  add scratch,r1
  xor scratch,r1
- shlq #16,r1
- add r1,r0
- store r0,(r2)
+ shlq #16,r1                                r1 <<= FRACBITS;
+ add r1,r0                                  r0 += r1;
+ store r0,(r2)                              *r2 = r0;
 
- load (FP+14),r0 ; local vis
- move r0,r1
- addq #28,r1
- movei #52,r2
- add r2,r0
- load (r0),r0
- movei #_viewz,r2
- load (r2),r2
- sub r2,r0
- store r0,(r1)
+ load (FP+14),r0 ; local vis                r0 = *(FP+14); // vis
+ move r0,r1                                 r1 = r0;
+ addq #28,r1                                r1 += &vissprite_t::texturemid
+ movei #52,r2                               r2 = &vissprite_t::gzt;
+ add r2,r0                                  r0 += r2;
+ load (r0),r0                               r0 = *r0;
+ movei #_viewz,r2                           r2 = &viewz;
+ load (r2),r2                               r2 = *r2;
+ sub r2,r0                                  r0 -= r2;
+ store r0,(r1)                              *r1 = r0;
 
- moveq #0,r0
- cmp r15,r0 ;(x1)
- movei #L78,scratch
+ moveq #0,r0                                r0 = 0;
+ cmp r15,r0 ;(x1)                           if(r15 >= r0)
+ movei #L78,scratch                            goto L78;
  jump EQ,(scratch)
  nop
  jump MI,(scratch)
  nop
- moveq #0,r0
- move r0,r21 ;(77)
- movei #L79,r0
+ moveq #0,r0                                r0 = 0;
+ move r0,r21 ;(77)                          r21 = r0;
+ movei #L79,r0                              goto L79;
  jump T,(r0)
  nop
-L78:
- move r15,r21 ;(x1)(77)
-L79:
- load (FP+14),r0 ; local vis
- store r21,(r0) ;(77)
+L78: // r15 >= r0:
+ move r15,r21 ;(x1)(77)                     r21 = r15; // x1
+L79: // else:
+ load (FP+14),r0 ; local vis                r0 = *(FP+14); // vis
+ store r21,(r0) ;(77)                       *r0 = r21; // vis->x1 = ...
 
- movei #160,r0
- cmp r18,r0 ;(x2)
- movei #L81,scratch
+ movei #160,r0                              r0 = 160;
+ cmp r18,r0 ;(x2)                           if(r18 < r0) // x2
+ movei #L81,scratch                            goto L81;
  jump S_LT,(scratch)
  nop
- movei #159,r0
- move r0,r22 ;(80)
- movei #L82,r0
+ movei #159,r0                              r0 = 159;
+ move r0,r22 ;(80)                          r22 = r0;
+ movei #L82,r0                              goto L82;
  jump T,(r0)
  nop
-L81:
- move r18,r22 ;(x2)(80)
-L82:
- load (FP+14),r0 ; local vis
- addq #4,r0
- store r22,(r0) ;(80)
+L81: // r18 < r0
+ move r18,r22 ;(x2)(80)                     r22 = r18; // x2
+L82: // else:
+ load (FP+14),r0 ; local vis                r0 = *(FP+14); // vis
+ addq #4,r0                                 r0 += &vissprite_t::x2;
+ store r22,(r0) ;(80)                       *r0 = r22;
 
- load (FP+14),r0 ; local vis
- addq #16,r0
- load (r0),r0
- moveq #0,r1
- cmp r0,r1
- movei #L83,scratch
+ load (FP+14),r0 ; local vis                r0 = *(FP+14); // vis
+ addq #16,r0                                r0 += &vissprite_t::xiscale;
+ load (r0),r0                               r0 = *r0;
+ moveq #0,r1                                r1 = 0;
+ cmp r0,r1                                  if(r0 >= r1)
+ movei #L83,scratch                            goto L83;
  jump EQ,(scratch)
  nop
  jump MI,(scratch)
  nop
 
- load (FP+14),r0 ; local vis
- addq #8,r0
- loadw (r17),r1 ;(patch)
- movei #$ffff8000,scratch
+ load (FP+14),r0 ; local vis                r0 = *(FP+14); // vis
+ addq #8,r0                                 r0 += &vissprite_t::startfrac;
+ loadw (r17),r1 ;(patch)                    r1 = *r17; // patch->width
+ movei #$ffff8000,scratch                   *sign extend and truncate to signed short*
  add scratch,r1
  xor scratch,r1
- shlq #16,r1
- subq #1,r1
- store r1,(r0)
+ shlq #16,r1                                r1 <<= FRACBITS;
+ subq #1,r1                                 r1 -= 1;
+ store r1,(r0)                              *r0 = r1;
 
- movei #L84,r0
+ movei #L84,r0                              goto L84;
  jump T,(r0)
  nop
 
-L83:
+L83: // else:
 
- load (FP+14),r0 ; local vis
- addq #8,r0
- moveq #0,r1
- store r1,(r0)
+ load (FP+14),r0 ; local vis                r0 = *(FP+14); // vis
+ addq #8,r0                                 r0 += &vissprite_t::startfrac;
+ moveq #0,r1                                r1 = 0;
+ store r1,(r0)                              *r0 = r1;
 
 L84:
 
- moveq #0,r0
- cmp r15,r0 ;(x1)
- movei #L85,scratch
+ moveq #0,r0                                r0 = 0;
+ cmp r15,r0 ;(x1)                           if(r15 >= r0) // x1
+ movei #L85,scratch                            goto L85;
  jump EQ,(scratch)
  nop
  jump MI,(scratch)
  nop
 
- load (FP+14),r0 ; local vis
- move r0,r1
- addq #8,r1
- load (r1),r2
- addq #16,r0
- load (r0),r0
- move r0,MATH_A
- movei #L90,MATH_RTS
- movei #GPU_IMUL,scratch
- jump T,(scratch)
- move r15,MATH_B ; delay slot ;(x1)
+ load (FP+14),r0 ; local vis                r0 = *(FP+14); // vis
+ move r0,r1                                 r1 = r0;
+ addq #8,r1                                 r1 += &vissprite_t::startfrac;
+ load (r1),r2                               r2 = *r1;
+ addq #16,r0                                r0 += &vissprite_t::xiscale;
+ load (r0),r0                               r0 = *r0;
+ move r0,MATH_A                             MATH_A = r0;
+ movei #L90,MATH_RTS                        MATH_RTS = L90;
+ movei #GPU_IMUL,scratch                    scratch = GPU_IMUL;
+ jump T,(scratch)                           goto scratch;
+ move r15,MATH_B ; delay slot ;(x1)           MATH_B = r15;
 L90:
- move MATH_C,r0
- sub r0,r2
- store r2,(r1)
+ move MATH_C,r0                             r0 = MATH_C;
+ sub r0,r2                                  r2 -= r0;
+ store r2,(r1)                              *r1 = r2;
 
 L85:
 
