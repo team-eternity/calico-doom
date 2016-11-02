@@ -413,89 +413,89 @@ static pixel_t *R_LoadPixels(int lumpnum)
 movei #40,scratch
  sub scratch,FP
 
- load (FP+10),r0 ; local lumpnum
- shlq #2,r0
- movei #_lumpcache,r1
- add r1,r0
- load (r0),r0
- move r0,r15 ;(rdest)
- move r15,r0 ;(rdest)
- moveq #0,r1
- cmp r0,r1
- movei #L109,scratch
+ load (FP+10),r0 ; local lumpnum          r0 = *(FP+10); // lumpnum
+ shlq #2,r0                               r0 <<= 2;
+ movei #_lumpcache,r1                     r1 = lumpcache;
+ add r1,r0                                r0 += r1;
+ load (r0),r0                             r0 = *r0;
+ move r0,r15 ;(rdest)                     r15 = r0; // rdest
+ move r15,r0 ;(rdest)                     r0 = r15;
+ moveq #0,r1                              r1 = 0;
+ cmp r0,r1                                if(r0 == r1)
+ movei #L109,scratch                         goto L109;
  jump EQ,(scratch)
  nop
 
- move r15,r0 ;(rdest)
- move r0,RETURNVALUE
+ move r15,r0 ;(rdest)                     r0 = r15; // rdest
+ move r0,RETURNVALUE                      RETURNVALUE = r0;
 
- movei #L108,r0
+ movei #L108,r0                           goto L108;
  jump T,(r0)
  nop
 
-L109:
+L109: // r0 == r1
 
- load (FP+10),r0 ; local lumpnum
- move r0,r1
- shlq #4,r1
- movei #_lumpinfo,r2
- load (r2),r2
- add r2,r1
- move r1,r16 ;(info)
- move FP,r1
- addq #8,r1 ; &count
- move r16,r2 ;(info)
- addq #4,r2
- load (r2),r2
- store r2,(r1)
- load (r1),r1
- shlq #1,r1
- store r1,(FP) ; arg[]
- shlq #2,r0
- movei #_lumpcache,r1
- add r1,r0
+ load (FP+10),r0 ; local lumpnum          r0 = *(FP+10); // lumpnum
+ move r0,r1                               r1 = r0;
+ shlq #4,r1                               r1 <<= 4;
+ movei #_lumpinfo,r2                      r2 = lumpinfo;
+ load (r2),r2                             r2 = *r2;
+ add r2,r1                                r1 += r2;
+ move r1,r16 ;(info)                      r16 = r1; // info
+ move FP,r1                               r1 = FP;
+ addq #8,r1 ; &count                      r1 += 8; // &count
+ move r16,r2 ;(info)                      r2 = r16; // info
+ addq #4,r2                               r2 += 4;
+ load (r2),r2                             r2 = *r2;
+ store r2,(r1)                            *r1 = r2;
+ load (r1),r1                             r1 = *r1;
+ shlq #1,r1                               r1 <<= 1;
+ store r1,(FP) ; arg[]                    *(FP) = r1;
+ shlq #2,r0                               r0 <<= 2;
+ movei #_lumpcache,r1                     r1 = lumpcache;
+ add r1,r0                                r0 += r1;
  or r0,scratch ; scoreboard bug
- store r0,(FP+1) ; arg[]
- movei #_R_Malloc,r0
- store r28,(FP+4) ; push ;(RETURNPOINT)
+ store r0,(FP+1) ; arg[]                  *(FP+1) = r0;
+ movei #_R_Malloc,r0                      r0 = R_Malloc;
+ store r28,(FP+4) ; push ;(RETURNPOINT)   
  store r16,(FP+5) ; push ;(info)
  movei #L111,RETURNPOINT
- jump T,(r0)
- store r15,(FP+6) ; delay slot push ;(rdest)
+ jump T,(r0)                              call R_Malloc;
+ store r15,(FP+6) ; delay slot ;(rdest)
 L111:
  load (FP+5),r16 ; pop ;(info)
  load (FP+6),r15 ; pop ;(rdest)
  load (FP+4), RETURNPOINT ; pop
- move r29,r0 ;(RETURNVALUE)
- move r0,r15 ;(rdest)
- move FP,r0
- addq #12,r0 ; &rsrc
- load (r16),r1 ;(info)
- movei #_wadfileptr,r2
- load (r2),r2
- add r2,r1
- store r1,(r0)
- load (r0),r0
- store r0,(FP) ; arg[]
+ move r29,r0 ;(RETURNVALUE)               r0 = RETURNVALUE;
+ move r0,r15 ;(rdest)                     r15 = r0; // rdest
+ move FP,r0                               r0 = FP;
+ addq #12,r0 ; &rsrc                      r0 += 12; // rsrc
+ load (r16),r1 ;(info)                    r1 = *r16; // info
+ movei #_wadfileptr,r2                    r2 = wadfileptr;
+ load (r2),r2                             r2 = *r2;
+ add r2,r1                                r1 += r2;
+ store r1,(r0)                            *r0 = r1;
+ load (r0),r0                             r0 = *r0;
+ store r0,(FP) ; arg[]                    *(FP) = r0;
  or r15,scratch ; scoreboard bug ;(rdest)
  store r15,(FP+1) ; arg[] ;(rdest)
- movei #_R_decode,r0
+ movei #_R_decode,r0                      r0 = R_decode
  store r28,(FP+4) ; push ;(RETURNPOINT)
  store r16,(FP+5) ; push ;(info)
  movei #L112,RETURNPOINT
- jump T,(r0)
- store r15,(FP+6) ; delay slot push ;(rdest)
+ jump T,(r0)                              call R_decode;
+ store r15,(FP+6) ; delay slot ;(rdest)
 L112:
  load (FP+5),r16 ; pop ;(info)
  load (FP+6),r15 ; pop ;(rdest)
  load (FP+4), RETURNPOINT ; pop
 
- load (FP+10),r0 ; local lumpnum
- shlq #2,r0
- movei #_lumpcache,r1
- add r1,r0
- load (r0),r0
- move r0,RETURNVALUE
+ load (FP+10),r0 ; local lumpnum          r0 = *(FP+10);
+ shlq #2,r0                               r0 <<= 2;
+ movei #_lumpcache,r1                     r1 = lumpcache;
+ add r1,r0                                r0 += r1;
+ load (r0),r0                             r0 = *r0;
+ move r0,RETURNVALUE                      RETURNVALUE = r0;
 
 L108:
  movei #40,scratch
@@ -529,7 +529,7 @@ void R_Cache(void)
       // load floorpic
       // CALICO: use floorpicnum to avoid type punning
       if(wall->floorpic == NULL)
-         wall->floorpic = R_LoadPixels(wall->floorpicnum);
+         wall->floorpic = R_LoadPixels(firstflat + wall->floorpicnum);
 
       // load sky or normal ceilingpic
       // CALICO: use ceilingpicnum to avoid type punning
@@ -539,7 +539,7 @@ void R_Cache(void)
             skytexturep->data = R_LoadPixels(skytexturep->lumpnum);
       }
       else if(wall->ceilingpic == NULL)
-         wall->ceilingpic = R_LoadPixels(wall->ceilingpicnum);
+         wall->ceilingpic = R_LoadPixels(firstflat + wall->ceilingpicnum);
 
       ++wall;
    }
@@ -548,28 +548,8 @@ void R_Cache(void)
    while(spr < vissprite_p)
    {
       if(spr->pixels == NULL)
-         ; // TODO: eh? spr->pixels = R_LoadPixels(spr->????); - probably related to there being two lumps.
-/*
- movei #56,r0                             r0 = &vissprite_t::pixels;
- move r16,r1 ;(spr)                       r1 = spr;
- add r0,r1                                r1 += r0;
- load (r1),r0                             r0 = *r1;
- store r0,(FP) ; arg[]                    *(FP) = r0;
- movei #_R_LoadPixels,r0                  r0 = R_LoadPixels;
- store r28,(FP+1) ; push ;(RETURNPOINT)   *(FP+1) = RETURNPOINT;
- store r16,(FP+2) ; push ;(spr)           *(FP+2) = spr;
- store r15,(FP+3) ; push ;(wall)          *(FP+3) = wall;
- movei #L80,RETURNPOINT                  
- jump T,(r0)                              call R_LoadPixels;
- store r1,(FP+4) ; delay slot push          *(FP+4) = r1;
-L80:
- load (FP+2),r16 ; pop ;(spr)             spr = *(FP+2);
- load (FP+3),r15 ; pop ;(wall)            wall = *(FP+3);
- load (FP+4),r1 ; pop                     r1 = *(FP+4);
- load (FP+1), RETURNPOINT ; pop           RETURNPOINT = *(FP+1);
- move r29,r0 ;(RETURNVALUE)               r0 = RETURNVALUE;
- store r0,(r1)                            *r1 = r0; // spr->pixels = R_LoadPixels(...);
-   */
+         spr->pixels = R_LoadPixels(spr->patchnum + 1);
+
       ++spr;
    }
 }

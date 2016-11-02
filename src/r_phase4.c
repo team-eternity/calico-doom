@@ -183,26 +183,26 @@ static void R_FinishSprite(vissprite_t *spr)
  movei #56,scratch
  sub scratch,FP
 
- load (FP+14),r0 ; local vis
- addq #32,r0
- load (r0),r1
- move r1,r20 ;(lump)
- move r20,r1 ;(lump)
- shlq #4,r1
- movei #_lumpinfo,r2
- load (r2),r2
- add r2,r1
- load (r1),r1
- movei #_wadfileptr,r2
- load (r2),r2
- add r2,r1
- move r1,r17 ;(patch)
- store r1,(r0)
+ load (FP+14),r0 ; local vis   r0 = &vis;
+ addq #32,r0                   r0 += &vissprite_t::patch;
+ load (r0),r1                  r1 = *r0;
+ move r1,r20 ;(lump)           r20 = r1; // lump
+ move r20,r1 ;(lump)           r1  = r20; // lump (...)
+ shlq #4,r1                    r1 <<= 4;
+ movei #_lumpinfo,r2           r2 = lumpinfo;
+ load (r2),r2                  r2 = *r2;
+ add r2,r1                     r1 += r2;
+ load (r1),r1                  r1 = *r1;
+ movei #_wadfileptr,r2         r2 = wadfileptr;
+ load (r2),r2                  r2 = *r2;
+ add r2,r1                     r1 += r2;
+ move r1,r17 ;(patch)          r17 = r1; // patch
+ store r1,(r0)                 *r0 = r1;
 
- move r20,r0 ;(lump)
- addq #1,r0
- store r0,(FP) ; arg[]
- movei #_R_CheckPixels,r0
+ move r20,r0 ;(lump)                     r0 = r20; // lump
+ addq #1,r0                              r0 += 1;  // +1 for column data lump!
+ store r0,(FP) ; arg[]                   *(FP) = r0;
+ movei #_R_CheckPixels,r0                r0 = R_CheckPixels;
  store r28,(FP+2) ; push ;(RETURNPOINT)
  store r22,(FP+3) ; push ;(80)
  store r21,(FP+4) ; push ;(77)
@@ -212,8 +212,8 @@ static void R_FinishSprite(vissprite_t *spr)
  store r17,(FP+8) ; push ;(patch)
  store r16,(FP+9) ; push ;(tx)
  movei #L87,RETURNPOINT
- jump T,(r0)
- store r15,(FP+10) ; delay slot push ;(x1)
+ jump T,(r0)                             call R_CheckPixels;
+ store r15,(FP+10) ; delay slot ;(x1)
 L87:
  load (FP+3),r22 ; pop ;(80)
  load (FP+4),r21 ; pop ;(77)
@@ -224,11 +224,11 @@ L87:
  load (FP+9),r16 ; pop ;(tx)
  load (FP+10),r15 ; pop ;(x1)
  load (FP+2), RETURNPOINT ; pop
- load (FP+14),r0 ; local vis
- movei #56,r1
- add r1,r0
- move r29,r1 ;(RETURNVALUE)
- store r1,(r0)
+ load (FP+14),r0 ; local vis             r0 = *(FP+14); // &vis
+ movei #56,r1                            r1 = &vissprite_t::pixels;
+ add r1,r0                               r0 += r1;
+ move r29,r1 ;(RETURNVALUE)              r1 = RETURNVALUE;
+ store r1,(r0)                           *r0 = r1;
 
  load (FP+14),r0 ; local vis
  load (r0),r1
@@ -478,7 +478,6 @@ L90:
 
 L85:
 
-
 L72:
  movei #56,scratch
  jump T,(RETURNPOINT)
@@ -511,10 +510,10 @@ static void R_FinishPSprite(vissprite_t *spr)
  move r1,r15 ;(patch)
  store r1,(r0)
 
- move r18,r0 ;(lump)
- addq #1,r0
- store r0,(FP) ; arg[]
- movei #_R_CheckPixels,r0
+ move r18,r0 ;(lump)                      r0 = r18; // lump
+ addq #1,r0                               r0 += 1;  // +1 to get column data lump #
+ store r0,(FP) ; arg[]                    *(FP) = r0;
+ movei #_R_CheckPixels,r0                 r0 = R_CheckPixels;
  store r28,(FP+1) ; push ;(RETURNPOINT)
  store r20,(FP+2) ; push ;(99)
  store r19,(FP+3) ; push ;(96)
@@ -523,7 +522,7 @@ static void R_FinishPSprite(vissprite_t *spr)
  store r16,(FP+6) ; push ;(x1)
  movei #L102,RETURNPOINT
  jump T,(r0)
- store r15,(FP+7) ; delay slot push ;(patch)
+ store r15,(FP+7) ; delay slot ;(patch)
 L102:
  load (FP+2),r20 ; pop ;(99)
  load (FP+3),r19 ; pop ;(96)
@@ -532,11 +531,11 @@ L102:
  load (FP+6),r16 ; pop ;(x1)
  load (FP+7),r15 ; pop ;(patch)
  load (FP+1), RETURNPOINT ; pop
- load (FP+12),r0 ; local vis
- movei #56,r1
- add r1,r0
- move r29,r1 ;(RETURNVALUE)
- store r1,(r0)
+ load (FP+12),r0 ; local vis              r0 = &vis;
+ movei #56,r1                             r1 = &vissprite_t::pixels;
+ add r1,r0                                r0 += r1;
+ move r29,r1 ;(RETURNVALUE)               r1 = RETURNVALUE;
+ store r1,(r0)                            *r0 = r1;
 
  load (FP+12),r0 ; local vis
  addq #28,r0
