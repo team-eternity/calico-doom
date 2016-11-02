@@ -28,9 +28,111 @@ static pixel_t vgatojag[] =
       83,    71,    59,    47,    35,    23,    11,     1, 30975, 30975, 29951, 28927, 28879, 32927, 32879, 42663
 };
 
-static void R_Malloc(void)
+#if 0
+#define MINFRAGMENT 64
+
+void *Z_Malloc2(memzone_t *mainzone, int size, int tag, void *user)
+{
+   int         extra;
+   memblock_t *start, *rover, *new, *base;
+
+   //
+   // scan through the block list looking for the first free block
+   // of sufficient size, throwing out any purgable blocks along the way
+   //
+   size += sizeof(memblock_t); // account for size of block header
+   size = (size + 7) & ~7;     // phrase align everything
+	
+	
+   start = base = mainzone->rover;
+
+   while(base->user || base->size < size)
+   {
+      if(base->user)
+         rover = base;
+      else
+         rover = base->next;
+			
+      if(!rover)
+         goto backtostart;
+		
+      if(rover->user)
+      {
+         // hit an in use block, so move base past it
+         base = rover->next;
+         if(!base)
+         {
+backtostart:
+            base = &mainzone->blocklist;
+         }
+			
+         if(base == start)	// scaned all the way around the list
+            I_Error("Z_Malloc: failed on %i", size);
+         continue;
+      }
+		
+      //
+      // free the rover block (adding the size to base)
+      //
+      rover->id = 0;
+      rover->user = NULL; // mark as free
+
+      if(base != rover)
+      { 
+         // merge with base
+         base->size += rover->size;
+         base->next = rover->next;
+         if(rover->next)
+            rover->next->prev = base;
+      }
+   }
+	
+   //
+   // found a block big enough
+   //
+   extra = base->size - size;
+   if(extra >  MINFRAGMENT)
+   { 
+      // there will be a free fragment after the allocated block
+      new = (memblock_t *) ((byte *)base + size );
+      new->size = extra;
+      new->user = NULL; // free block
+      new->tag = 0;
+      new->prev = base;
+      new->next = base->next;
+      if (new->next)
+         new->next->prev = new;
+      base->next = new;
+      base->size = size;
+   }
+	
+   if(user)
+   {
+      base->user = user; // mark as an in use block
+      *(void **)user = (void *) ((byte *)base + sizeof(memblock_t));
+   }
+   else
+   {
+      if(tag >= PU_PURGELEVEL)
+         I_Error("Z_Malloc: an owner is required for purgable blocks");
+      base->user = (void *)2; // mark as in use, but unowned
+   }
+   base->tag = tag;
+   base->id = ZONEID;
+   base->lockframe = -1;
+		
+   mainzone->rover = base->next; // next allocation will start looking here
+   if(!mainzone->rover)
+      mainzone->rover = &mainzone->blocklist;
+
+   return (void *)((byte *)base + sizeof(memblock_t));
+}
+#endif
+
+static void *R_Malloc(int count)
 {
    // CALICO_TODO
+   return NULL;
    /*
  subq #4,FP
 
@@ -405,103 +507,35 @@ static void R_decode(byte *input, pixel_t *output)
    }
 }
 
+//
+// Load and decode a compressed graphic resource and store it in the lumpcache
+//
 static pixel_t *R_LoadPixels(int lumpnum)
 {
-   // CALICO_TODO
-   return NULL;
-   /*
-movei #40,scratch
- sub scratch,FP
+   void       *rdest;
+   byte       *rsrc;
+   lumpinfo_t *info;
+   int         count;
 
- load (FP+10),r0 ; local lumpnum          r0 = *(FP+10); // lumpnum
- shlq #2,r0                               r0 <<= 2;
- movei #_lumpcache,r1                     r1 = lumpcache;
- add r1,r0                                r0 += r1;
- load (r0),r0                             r0 = *r0;
- move r0,r15 ;(rdest)                     r15 = r0; // rdest
- move r15,r0 ;(rdest)                     r0 = r15;
- moveq #0,r1                              r1 = 0;
- cmp r0,r1                                if(r0 == r1)
- movei #L109,scratch                         goto L109;
- jump EQ,(scratch)
- nop
+   // already cached?
+   rdest = lumpcache[lumpnum];
+   if(rdest != NULL)
+      return rdest;
 
- move r15,r0 ;(rdest)                     r0 = r15; // rdest
- move r0,RETURNVALUE                      RETURNVALUE = r0;
+   info  = &lumpinfo[lumpnum];
+   count = info->size;
 
- movei #L108,r0                           goto L108;
- jump T,(r0)
- nop
+   // allocate at doubled lump size, as translates from 8-bit paletted to 
+   // 16-bit CRY while decompressing
+   rdest = R_Malloc(count * 2);
+   rsrc  = wadfileptr + info->filepos;
 
-L109: // r0 == r1
+   // decompress
+   R_decode(rsrc, rdest);
 
- load (FP+10),r0 ; local lumpnum          r0 = *(FP+10); // lumpnum
- move r0,r1                               r1 = r0;
- shlq #4,r1                               r1 <<= 4;
- movei #_lumpinfo,r2                      r2 = lumpinfo;
- load (r2),r2                             r2 = *r2;
- add r2,r1                                r1 += r2;
- move r1,r16 ;(info)                      r16 = r1; // info
- move FP,r1                               r1 = FP;
- addq #8,r1 ; &count                      r1 += 8; // &count
- move r16,r2 ;(info)                      r2 = r16; // info
- addq #4,r2                               r2 += 4;
- load (r2),r2                             r2 = *r2;
- store r2,(r1)                            *r1 = r2;
- load (r1),r1                             r1 = *r1;
- shlq #1,r1                               r1 <<= 1;
- store r1,(FP) ; arg[]                    *(FP) = r1;
- shlq #2,r0                               r0 <<= 2;
- movei #_lumpcache,r1                     r1 = lumpcache;
- add r1,r0                                r0 += r1;
- or r0,scratch ; scoreboard bug
- store r0,(FP+1) ; arg[]                  *(FP+1) = r0;
- movei #_R_Malloc,r0                      r0 = R_Malloc;
- store r28,(FP+4) ; push ;(RETURNPOINT)   
- store r16,(FP+5) ; push ;(info)
- movei #L111,RETURNPOINT
- jump T,(r0)                              call R_Malloc;
- store r15,(FP+6) ; delay slot ;(rdest)
-L111:
- load (FP+5),r16 ; pop ;(info)
- load (FP+6),r15 ; pop ;(rdest)
- load (FP+4), RETURNPOINT ; pop
- move r29,r0 ;(RETURNVALUE)               r0 = RETURNVALUE;
- move r0,r15 ;(rdest)                     r15 = r0; // rdest
- move FP,r0                               r0 = FP;
- addq #12,r0 ; &rsrc                      r0 += 12; // rsrc
- load (r16),r1 ;(info)                    r1 = *r16; // info
- movei #_wadfileptr,r2                    r2 = wadfileptr;
- load (r2),r2                             r2 = *r2;
- add r2,r1                                r1 += r2;
- store r1,(r0)                            *r0 = r1;
- load (r0),r0                             r0 = *r0;
- store r0,(FP) ; arg[]                    *(FP) = r0;
- or r15,scratch ; scoreboard bug ;(rdest)
- store r15,(FP+1) ; arg[] ;(rdest)
- movei #_R_decode,r0                      r0 = R_decode
- store r28,(FP+4) ; push ;(RETURNPOINT)
- store r16,(FP+5) ; push ;(info)
- movei #L112,RETURNPOINT
- jump T,(r0)                              call R_decode;
- store r15,(FP+6) ; delay slot ;(rdest)
-L112:
- load (FP+5),r16 ; pop ;(info)
- load (FP+6),r15 ; pop ;(rdest)
- load (FP+4), RETURNPOINT ; pop
+   lumpcache[lumpnum] = rdest;
 
- load (FP+10),r0 ; local lumpnum          r0 = *(FP+10);
- shlq #2,r0                               r0 <<= 2;
- movei #_lumpcache,r1                     r1 = lumpcache;
- add r1,r0                                r0 += r1;
- load (r0),r0                             r0 = *r0;
- move r0,RETURNVALUE                      RETURNVALUE = r0;
-
-L108:
- movei #40,scratch
- jump T,(RETURNPOINT)
- add scratch,FP ; delay slot
-   */
+   return rdest;
 }
 
 void R_Cache(void)
@@ -568,6 +602,13 @@ void R_Cache(void)
 #define	AC_TOPSIL        256     001:00000000
 #define	AC_BOTTOMSIL     512     010:00000000
 #define	AC_SOLIDSIL      1024    100:00000000
+
+typedef struct
+{
+0:  int  filepos; // also texture_t * for comp lumps
+4:  int  size;
+8:  char name[8];
+} lumpinfo_t;
 
 typedef struct
 {
