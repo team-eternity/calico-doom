@@ -20,10 +20,10 @@ processing
 ===============================================================================
 */
 
-thinker_t thinkercap;     /* both the head and tail of the thinker list */
-mobj_t    mobjhead;       /* head and tail of mobj list */
-int       activethinkers; /* debug count */
-int       activemobjs;    /* debug count */
+thinker_t thinkercap;     // both the head and tail of the thinker list
+mobj_t    mobjhead;       // head and tail of mobj list
+int       activethinkers; // debug count
+int       activemobjs;    // debug count
 
 /*
 ===============
@@ -110,7 +110,7 @@ void P_RunThinkers(void)
    }
 }
 
-/*============================================================================= */
+//=============================================================================
 
 /*
 ===============
@@ -129,7 +129,7 @@ void P_CheckSights(void)
    P_CheckSights2();
 }
 
-/*============================================================================= */
+//=============================================================================
 
 /* 
 =================== 
@@ -145,7 +145,7 @@ void P_RunMobjBase(void)
    P_RunMobjBase2();
 }
 
-/*============================================================================= */
+//=============================================================================
 
 /* 
 =================== 
@@ -161,7 +161,7 @@ void P_RunMobjLate(void)
    P_RunMobjExtra();
 }
 
-/*============================================================================= */
+//=============================================================================
 
 /*
 ==============
@@ -215,7 +215,7 @@ void P_CheckCheats(void)
 
    if(buttons&JP_STAR)
    {
-      /* godmode */
+      // godmode
       players[0].cheats ^= CF_GODMODE;
    }
    warpmap = 0;
@@ -262,20 +262,20 @@ int P_Ticker(void)
    //ticstart = samplecount;
 
    while(!I_RefreshLatched())
-      ;	/* wait for refresh to latch all needed data before running the next tick */
+      ;	// wait for refresh to latch all needed data before running the next tick
 
    gameaction = ga_nothing;
 
    gametic++;
  
-   /* */
-   /* check for pause and cheats */
-   /* */
+   //
+   // check for pause and cheats
+   //
    P_CheckCheats();
 	
-   /* */
-   /* do option screen processing */
-   /* */
+   //
+   // do option screen processing
+   //
    for(playernum = 0, pl = players; playernum < MAXPLAYERS; playernum++, pl++)
    {
       if(playeringame[playernum])
@@ -285,9 +285,9 @@ int P_Ticker(void)
    if(gamepaused)
       return 0;
 
-   /* */
-   /* run player actions */
-   /* */
+   //
+   // run player actions
+   //
    //start = samplecount;
    for(playernum = 0, pl = players; playernum < MAXPLAYERS; playernum++, pl++)
    {
@@ -322,11 +322,11 @@ int P_Ticker(void)
 
    P_RespawnSpecials();
 	
-   ST_Ticker(); /* update status bar */
+   ST_Ticker(); // update status bar
 		
    //tictics = samplecount - ticstart;
 	
-   return gameaction; /* may have been set to ga_died, ga_completed, or ga_secretexit */
+   return gameaction; // may have been set to ga_died, ga_completed, or ga_secretexit
 }
 
 /* 
@@ -391,7 +391,7 @@ void DrawPlaque(jagobj_t *pl)
 ============= 
 */ 
  
-void DrawSinglePlaque (jagobj_t *pl)
+void DrawSinglePlaque(jagobj_t *pl)
 {
    int   x,y,w;
    byte *bdest, *source;
@@ -432,7 +432,7 @@ void P_Drawer(void)
    }
    else if(gamepaused && refreshdrawn)
    {
-      DrawPlaque (pausepic);
+      DrawPlaque(pausepic);
    }
    else if(players[consoleplayer].automapflags & AF_ACTIVE)
    {
@@ -446,7 +446,7 @@ void P_Drawer(void)
       ST_Drawer();
       R_RenderPlayerView();
       refreshdrawn = true;
-      /* assume part of the refresh is now running parallel with main code */
+      // assume part of the refresh is now running parallel with main code
    }
 } 
  
@@ -463,7 +463,7 @@ void P_Start(void)
    M_ClearRandom();
 }
 
-void P_Stop (void)
+void P_Stop(void)
 {
    Z_FreeTags(mainzone);
 }
