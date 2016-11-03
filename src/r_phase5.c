@@ -28,9 +28,111 @@ static pixel_t vgatojag[] =
       83,    71,    59,    47,    35,    23,    11,     1, 30975, 30975, 29951, 28927, 28879, 32927, 32879, 42663
 };
 
-static void R_Malloc(void)
+#if 0
+#define MINFRAGMENT 64
+
+void *Z_Malloc2(memzone_t *mainzone, int size, int tag, void *user)
+{
+   int         extra;
+   memblock_t *start, *rover, *new, *base;
+
+   //
+   // scan through the block list looking for the first free block
+   // of sufficient size, throwing out any purgable blocks along the way
+   //
+   size += sizeof(memblock_t); // account for size of block header
+   size = (size + 7) & ~7;     // phrase align everything
+	
+	
+   start = base = mainzone->rover;
+
+   while(base->user || base->size < size)
+   {
+      if(base->user)
+         rover = base;
+      else
+         rover = base->next;
+			
+      if(!rover)
+         goto backtostart;
+		
+      if(rover->user)
+      {
+         // hit an in use block, so move base past it
+         base = rover->next;
+         if(!base)
+         {
+backtostart:
+            base = &mainzone->blocklist;
+         }
+			
+         if(base == start)	// scaned all the way around the list
+            I_Error("Z_Malloc: failed on %i", size);
+         continue;
+      }
+		
+      //
+      // free the rover block (adding the size to base)
+      //
+      rover->id = 0;
+      rover->user = NULL; // mark as free
+
+      if(base != rover)
+      { 
+         // merge with base
+         base->size += rover->size;
+         base->next = rover->next;
+         if(rover->next)
+            rover->next->prev = base;
+      }
+   }
+	
+   //
+   // found a block big enough
+   //
+   extra = base->size - size;
+   if(extra >  MINFRAGMENT)
+   { 
+      // there will be a free fragment after the allocated block
+      new = (memblock_t *) ((byte *)base + size );
+      new->size = extra;
+      new->user = NULL; // free block
+      new->tag = 0;
+      new->prev = base;
+      new->next = base->next;
+      if (new->next)
+         new->next->prev = new;
+      base->next = new;
+      base->size = size;
+   }
+	
+   if(user)
+   {
+      base->user = user; // mark as an in use block
+      *(void **)user = (void *) ((byte *)base + sizeof(memblock_t));
+   }
+   else
+   {
+      if(tag >= PU_PURGELEVEL)
+         I_Error("Z_Malloc: an owner is required for purgable blocks");
+      base->user = (void *)2; // mark as in use, but unowned
+   }
+   base->tag = tag;
+   base->id = ZONEID;
+   base->lockframe = -1;
+		
+   mainzone->rover = base->next; // next allocation will start looking here
+   if(!mainzone->rover)
+      mainzone->rover = &mainzone->blocklist;
+
+   return (void *)((byte *)base + sizeof(memblock_t));
+}
+#endif
+
+static void *R_Malloc(int count)
 {
    // CALICO_TODO
+   return NULL;
    /*
  subq #4,FP
 
@@ -405,103 +507,35 @@ static void R_decode(byte *input, pixel_t *output)
    }
 }
 
+//
+// Load and decode a compressed graphic resource and store it in the lumpcache
+//
 static pixel_t *R_LoadPixels(int lumpnum)
 {
-   // CALICO_TODO
-   return NULL;
-   /*
-movei #40,scratch
- sub scratch,FP
+   void       *rdest;
+   byte       *rsrc;
+   lumpinfo_t *info;
+   int         count;
 
- load (FP+10),r0 ; local lumpnum
- shlq #2,r0
- movei #_lumpcache,r1
- add r1,r0
- load (r0),r0
- move r0,r15 ;(rdest)
- move r15,r0 ;(rdest)
- moveq #0,r1
- cmp r0,r1
- movei #L109,scratch
- jump EQ,(scratch)
- nop
+   // already cached?
+   rdest = lumpcache[lumpnum];
+   if(rdest != NULL)
+      return rdest;
 
- move r15,r0 ;(rdest)
- move r0,RETURNVALUE
+   info  = &lumpinfo[lumpnum];
+   count = info->size;
 
- movei #L108,r0
- jump T,(r0)
- nop
+   // allocate at doubled lump size, as translates from 8-bit paletted to 
+   // 16-bit CRY while decompressing
+   rdest = R_Malloc(count * 2);
+   rsrc  = wadfileptr + info->filepos;
 
-L109:
+   // decompress
+   R_decode(rsrc, rdest);
 
- load (FP+10),r0 ; local lumpnum
- move r0,r1
- shlq #4,r1
- movei #_lumpinfo,r2
- load (r2),r2
- add r2,r1
- move r1,r16 ;(info)
- move FP,r1
- addq #8,r1 ; &count
- move r16,r2 ;(info)
- addq #4,r2
- load (r2),r2
- store r2,(r1)
- load (r1),r1
- shlq #1,r1
- store r1,(FP) ; arg[]
- shlq #2,r0
- movei #_lumpcache,r1
- add r1,r0
- or r0,scratch ; scoreboard bug
- store r0,(FP+1) ; arg[]
- movei #_R_Malloc,r0
- store r28,(FP+4) ; push ;(RETURNPOINT)
- store r16,(FP+5) ; push ;(info)
- movei #L111,RETURNPOINT
- jump T,(r0)
- store r15,(FP+6) ; delay slot push ;(rdest)
-L111:
- load (FP+5),r16 ; pop ;(info)
- load (FP+6),r15 ; pop ;(rdest)
- load (FP+4), RETURNPOINT ; pop
- move r29,r0 ;(RETURNVALUE)
- move r0,r15 ;(rdest)
- move FP,r0
- addq #12,r0 ; &rsrc
- load (r16),r1 ;(info)
- movei #_wadfileptr,r2
- load (r2),r2
- add r2,r1
- store r1,(r0)
- load (r0),r0
- store r0,(FP) ; arg[]
- or r15,scratch ; scoreboard bug ;(rdest)
- store r15,(FP+1) ; arg[] ;(rdest)
- movei #_R_decode,r0
- store r28,(FP+4) ; push ;(RETURNPOINT)
- store r16,(FP+5) ; push ;(info)
- movei #L112,RETURNPOINT
- jump T,(r0)
- store r15,(FP+6) ; delay slot push ;(rdest)
-L112:
- load (FP+5),r16 ; pop ;(info)
- load (FP+6),r15 ; pop ;(rdest)
- load (FP+4), RETURNPOINT ; pop
+   lumpcache[lumpnum] = rdest;
 
- load (FP+10),r0 ; local lumpnum
- shlq #2,r0
- movei #_lumpcache,r1
- add r1,r0
- load (r0),r0
- move r0,RETURNVALUE
-
-L108:
- movei #40,scratch
- jump T,(RETURNPOINT)
- add scratch,FP ; delay slot
-   */
+   return rdest;
 }
 
 void R_Cache(void)
@@ -529,7 +563,7 @@ void R_Cache(void)
       // load floorpic
       // CALICO: use floorpicnum to avoid type punning
       if(wall->floorpic == NULL)
-         wall->floorpic = R_LoadPixels(wall->floorpicnum);
+         wall->floorpic = R_LoadPixels(firstflat + wall->floorpicnum);
 
       // load sky or normal ceilingpic
       // CALICO: use ceilingpicnum to avoid type punning
@@ -539,7 +573,7 @@ void R_Cache(void)
             skytexturep->data = R_LoadPixels(skytexturep->lumpnum);
       }
       else if(wall->ceilingpic == NULL)
-         wall->ceilingpic = R_LoadPixels(wall->ceilingpicnum);
+         wall->ceilingpic = R_LoadPixels(firstflat + wall->ceilingpicnum);
 
       ++wall;
    }
@@ -548,31 +582,250 @@ void R_Cache(void)
    while(spr < vissprite_p)
    {
       if(spr->pixels == NULL)
-         ; // TODO: eh? spr->pixels = R_LoadPixels(spr->????); - probably related to there being two lumps.
-/*
- movei #56,r0                             r0 = &vissprite_t::pixels;
- move r16,r1 ;(spr)                       r1 = spr;
- add r0,r1                                r1 += r0;
- load (r1),r0                             r0 = *r1;
- store r0,(FP) ; arg[]                    *(FP) = r0;
- movei #_R_LoadPixels,r0                  r0 = R_LoadPixels;
- store r28,(FP+1) ; push ;(RETURNPOINT)   *(FP+1) = RETURNPOINT;
- store r16,(FP+2) ; push ;(spr)           *(FP+2) = spr;
- store r15,(FP+3) ; push ;(wall)          *(FP+3) = wall;
- movei #L80,RETURNPOINT                  
- jump T,(r0)                              call R_LoadPixels;
- store r1,(FP+4) ; delay slot push          *(FP+4) = r1;
-L80:
- load (FP+2),r16 ; pop ;(spr)             spr = *(FP+2);
- load (FP+3),r15 ; pop ;(wall)            wall = *(FP+3);
- load (FP+4),r1 ; pop                     r1 = *(FP+4);
- load (FP+1), RETURNPOINT ; pop           RETURNPOINT = *(FP+1);
- move r29,r0 ;(RETURNVALUE)               r0 = RETURNVALUE;
- store r0,(r1)                            *r1 = r0; // spr->pixels = R_LoadPixels(...);
-   */
+         spr->pixels = R_LoadPixels(spr->patchnum + 1);
+
       ++spr;
    }
 }
 
 // EOF
+
+/*
+#define	AC_ADDFLOOR      1       000:00000001
+#define	AC_ADDCEILING    2       000:00000010
+#define	AC_TOPTEXTURE    4       000:00000100
+#define	AC_BOTTOMTEXTURE 8       000:00001000
+#define	AC_NEWCEILING    16      000:00010000
+#define	AC_NEWFLOOR      32      000:00100000
+#define	AC_ADDSKY        64      000:01000000
+#define	AC_CALCTEXTURE   128     000:10000000
+#define	AC_TOPSIL        256     001:00000000
+#define	AC_BOTTOMSIL     512     010:00000000
+#define	AC_SOLIDSIL      1024    100:00000000
+
+typedef struct
+{
+0:  int  filepos; // also texture_t * for comp lumps
+4:  int  size;
+8:  char name[8];
+} lumpinfo_t;
+
+typedef struct
+{
+   // filled in by bsp
+  0:   seg_t        *seg;
+  4:   int           start;
+  8:   int           stop;   // inclusive x coordinates
+ 12:   int           angle1; // polar angle to start
+
+   // filled in by late prep
+ 16:   pixel_t      *floorpic;
+ 20:   pixel_t      *ceilingpic;
+
+   // filled in by early prep
+ 24:   unsigned int  actionbits;
+ 28:   int           t_topheight;
+ 32:   int           t_bottomheight;
+ 36:   int           t_texturemid;
+ 40:   texture_t    *t_texture;
+ 44:   int           b_topheight;
+ 48:   int           b_bottomheight;
+ 52:   int           b_texturemid;
+ 56:   texture_t    *b_texture;
+ 60:   int           floorheight;
+ 64:   int           floornewheight;
+ 68:   int           ceilingheight;
+ 72:   int           ceilingnewheight;
+ 76:   byte         *topsil;
+ 80:   byte         *bottomsil;
+ 84:   unsigned int  scalefrac;
+ 88:   unsigned int  scale2;
+ 92:   int           scalestep;
+ 96:   unsigned int  centerangle;
+100:   unsigned int  offset;
+104:   unsigned int  distance;
+108:   unsigned int  seglightlevel;
+} viswall_t;
+
+typedef struct seg_s
+{
+ 0:   vertex_t *v1;
+ 4:   vertex_t *v2;
+ 8:   fixed_t   offset;
+12:   angle_t   angle;       // this is not used (keep for padding)
+16:   side_t   *sidedef;
+20:   line_t   *linedef;
+24:   sector_t *frontsector;
+28:   sector_t *backsector;  // NULL for one sided lines
+} seg_t;
+
+typedef struct line_s
+{
+ 0: vertex_t     *v1;
+ 4: vertex_t     *v2;
+ 8: fixed_t      dx;
+12: fixed_t      dy;                    // v2 - v1 for side checking
+16: VINT         flags;
+20: VINT         special;
+24: VINT         tag;
+28: VINT         sidenum[2];               // sidenum[1] will be -1 if one sided
+36: fixed_t      bbox[4];
+52: slopetype_t  slopetype;                // to aid move clipping
+56: sector_t    *frontsector;
+60: sector_t    *backsector;
+64: int          validcount;               // if == validcount, already checked
+68: void        *specialdata;              // thinker_t for reversable actions
+72: int          fineangle;                // to get sine / cosine for sliding
+} line_t;
+
+typedef struct
+{
+ 0:  fixed_t   textureoffset; // add this to the calculated texture col
+ 4:  fixed_t   rowoffset;     // add this to the calculated texture top
+ 8:  VINT      toptexture;
+12:  VINT      bottomtexture;
+16:  VINT      midtexture;
+20:  sector_t *sector;
+} side_t;
+
+typedef	struct
+{
+ 0:   fixed_t floorheight;
+ 4:   fixed_t ceilingheight;
+ 8:   VINT    floorpic;
+12:   VINT    ceilingpic;        // if ceilingpic == -1,draw sky
+16:   VINT    lightlevel;
+20:   VINT    special;
+24:   VINT    tag;
+28:   VINT    soundtraversed;              // 0 = untraversed, 1,2 = sndlines -1
+32:   mobj_t *soundtarget;                 // thing that made a sound (or null)
+36:   VINT        blockbox[4];             // mapblock bounding box for height changes
+52:   degenmobj_t soundorg;                // for any sounds played by the sector
+76:   int     validcount;                  // if == validcount, already checked
+80:   mobj_t *thinglist;                   // list of mobjs in sector
+84:   void   *specialdata;                 // thinker_t for reversable actions
+88:   VINT    linecount;
+92:   struct line_s **lines;               // [linecount] size
+} sector_t;
+
+typedef struct subsector_s
+{
+0:   sector_t *sector;
+4:   VINT      numlines;
+8:   VINT      firstline;
+} subsector_t;
+
+typedef struct
+{
+ 0:  char     name[8];  // for switch changing, etc
+ 8:  int      width;
+12:  int      height;
+16:  pixel_t *data;     // cached data to draw from
+20:  int      lumpnum;
+24:  int      usecount; // for precaching
+28:  int      pad;
+} texture_t;
+
+typedef struct mobj_s
+{
+  0: struct mobj_s *prev;
+  4: struct mobj_s *next;
+  8: latecall_t     latecall;
+ 12: fixed_t        x;
+ 16: fixed_t        y;
+ 20: fixed_t        z;
+ 24: struct mobj_s *snext;
+ 28: struct mobj_s *sprev;
+ 32: angle_t        angle;
+ 36: VINT           sprite;
+ 40: VINT           frame;
+ 44: struct mobj_s *bnext;
+ 48: struct mobj_s *bprev;
+ 52: struct subsector_s *subsector;
+ 56: fixed_t        floorz;
+ 60: fixed_t        ceilingz;
+ 64: fixed_t        radius;
+ 68: fixed_t        height;
+ 72: fixed_t        momx;
+ 76: fixed_t        momy;
+ 80: fixed_t        momz;
+ 84: mobjtype_t     type;
+ 88: mobjinfo_t    *info;
+ 92: VINT           tics;
+ 96: state_t       *state;
+100: int            flags;
+104: VINT           health;
+108: VINT           movedir;
+112: VINT           movecount;
+116: struct mobj_s *target;
+120: VINT           reactiontime;
+124: VINT           threshold;
+132: struct player_s *player;
+136: struct line_s *extradata;
+140: short spawnx;
+142: short spawny;
+144: short spawntype;
+146: short spawnangle;
+} mobj_t;
+
+typedef struct vissprite_s
+{
+ 0:  int     x1;
+ 4:  int     x2;
+ 8:  fixed_t startfrac;
+12:  fixed_t xscale;
+16:  fixed_t xiscale;
+20:  fixed_t yscale;
+24:  fixed_t yiscale;
+28:  fixed_t texturemid;
+32:  patch_t *patch;
+36:  int     colormap;
+40:  fixed_t gx;
+44:  fixed_t gy;
+48:  fixed_t gz;
+52:  fixed_t gzt;
+56:  pixel_t *pixels;
+} vissprite_t;
+
+typedef struct 
+{ 
+0:  short width;
+2:  short height;
+4:  short leftoffset;
+6:  short topoffset;
+8:  unsigned short columnofs[8];
+} patch_t; 
+
+typedef struct
+{
+ 0:  state_t *state;
+ 4:  int      tics;
+ 8:  fixed_t  sx;
+12:  fixed_t  sy;
+} pspdef_t;
+
+typedef struct
+{
+ 0:  spritenum_t sprite;
+ 4:  long        frame;
+ 8:  long        tics;
+12:  void        (*action)();
+16:  statenum_t  nextstate;
+20:  long        misc1;
+24:  long        misc2;
+} state_t;
+
+typedef struct
+{
+ 0:  boolean rotate;  // if false use 0 for any position
+ 4:  int     lump[8]; // lump to use for view angles 0-7
+36:  byte    flip[8]; // flip (1 = flip) to use for view angles 0-7
+} spriteframe_t;
+
+typedef struct
+{
+0: int            numframes;
+4: spriteframe_t *spriteframes;
+} spritedef_t;
+*/
 

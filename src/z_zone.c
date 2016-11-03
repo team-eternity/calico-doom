@@ -88,9 +88,9 @@ void Z_Free2(memzone_t *mainzone, void *ptr)
       I_Error("Z_Free: freed a pointer without ZONEID");
 
    // CALICO_TODO: non-portable pointer comparison
-   if(block->user > (void **)0x100) /* smaller values are not pointers */
-      *block->user = 0;             /* clear the user's mark */
-   block->user = NULL; /* mark as free */
+   if(block->user > (void **)0x100) // smaller values are not pointers
+      *block->user = 0;             // clear the user's mark
+   block->user = NULL; // mark as free
    block->tag = 0;
    block->id = 0;
 }
@@ -111,12 +111,12 @@ void *Z_Malloc2(memzone_t *mainzone, int size, int tag, void *user)
    int         extra;
    memblock_t *start, *rover, *new, *base;
 
-/* */
-/* scan through the block list looking for the first free block */
-/* of sufficient size, throwing out any purgable blocks along the way */
-/* */
-   size += sizeof(memblock_t); /* account for size of block header */
-   size = (size+7)&~7;         /* phrase align everything */
+   //
+   // scan through the block list looking for the first free block
+   // of sufficient size, throwing out any purgable blocks along the way
+   //
+   size += sizeof(memblock_t); // account for size of block header
+   size = (size + 7) & ~7;     // phrase align everything
 	
 	
    start = base = mainzone->rover;
@@ -133,7 +133,7 @@ void *Z_Malloc2(memzone_t *mainzone, int size, int tag, void *user)
 		
       if(rover->user)
       {
-         /* hit an in use block, so move base past it */
+         // hit an in use block, so move base past it
          base = rover->next;
          if(!base)
          {
@@ -141,19 +141,20 @@ backtostart:
             base = &mainzone->blocklist;
          }
 			
-         if(base == start)	/* scaned all the way around the list */
-            I_Error ("Z_Malloc: failed on %i",size);
+         if(base == start)	// scaned all the way around the list
+            I_Error("Z_Malloc: failed on %i", size);
          continue;
       }
 		
-      /* */
-      /* free the rover block (adding the size to base) */
-      /*		 */
+      //
+      // free the rover block (adding the size to base)
+      //
       rover->id = 0;
-      rover->user = NULL; /* mark as free */
+      rover->user = NULL; // mark as free
 
       if(base != rover)
-      { /* merge with base */
+      { 
+         // merge with base
          base->size += rover->size;
          base->next = rover->next;
          if(rover->next)
@@ -161,16 +162,16 @@ backtostart:
       }
    }
 	
-   /* */
-   /* found a block big enough */
-   /* */
+   //
+   // found a block big enough
+   //
    extra = base->size - size;
    if(extra >  MINFRAGMENT)
    { 
-      /* there will be a free fragment after the allocated block */
+      // there will be a free fragment after the allocated block
       new = (memblock_t *) ((byte *)base + size );
       new->size = extra;
-      new->user = NULL;		/* free block */
+      new->user = NULL; // free block
       new->tag = 0;
       new->prev = base;
       new->next = base->next;
@@ -182,20 +183,20 @@ backtostart:
 	
    if(user)
    {
-      base->user = user; /* mark as an in use block */
+      base->user = user; // mark as an in use block
       *(void **)user = (void *) ((byte *)base + sizeof(memblock_t));
    }
    else
    {
       if(tag >= PU_PURGELEVEL)
          I_Error("Z_Malloc: an owner is required for purgable blocks");
-      base->user = (void *)2; /* mark as in use, but unowned	 */
+      base->user = (void *)2; // mark as in use, but unowned
    }
    base->tag = tag;
    base->id = ZONEID;
    base->lockframe = -1;
 		
-   mainzone->rover = base->next; /* next allocation will start looking here */
+   mainzone->rover = base->next; // next allocation will start looking here
    if(!mainzone->rover)
       mainzone->rover = &mainzone->blocklist;
 
@@ -216,11 +217,11 @@ void Z_FreeTags(memzone_t *mainzone)
 
    for(block = &mainzone->blocklist ; block ; block = next)
    {
-      next = block->next; /* get link before freeing */
+      next = block->next; // get link before freeing
       if(!block->user)
-         continue;        /* free block */
+         continue;        // free block
       if(block->tag == PU_LEVEL || block->tag == PU_LEVSPEC)
-         Z_Free2 (mainzone, (byte *)block+sizeof(memblock_t));
+         Z_Free2(mainzone, (byte *)block+sizeof(memblock_t));
    }
 }
 
@@ -240,8 +241,7 @@ void Z_CheckHeap(memzone_t *mainzone)
    {
       if(!checkblock->next)
       {
-         if((byte *)checkblock + checkblock->size - (byte *)mainzone
-            != mainzone->size)
+         if((byte *)checkblock + checkblock->size - (byte *)mainzone != mainzone->size)
             I_Error ("Z_CheckHeap: zone size changed\n");
          continue;
       }
@@ -287,7 +287,7 @@ int Z_FreeMemory(memzone_t *mainzone)
    int         free;
 
    free = 0;
-   for(block = &mainzone->blocklist ; block ; block = block->next)
+   for(block = &mainzone->blocklist; block; block = block->next)
    {
       if(!block->user)
          free += block->size;
