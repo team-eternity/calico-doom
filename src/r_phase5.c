@@ -136,333 +136,331 @@ static void *R_Malloc(int count)
    /*
  subq #4,FP
 
- move FP,r0
- addq #4,r0 ; &size
- load (r0),r1
- addq #24,r1
- store r1,(r0)
- load (r0),r1
- addq #7,r1
- movei #-8,r2
- and r2,r1
- store r1,(r0)
- movei #_refzone,r0
- load (r0),r0
- addq #4,r0
- load (r0),r0
- move r0,r16 ;(base)
- move r0,r17 ;(start)
+ move FP,r0                    r0 = FP;
+ addq #4,r0 ; &size            r0 += 4; // &size
+ load (r0),r1                  r1 = *r0;
+ addq #24,r1                   r1 += 24;
+ store r1,(r0)                 *r0 = r1;
+ load (r0),r1                  r1 = *r0;
+ addq #7,r1                    r1 += 7;
+ movei #-8,r2                  r2 = -8;
+ and r2,r1                     r1 &= r2;
+ store r1,(r0)                 *r0 = r1;
+ movei #_refzone,r0            r0 = &refzone;
+ load (r0),r0                  r0 = *r0;
+ addq #4,r0                    r0 += 4;
+ load (r0),r0                  r0 += *r0;
+ move r0,r16 ;(base)           r16 = r0; // base
+ move r0,r17 ;(start)          r17 = r0; // start
 
  movei #L83,r0
- jump T,(r0)
+ jump T,(r0)                   goto L83;
  nop
 
-L82:
+L82: // loop start
 
- move r16,r0 ;(base)
- addq #4,r0
- load (r0),r0
- moveq #0,r1
- cmp r0,r1
+ move r16,r0 ;(base)           r0 = r16; // base
+ addq #4,r0                    r0 += 4;
+ load (r0),r0                  r0 = *r0;
+ moveq #0,r1                   r1 = 0;
+ cmp r0,r1                     if(r0 == r1)
  movei #L85,scratch
- jump EQ,(scratch)
+ jump EQ,(scratch)                goto L85;
  nop
 
- move r16,r15 ;(base)(rover)
+ move r16,r15 ;(base)(rover)   r15 = r16;
 
  movei #L86,r0
- jump T,(r0)
+ jump T,(r0)                   goto L86;
  nop
 
-L85:
+L85: // r0 == r1 (0)
 
- move r16,r0 ;(base)
- addq #16,r0
- load (r0),r0
- move r0,r15 ;(rover)
+ move r16,r0 ;(base)           r0 = r16;
+ addq #16,r0                   r0 += 16;
+ load (r0),r0                  r0 = *r0;
+ move r0,r15 ;(rover)          r15 = r0;
 
 L86:
 
- move r15,r0 ;(rover)
- moveq #0,r1
- cmp r0,r1
+ move r15,r0 ;(rover)          r0 = r15;
+ moveq #0,r1                   r1 = 0;
+ cmp r0,r1                     if(r0 != r1)
  movei #L87,scratch
- jump NE,(scratch)
+ jump NE,(scratch)                goto L87;
  nop
 
  movei #L89,r0
- jump T,(r0)
+ jump T,(r0)                   goto L89;
  nop
 
-L87:
+L87: // r0 != r1 (0)
 
- move r15,r0 ;(rover)
- addq #4,r0
- load (r0),r0
- moveq #0,r1
- cmp r0,r1
+ move r15,r0 ;(rover)          r0 = r15; // rover
+ addq #4,r0                    r0 += 4;
+ load (r0),r0                  r0 = *r0;
+ moveq #0,r1                   r1 = 0;
+ cmp r0,r1                     if(r0 == r1)
  movei #L90,scratch
- jump EQ,(scratch)
+ jump EQ,(scratch)                goto L90;
  nop
- move r15,r0 ;(rover)
- addq #12,r0
- load (r0),r0
- movei #_framecount,r1
- load (r1),r1
- cmp r0,r1
- movei #L90,scratch
+ move r15,r0 ;(rover)          r0 = r15; // rover
+ addq #12,r0                   r0 += 12;
+ load (r0),r0                  r0 = *r0;
+ movei #_framecount,r1         r1 = &framecount;
+ load (r1),r1                  r1 = *r1;
+ cmp r0,r1                     if(r0 != r1)
+ movei #L90,scratch               goto L90;
  jump NE,(scratch)
  nop
 
- move r15,r0 ;(rover)
- addq #16,r0
- load (r0),r0
- move r0,r16 ;(base)
- move r16,r0 ;(base)
- moveq #0,r1
- cmp r0,r1
- movei #L92,scratch
+ move r15,r0 ;(rover)          r0 = r15; // rover
+ addq #16,r0                   r0 += 16;
+ load (r0),r0                  r0 = *r0;
+ move r0,r16 ;(base)           r16 = r0; // base
+ move r16,r0 ;(base)           r0 = r16; // base
+ moveq #0,r1                   r1 = 0;
+ cmp r0,r1                     if(r0 != r1)
+ movei #L92,scratch               goto L92;
  jump NE,(scratch)
  nop
 
 L89:
 
- movei #_refzone,r0
- load (r0),r0
- addq #8,r0
- move r0,r16 ;(base)
+ movei #_refzone,r0            r0 = &refzone;
+ load (r0),r0                  r0 = *r0;
+ addq #8,r0                    r0 += 8;
+ move r0,r16 ;(base)           r16 = r0; // base
 
 L92:
 
- move r16,r0 ;(base)
- move r17,r1 ;(start)
- cmp r0,r1
- movei #L83,scratch
+ move r16,r0 ;(base)           r0 = r16; // base
+ move r17,r1 ;(start)          r1 = r17; // start
+ cmp r0,r1                     if(r0 != r1)
+ movei #L83,scratch               goto L83; // to loop end
  jump NE,(scratch)
  nop
 
- movei #_framecount,r0
- load (r0),r1
- addq #1,r1
- store r1,(r0)
+ movei #_framecount,r0         r0 = &framecount;
+ load (r0),r1                  r1 = *r0;
+ addq #1,r1                    r1 += 1;
+ store r1,(r0)                 *r0 = r1;
 
- movei #L83,r0
+ movei #L83,r0                 goto L83;
  jump T,(r0)
  nop
 
 L90:
 
- move r15,r0 ;(rover)
- addq #4,r0
- load (r0),r0
- movei #1024,r1
- cmp r0,r1
- movei #L96,scratch
+ move r15,r0 ;(rover)          r0 = r15; // rover
+ addq #4,r0                    r0 += 4;
+ load (r0),r0                  r0 = *r0;
+ movei #1024,r1                r1 = 1024;
+ cmp r0,r1                     if(r0 <= r1)
+ movei #L96,scratch               goto L96;
  jump PL,(scratch)
  nop
 
- move r15,r0 ;(rover)
- addq #4,r0
- load (r0),r0
- moveq #0,r1
- store r1,(r0)
+ move r15,r0 ;(rover)          r0 = r15; // rover
+ addq #4,r0                    r0 += 4;
+ load (r0),r0                  r0 = *r0;
+ moveq #0,r1                   r1 = 0;
+ store r1,(r0)                 *r0 = r1;
 
 L96:
 
- move r15,r0 ;(rover)
- addq #10,r0
- moveq #0,r1
- storew r1,(r0)
+ move r15,r0 ;(rover)          r0 = r15; // rover
+ addq #10,r0                   r0 += 10;
+ moveq #0,r1                   r1 = 0;
+ storew r1,(r0)                *r0 = r1;
 
- move r15,r0 ;(rover)
- addq #4,r0
- moveq #0,r1
- store r1,(r0)
+ move r15,r0 ;(rover)          r0 = r15; // rover
+ addq #4,r0                    r0 += 4;
+ moveq #0,r1                   r1 = 0;
+ store r1,(r0)                 *r0 = r1;
 
- move r16,r0 ;(base)
- move r15,r1 ;(rover)
- cmp r0,r1
- movei #L98,scratch
+ move r16,r0 ;(base)           r0 = r16; // base
+ move r15,r1 ;(rover)          r1 = r15; // rover
+ cmp r0,r1                     if(r0 == r1)
+ movei #L98,scratch               goto L98; // to loop end
  jump EQ,(scratch)
  nop
 
- load (r16),r0 ;(base)
- load (r15),r1 ;(rover)
- add r1,r0
- store r0,(r16) ;(base)
+ load (r16),r0 ;(base)         r0 = *r16; // base
+ load (r15),r1 ;(rover)        r1 = *r15; // rover
+ add r1,r0                     r0 += r1;
+ store r0,(r16) ;(base)        *r16 = r0; // base
 
- moveq #16,r0
- move r16,r1 ;(base)
- add r0,r1
- move r15,r2 ;(rover)
- add r0,r2
- load (r2),r0
- store r0,(r1)
+ moveq #16,r0                  r0 = 16;
+ move r16,r1 ;(base)           r1 = r16; // base
+ add r0,r1                     r1 += r0;
+ move r15,r2 ;(rover)          r2 = r15; // rover
+ add r0,r2                     r2 += r0;
+ load (r2),r0                  r0 = *r2;
+ store r0,(r1)                 *r1 = r0;
 
- move r15,r0 ;(rover)
- addq #16,r0
- load (r0),r0
- moveq #0,r1
- cmp r0,r1
- movei #L100,scratch
+ move r15,r0 ;(rover)          r0 = r15; // rover
+ addq #16,r0                   r0 += 16;
+ load (r0),r0                  r0 = *r0;
+ moveq #0,r1                   r1 = 0;
+ cmp r0,r1                     if(r0 == r1)
+ movei #L100,scratch              goto L100; // to loop end
  jump EQ,(scratch)
  nop
 
- move r15,r0 ;(rover)
- addq #16,r0
- load (r0),r0
- addq #20,r0
- store r16,(r0) ;(base)
+ move r15,r0 ;(rover)          r0 = r15; // rover
+ addq #16,r0                   r0 += 16;
+ load (r0),r0                  r0 = *r0;
+ addq #20,r0                   r0 += 20;
+ store r16,(r0) ;(base)        *r0 = r16; // base
 
 L100:
-
 L98:
+L83: // end loop
 
-L83:
-
- move r16,r0 ;(base)
- addq #4,r0
- load (r0),r0
- moveq #0,r1
- cmp r0,r1
- movei #L82,scratch
+ move r16,r0 ;(base)           r0 = r16; // base
+ addq #4,r0                    r0 += 4;
+ load (r0),r0                  r0 = *r0;
+ moveq #0,r1                   r1 = 0;
+ cmp r0,r1                     if(r0 != r1)
+ movei #L82,scratch               goto L82; // loop^^^
  jump NE,(scratch)
  nop
- load (r16),r0 ;(base)
- load (FP+1),r1 ; local size
- cmp r0,r1
- movei #L82,scratch
+ load (r16),r0 ;(base)         r0 = *r16; // base
+ load (FP+1),r1 ; local size   r1 = *(FP+1) // size
+ cmp r0,r1                     if(r0 < r1)
+ movei #L82,scratch               goto L82; // loop^^^
  jump S_LT,(scratch)
  nop
 
- move FP,r0 ; &extra
- load (r16),r1 ;(base)
- load (FP+1),r2 ; local size
- sub r2,r1
- store r1,(r0)
- load (r0),r0
- movei #64,r1
- cmp r0,r1
- movei #L102,scratch
+ move FP,r0 ; &extra           r0 = FP; // &extra
+ load (r16),r1 ;(base)         r1 = *r16; // base
+ load (FP+1),r2 ; local size   r2 = *(FP+1); // size
+ sub r2,r1                     r1 -= r2;
+ store r1,(r0)                 *r0 = r1;
+ load (r0),r0                  r0 = *r0;
+ movei #64,r1                  r1 = 64;
+ cmp r0,r1                     if(r0 <= r1)
+ movei #L102,scratch              goto L102;
  jump PL,(scratch)
  nop
 
- load (FP+1),r0 ; local size
- add r16,r0 ;(base)
- move r0,r18 ;(new)
- load (FP),r0 ; local extra
- store r0,(r18) ;(new)
+ load (FP+1),r0 ; local size   r0 = *(FP+1); // size
+ add r16,r0 ;(base)            r0 += r16; // base
+ move r0,r18 ;(new)            r18 = r0; // new
+ load (FP),r0 ; local extra    r0 = *FP; // extra
+ store r0,(r18) ;(new)         *r18 = r0; // new
 
- move r18,r0 ;(new)
- addq #4,r0
- moveq #0,r1
- store r1,(r0)
+ move r18,r0 ;(new)            r0 = r18; // new
+ addq #4,r0                    r0 += 4;
+ moveq #0,r1                   r1 = 1;
+ store r1,(r0)                 *r0 = r1;
 
- move r18,r0 ;(new)
- addq #12,r0
- moveq #0,r1
- store r1,(r0)
- move r18,r0 ;(new)
- addq #8,r0
- storew r1,(r0)
+ move r18,r0 ;(new)            r0 = r18; // new
+ addq #12,r0                   r0 += 12;
+ moveq #0,r1                   r1 = 0;
+ store r1,(r0)                 *r0 = r1;
+ move r18,r0 ;(new)            r0 = r18; // new
+ addq #8,r0                    r0 += 8;
+ storew r1,(r0)                *r0 = r1;
 
- move r18,r0 ;(new)
- addq #20,r0
- store r16,(r0) ;(base)
+ move r18,r0 ;(new)            r0 = r18; // new
+ addq #20,r0                   r0 += 20;
+ store r16,(r0) ;(base)        *r0 = r16; // base
 
- moveq #16,r0
- move r18,r1 ;(new)
- add r0,r1
- move r16,r2 ;(base)
- add r0,r2
- load (r2),r0
- store r0,(r1)
+ moveq #16,r0                  r0 = 16;
+ move r18,r1 ;(new)            r1 = r18; // new
+ add r0,r1                     r1 += r0;
+ move r16,r2 ;(base)           r2 = r16; // base
+ add r0,r2                     r2 += r0;
+ load (r2),r0                  r0 = *r2;
+ store r0,(r1)                 *r1 = r0;
 
- move r18,r0 ;(new)
- addq #16,r0
- load (r0),r0
- moveq #0,r1
- cmp r0,r1
- movei #L104,scratch
+ move r18,r0 ;(new)            r0 = r18; // new
+ addq #16,r0                   r0 += 16;
+ load (r0),r0                  r0 = *r0;
+ moveq #0,r1                   r1 = 0;
+ cmp r0,r1                     if(r0 == r1)
+ movei #L104,scratch              goto L104;
  jump EQ,(scratch)
  nop
 
- move r18,r0 ;(new)
- addq #16,r0
- load (r0),r0
- addq #20,r0
- store r18,(r0) ;(new)
+ move r18,r0 ;(new)            r0 = r18; // new
+ addq #16,r0                   r0 += 16;
+ load (r0),r0                  r0 = *r0;
+ addq #20,r0                   r0 += 20;
+ store r18,(r0) ;(new)         *r0 = r18; // new
 
 L104:
 
- move r16,r0 ;(base)
- addq #16,r0
- store r18,(r0) ;(new)
+ move r16,r0 ;(base)           r0 = r16; // base
+ addq #16,r0                   r0 += 16;
+ store r18,(r0) ;(new)         *r0 = r18; // new
 
- load (FP+1),r0 ; local size
- store r0,(r16) ;(base)
+ load (FP+1),r0 ; local size   r0 = *(FP+1); // size
+ store r0,(r16) ;(base)        *r16 = r0; // base
 
 L102:
 
- move r16,r0 ;(base)
- addq #4,r0
- load (FP+2),r1 ; local user
- store r1,(r0)
+ move r16,r0 ;(base)           r0 = r16; // base
+ addq #4,r0                    r0 += 4;
+ load (FP+2),r1 ; local user   r1 = *(FP+2); // use
+ store r1,(r0)                 *r0 = r1;
 
- move r16,r0 ;(base)
- addq #12,r0
- movei #_framecount,r1
- load (r1),r1
- store r1,(r0)
+ move r16,r0 ;(base)           r0 = r16; // base
+ addq #12,r0                   r0 += 12;
+ movei #_framecount,r1         r1 = &framecount;
+ load (r1),r1                  r1 = *r1;
+ store r1,(r0)                 *r0 = r1;
 
- move r16,r0 ;(base)
- addq #10,r0
- movei #7498,r1
- storew r1,(r0)
+ move r16,r0 ;(base)           r0 = r16; // base
+ addq #10,r0                   r0 += 10;
+ movei #7498,r1                r1 = 7498; // 0x1D4A (ZONEID)
+ storew r1,(r0)                *r0 = r1;
 
- move r16,r0 ;(base)
- addq #8,r0
- movei #101,r1
- storew r1,(r0)
+ move r16,r0 ;(base)           r0 = r16; // base
+ addq #8,r0                    r0 += 8;
+ movei #101,r1                 r1 = 101; // PU_CACHE
+ storew r1,(r0)                *r0 = r1;
 
- movei #_refzone,r0
- load (r0),r0
- addq #4,r0
- move r16,r1 ;(base)
- addq #16,r1
- load (r1),r1
- store r1,(r0)
+ movei #_refzone,r0            r0 = &refzone;
+ load (r0),r0                  r0 = *r0;
+ addq #4,r0                    r0 += 4;
+ move r16,r1 ;(base)           r1 = r16; // base
+ addq #16,r1                   r1 += 16;
+ load (r1),r1                  r1 = *r1;
+ store r1,(r0)                 *r0 = r1;
 
- movei #_refzone,r0
- load (r0),r0
- addq #4,r0
- load (r0),r0
- moveq #0,r1
- cmp r0,r1
- movei #L106,scratch
+ movei #_refzone,r0            r0 = &refzone;
+ load (r0),r0                  r0 = *r0;
+ addq #4,r0                    r0 += 4;
+ load (r0),r0                  r0 = *r0;
+ moveq #0,r1                   r1 = 0;
+ cmp r0,r1                     if(r0 != r1)
+ movei #L106,scratch              goto L106;
  jump NE,(scratch)
  nop
 
- movei #_refzone,r0
- load (r0),r0
- move r0,r1
- addq #4,r1
- addq #8,r0
- store r0,(r1)
+ movei #_refzone,r0            r0 = &refzone;
+ load (r0),r0                  r0 = *r0;
+ move r0,r1                    r1 = r0;
+ addq #4,r1                    r1 += 4;
+ addq #8,r0                    r0 += 8;
+ store r0,(r1)                 *r1 = r0;
 
 L106:
 
- load (FP+2),r0 ; local user
- move r16,r1 ;(base)
- addq #24,r1
- store r1,(r0)
+ load (FP+2),r0 ; local user   r0 = *(FP+2); // user
+ move r16,r1 ;(base)           r1 = r16; // base
+ addq #24,r1                   r1 += 24;
+ store r1,(r0)                 *r0 = r1;
 
- move r16,r0 ;(base)
- addq #24,r0
- move r0,RETURNVALUE
+ move r16,r0 ;(base)           r0 = r16; // base
+ addq #24,r0                   r0 += 24;
+ move r0,RETURNVALUE           RETURNVALUE = r0;
 
 L81:
- jump T,(RETURNPOINT)
+ jump T,(RETURNPOINT)          return RETURNVALUE;
  addq #4,FP ; delay slot
    */
 }
