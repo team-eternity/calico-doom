@@ -6,141 +6,50 @@
 
 #include "r_local.h"
 
-static void R_FindPlane(void)
+#define OPENMARK 0xff00
+
+static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, int picnum, 
+                               int lightlevel, int start, int stop)
 {
-/*
-typedef struct
-{
-  0: fixed_t        height;
-  4: pixel_t       *picnum;
-  8: int            lightlevel;
- 12: int            minx;
- 16: int            maxx;
- 20: int            pad1;              // leave pads for [minx-1]/[maxx+1]
- 24: unsigned short open[SCREENWIDTH]; // top<<8 | bottom 
-344: int            pad2;
-} visplane_t; // sizeof() = 348
-*/
-   /*
-;
-; parms
-;
-fp_check		.equr	r15
-fp_height		.equr	r7
-fp_picnum		.equr	r6
-fp_lightlevel	.equr	r5
-fp_start		.equr	r21			; common with sl_x
-fp_stop			.equr	r4
+   int i;
 
-;
-; locals
-;
-fp_set			.equr	r10
-fp_lastvisplane	.equr	r9
-fp_jump			.equr	r8
+   while(check < lastvisplane)
+   {
+      if(height == check->height && // same plane as before?
+         picnum == check->picnum &&
+         lightlevel == check->lightlevel)
+      {
+         if(check->open[start] == OPENMARK)
+         {
+            // found a plane, so adjust bounds and return it
+            if(start < check->minx) // in range of the plane?
+               check->minx = start; // mark the new edge
+            if(stop > check->maxx)
+               check->maxx = stop;  // mark the new edge
 
-	movei #_lastvisplane,fp_lastvisplane           fp_lastvisplane = &lastvisplane;
-	load  (fp_lastvisplane),fp_lastvisplane        fp_lastvisplane = *fp_lastvisplane;
+            return check; // use the same one as before
+         }
+      }
+      ++check;
+   }
 
-	movei #L105,fp_jump                            fp_jump = &#L105;
-	
-	movei #L104,r0                                 goto L104;
-	jump  T,(r0)
-	nop
+   // make a new plane
+   check = lastvisplane;
+   ++lastvisplane;
 
-L101: // loop start
+   check->height = height;
+   check->picnum = picnum;
+   check->lightlevel = lightlevel;
+   check->minx = start;
+   check->maxx = stop;
 
-	load  (fp_check),r0                            r0 = *fp_check;
-	cmp   fp_height,r0                             if(fp_height != r0)
-	jump  NE,(fp_jump)                               goto fp_jump;
-	nop
-	load  (fp_check+1),r0                          r0 = *(fp_check+1);
-	cmp   fp_picnum,r0                             if(fp_picnum != r0)
-	jump  NE,(fp_jump)                               goto fp_jump;
-	nop
-	load  (fp_check+2),r0                          r0 = *(fp_check+2);
-	cmp   fp_lightlevel,r0                         if(fp_lightlevel != r0)
-	jump  NE,(fp_jump)                               goto fp_jump;
-	nop
- 
-; if check->open[start]
-	move  fp_start,r0                              r0 = fp_start;
-	shlq  #1,r0                                    r0 <<= 1;
-	add   fp_check,r0                              r0 += fp_check;
-	addq  #24,r0                                   r0 += 24;
-	loadw (r0),r0                                  r0 = *r0;
-	movei #65280,r1                                r1 = 65280;
-	cmp   r0,r1                                    if(r0 != r1)
-	jump  NE,(fp_jump)                               goto fp_jump;
-	nop
+   for(i = 0; i < 80; i++)
+   {
+      check->open[i*2  ] = OPENMARK;
+      check->open[i*2+1] = OPENMARK;
+   }
 
-; found a plane, so adjust bounds and return it
-	load  (fp_check+3),r0                          r0 = *(fp_check+3);
-	cmp   r0,fp_start                              if(r0 <= fp_start)
-	jr    U_LE,startok                               goto startok;
-	nop
-	store fp_start,(fp_check+3)                    *(fp_check+3) = fp_start;
-startok:
-	load  (fp_check+4),r0                          r0 = *(fp_check+4);
-	cmp   r0,fp_stop                               if(r0 > fp_stop)
-	jr    U_GT,stopok                                goto stopok;
-	nop
-	store fp_stop,(fp_check+4)                     *(fp_check+4) = fp_stop;
-stopok:
-; return check
-	jump  T,(RETURNPOINT)                          return fp_check;
-	move  fp_check,RETURNVALUE
-
-;
-; next plane
-;
-L105: // == fp_jump
-	movei #348,r0                                  r0 = sizeof(visplane_t);
-	add   r0,fp_check                              fp_check += r0;
-
-L104: // loop end
-	cmp   fp_check,fp_lastvisplane                 if(fp_check < fp_lastvisplane)
-	movei #L101,scratch                              goto L101;
-	jump  U_LT,(scratch)
-	nop
-
-;
-; make a new plane
-;
-	move  fp_lastvisplane,fp_check                 fp_check = fp_lastvisplane;
-	movei #348,r3                                  r3 = sizeof(visplane_t);
-	add   r3,fp_lastvisplane                       fp_lastvisplane += r3;
-	movei #_lastvisplane,scratch                   scratch = &lastvisplane;
-	store fp_lastvisplane,(scratch) ; visplane++   *scratch = fp_lastvisplane;
- 
-	store fp_height,(fp_check)                     *fp_check = fp_height;
-	store fp_picnum,(fp_check+1)                   *(fp_check+1) = fp_picnum;
-	store fp_lightlevel,(fp_check+2)               *(fp_check+2) = fp_lightlevel;
-	store fp_start,(fp_check+3)                    *(fp_check+3) = fp_start;
-	store fp_stop,(fp_check+4)                     *(fp_check+4) = fp_stop;
-
-;
-; for i=0 ; i<80 ; i++ 
-; (int)check->open[i] = 0xff00ff00
-;
-	move  fp_check,fp_set                          fp_set = fp_check;
-	addq  #24,fp_set                               fp_set += &visplane_t::open;
-	
-	movei #$ff00ff00,r0                            r0 = 0xff00ff00;
-	movei #40,r1                                   r1 = 40; // 80/2
-		
-fillloop:
-	store r0,(fp_set)                              *fp_set = r0;
-	addq  #4,fp_set                                fp_set += 4;
-	store r0,(fp_set)                              *fp_set = r0;
-	subq  #1,r1                                    r1 -= 1;
-	addqt #4,fp_set                                fp_set += 4;
-	jr    NE,fillloop                              if(r1 != 0) // ???
-	nop                                              goto fillloop;
-
-	jump T,(RETURNPOINT)
-	move fp_check,RETURNVALUE                      return RETURNVALUE;
-   */
+   return check;
 }
 
 static void R_DrawTexture(void)
