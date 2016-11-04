@@ -8,6 +8,12 @@
 
 #define OPENMARK 0xff00
 
+static int clipbounds[SCREENWIDTH];
+
+//
+// Check for a matching visplane in the visplanes array, or set up a new one
+// if no compatible match can be found.
+//
 static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, int picnum, 
                                int lightlevel, int start, int stop)
 {
@@ -16,7 +22,7 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, int picnum,
    while(check < lastvisplane)
    {
       if(height == check->height && // same plane as before?
-         picnum == check->picnum &&
+         picnum == check->picnum && // CALICO_FIXME: not int
          lightlevel == check->lightlevel)
       {
          if(check->open[start] == OPENMARK)
@@ -38,7 +44,7 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, int picnum,
    ++lastvisplane;
 
    check->height = height;
-   check->picnum = picnum;
+   check->picnum = picnum; // CALICO_FIXME: not int
    check->lightlevel = lightlevel;
    check->minx = start;
    check->maxx = stop;
@@ -242,91 +248,57 @@ dt_wait: // busy loop
    */
 }
 
-static void R_SegLoop(void)
+//
+// Main seg clipping loop
+//
+static void R_SegLoop(viswall_t *segl)
 {
-   // CALICO_TODO
+   int x, scale, scalefrac, floorclipx, ceilingclipx;
+   visplane_t *ceiling, *floor;
+
+   x = segl->start;
+   scalefrac = segl->scalefrac;
+
+   // force R_FindPlane for both planes
+   floor = ceiling = visplanes;
+
+   do
+   {
+      scale = scalefrac / (1 << FIXEDTOSCALE);
+      // CALICO_TODO: ??? where is this value going ???
+      /*
+      L118:
+        movefa VR_scalestep,r2                              r2 = VR_scalestep;
+        add    r2,r1                                        r1 += r2;
+        store  r1,(FP+6)                                    *(FP+6) = r1;
+      */
+      if(scale >= 0x7fff)
+         scale = 0x7fff; // fix the scale to maximum
+
+      //
+      // get ceilingclipx and floorclipx from clipbounds
+      //
+      floorclipx = clipbounds[x];
+      // CALICO_TODO: dunno what's going on here...
+      /*
+      move  sl_floorclipx,sl_ceilingclipx                 sl_ceilingclipx = sl_floorclipx;
+      shrq  #8,sl_ceilingclipx                            sl_ceilingclipx >>= 8;
+      shlq  #24,sl_floorclipx                             sl_floorclipx <<= 24;
+      subq  #1,sl_ceilingclipx                            sl_ceilingclipx -= 1;
+      shrq  #24,sl_floorclipx ; mask off top 24 bits      sl_floorclipx >>= 24;
+      */
+      //ceilingclipx = floorclipx;
+
+      //
+      // texture only stuff
+      //
+      if(segl->actionbits & AC_CALCTEXTURE)
+      {
+      }
+   }
+   while(++x <= segl->stop); // L121
+
    /*
-BIT_ADDFLOOR	.equ	0
-BIT_ADDCEILING	.equ	1
-BIT_TOPTEXTURE	.equ	2
-BIT_BOTTOMTEXTURE .equ	3
-BIT_NEWCEILING	.equ	4
-BIT_NEWFLOOR	.equ	5
-BIT_ADDSKY		.equ	6
-BIT_CALCTEXTURE	.equ	7
-BIT_TOPSIL		.equ	8
-BIT_BOTTOMSIL	.equ	9
-BIT_SOLIDSIL	.equ	10
-
-; r15 stays free for subfunctions to use
-
-sl_colnum		.equr	r16
-sl_top			.equr	r17
-sl_bottom		.equr	r18
-sl_actionbits	.equr	r9
-
-sl_high			.equr	r30
-sl_low			.equr	r31
-
-;
-; common to draw texture
-;
-sl_floorclipx	.equr	r19
-sl_ceilingclipx	.equr	r20
-sl_x			.equr	r21		; also common to find plane
-sl_scale		.equr	r22
-
-sl_iscale		.equr	r23
-sl_texturecol	.equr	r24
-sl_texturelight	.equr	r25
-
-
-  movei #96,scratch
-  sub   scratch,FP
-  
-  store   RETURNPOINT,(FP+10) ; only store once       *(FP+10) = RETURNPOINT;
-  movefa  VR_actionbits,sl_actionbits                 sl_actionbits = VR_actionbits;
-  movefa  VR_scalefrac,r1                             r1 = VR_scalefrac;
-  movefa  VR_start,sl_x                               sl_x = VR_start;
-  btst    #0,r1 ; scoreboard bug
-  store   r1,(FP+6) ; scalefrac                       *(FP+6) = r1; // scalefrac
-  
-; force R_FindPlane for both planes
-  movei #_visplanes,r1                                r1 = &visplanes;
-  store r1,(FP+8) ; &ceiling                          *(FP+8) = r1; // &ceiling;
-  store r1,(FP+7) ; &floor                            *(FP+7) = r1; // &floor;
-        
-  movei #L121,r0                                      goto L121;
-  jump  T,(r0)
-  nop
-
-L118:
-  load   (FP+6),r1 ; scalefrac                        r1 = *(FP+6); // scalefrac
-  move   r1,sl_scale                                  sl_scale = r1;
-  sharq  #7,sl_scale                                  sl_scale >>= 7;
-  movefa VR_scalestep,r2                              r2 = VR_scalestep;
-  add    r2,r1                                        r1 += r2;
-  movei  #$7fff,scratch                               scratch = 0x7fff;
-  store  r1,(FP+6)                                    *(FP+6) = r1;
-  ; if scale>0x7fff scale = 0x7fff
-  cmp    scratch,sl_scale                             if(scratch > sl_scale)
-  jr     U_GT,scaleok                                   goto scaleok;
-  nop
-  move   scratch,sl_scale                             sl_scale = scratch;
-
-scaleok:
-L125:
-; get ceilingclipx and floorclipx from clipbounds
-  move  sl_x,r0 ;(x)                                  r0 = sl_x;
-  shlq  #2,r0                                         r0 <<= 2;
-  movei #_clipbounds,r1                               r1 = &clipbounds;
-  add   r1,r0                                         r0 += r1;
-  load  (r0),sl_floorclipx                            sl_floorclipx = *r0;
-  move  sl_floorclipx,sl_ceilingclipx                 sl_ceilingclipx = sl_floorclipx;
-  shrq  #8,sl_ceilingclipx                            sl_ceilingclipx >>= 8;
-  shlq  #24,sl_floorclipx                             sl_floorclipx <<= 24;
-  subq  #1,sl_ceilingclipx                            sl_ceilingclipx -= 1;
-  shrq  #24,sl_floorclipx ; mask off top 24 bits      sl_floorclipx >>= 24;
 
 ; texture only stuff
   btst  #BIT_CALCTEXTURE,sl_actionbits                if(!(sl_actionbits & BIT_CALCTEXTURE))
@@ -1090,17 +1062,17 @@ L53:
 // EOF
 
 /*
-#define	AC_ADDFLOOR      1       000:00000001
-#define	AC_ADDCEILING    2       000:00000010
-#define	AC_TOPTEXTURE    4       000:00000100
-#define	AC_BOTTOMTEXTURE 8       000:00001000
-#define	AC_NEWCEILING    16      000:00010000
-#define	AC_NEWFLOOR      32      000:00100000
-#define	AC_ADDSKY        64      000:01000000
-#define	AC_CALCTEXTURE   128     000:10000000
-#define	AC_TOPSIL        256     001:00000000
-#define	AC_BOTTOMSIL     512     010:00000000
-#define	AC_SOLIDSIL      1024    100:00000000
+#define	AC_ADDFLOOR      1       000:00000001 0
+#define	AC_ADDCEILING    2       000:00000010 1
+#define	AC_TOPTEXTURE    4       000:00000100 2
+#define	AC_BOTTOMTEXTURE 8       000:00001000 3
+#define	AC_NEWCEILING    16      000:00010000 4
+#define	AC_NEWFLOOR      32      000:00100000 5
+#define	AC_ADDSKY        64      000:01000000 6
+#define	AC_CALCTEXTURE   128     000:10000000 7
+#define	AC_TOPSIL        256     001:00000000 8
+#define	AC_BOTTOMSIL     512     010:00000000 9
+#define	AC_SOLIDSIL      1024    100:00000000 10
 
 typedef struct
 {
