@@ -49,10 +49,12 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, int picnum,
    check->minx = start;
    check->maxx = stop;
 
-   for(i = 0; i < 80; i++)
+   for(i = 0; i < SCREENWIDTH/4; i++)
    {
-      check->open[i*2  ] = OPENMARK;
-      check->open[i*2+1] = OPENMARK;
+      check->open[i*4  ] = OPENMARK;
+      check->open[i*4+1] = OPENMARK;
+      check->open[i*4+2] = OPENMARK;
+      check->open[i*4+3] = OPENMARK;
    }
 
    return check;
@@ -294,7 +296,7 @@ static void R_SegLoop(viswall_t *segl)
       //
       if(segl->actionbits & AC_CALCTEXTURE)
       {
-      }
+      } // L129
    }
    while(++x <= segl->stop); // L121
 
@@ -793,157 +795,87 @@ nonewceiling:
   store sl_ceilingclipx,(r0)                          *r0 = sl_ceilingclipx;
   
 L119:
-;--------------
-;
 ; next
-;
-;--------------
-  addq  #1,sl_x                                       sl_x += 1;
+  (up above ^^^^)
 
 L121:
-  movefa VR_stop,r0                                   r0 = VR_stop;
-  cmp    sl_x,r0 ;(x)                                 if(sl_x <= r0)
-  movei  #L118,scratch                                   goto L118;
-  jump   S_LE,(scratch)
-  nop
-  
-  load  (FP+10),RETURNPOINT                           return;
-  movei #96,scratch
-  jump  T,(RETURNPOINT)
-  add   scratch,FP ; delay slot
+  (up above ^^^^)
    */
 }
 
 void R_SegCommands(void)
 {
-   // CALICO_TODO: R_SegCommands
+   int i, lightmin, lightmax, lightsub, lightcoef;
+   int *clip;
+   viswall_t *segl;
+
+   // initialize the clipbounds array
+   clip = clipbounds;
+   for(i = 0; i < SCREENWIDTH / 4; i++)
+   {
+      *clip++ = SCREENHEIGHT;
+      *clip++ = SCREENHEIGHT;
+      *clip++ = SCREENHEIGHT;
+      *clip++ = SCREENHEIGHT;
+   }
+
+   // CALICO_TODO: JAG SPECIFIC
    /*
-  subq  #32,FP
+   ; setup blitter
+   movei #15737348,r0   r0 = 15737348; // 0xf02204
+   movei #145440,r1     r1 = 145440;   // ????
+   store r1,(r0)        *r0 = r1;
+                       
+   movei #15737384,r0   r0 = 15737384; // 0xf02228
+   movei #145952,r1     r1 = 145952;   // ????
+   store r1,(r0)        *r0 = r1;
+   */
+  
+   segl = viswalls;
+   while(segl < lastwallcmd)
+   {
+      lightmin = segl->seglightlevel - (255 - segl->seglightlevel) * 2;
+      if(lightmin < 0)
+         lightmin = 0;
 
-  movei #_clipbounds,r0                               r0 = &clipbounds;
-  movei #180,r1		; SCREENHEIGHT                      r1 = SCREENHEIGHT;
-  movei #160,r2		; SCREENWIDTH                       r2 = SCREENWIDTH;
-  movei #clearclipbounds,r3                           r3 = &clearclipbounds;
-  
-clearclipbounds:
-  store r1,(r0)                                       *r0 = r1;
-  addq  #4,r0                                         r0 += 4;
-  store r1,(r0)                                       *r0 = r1;
-  addq  #4,r0                                         r0 += 4;
-  store r1,(r0)                                       *r0 = r1;
-  addq  #4,r0                                         r0 += 4;
-  subq  #4,r2                                         r2 -= 4;
-  store r1,(r0)                                       *r0 = r1;
-  jump  NE,(r3)
-  addq  #4,r0
+      lightmax = segl->seglightlevel;
+      
+      lightsub  = 160 * (lightmax - lightmin) / (800 - 160);
+      lightcoef = ((lightmax - lightmin) << FRACBITS) / (800 - 160);
 
-;
-; setup blitter
-;
-  movei #15737348,r0                                  r0 = 15737348; // 0xf02204
-  movei #145440,r1                                    r1 = 145440; // ????
-  store r1,(r0)                                       *r0 = r1;
-  
-  movei #15737384,r0                                  r0 = 15737384; // 0xf02228
-  movei #145952,r1                                    r1 = 145952; // ????
-  store r1,(r0)                                       *r0 = r1;
-  
-  movei #_viswalls,r0                                 r0 = &viswalls;
-  move  r0,r16 ;(segl)                                r16 = r0; // segl
-  
-  movei #L61,r0                                       goto L61;
-  jump  T,(r0)
-  nop
+      if(segl->actionbits & AC_TOPTEXTURE)
+      {
+         // CALICO_TODO
+      } // L71
 
-L58: // loop start
-;
-; copy viswall to local memory
-;
-  move  r16,r15                                       r15 = r16;
-  
-  load   (r15+VS_start),r0                            r0 = *(r15 + VS_start);
-  moveta r0,VR_start                                  VR_start = r0;
-  load   (r15+VS_stop),r0                             r0 = *(r15+VS_stop);
-  moveta r0,VR_stop                                   VR_stop = r0;
-  load   (r15+VS_floorpic),r0                         r0 = *(r15+VS_floorpic);
-  moveta r0,VR_floorpic                               VR_floorpic = r0;
-  load   (r15+VS_ceilingpic),r0                       r0 = *(r15+VS_ceilingpic);
-  moveta r0,VR_ceilingpic                             VR_ceilingpic = r0;
-  load   (r15+VS_actionbits),r0                       r0 = *(r15+VS_actionbits);
-  moveta r0,VR_actionbits                             VR_actionbits = r0;
-  load   (r15+VS_floorheight),r0                      r0 = *(r15+VS_floorheight);
-  moveta r0,VR_floorheight                            VR_floorheight = r0;
-  load   (r15+VS_floornewheight),r0                   r0 = *(r15+VS_floornewheight);
-  moveta r0,VR_floornewheight                         VR_floornewheight = r0;
-  load   (r15+VS_ceilingheight),r0                    r0 = *(r15+VS_ceilingheight);
-  moveta r0,VR_ceilingheight                          VR_ceilingheight = r0;
-  load   (r15+VS_ceilingnewheight),r0                 r0 = *(r15+VS_ceilingnewheight);
-  moveta r0,VR_ceilingnewheight                       VR_ceilingnewheight = r0;
-  load   (r15+VS_topsil),r0                           r0 = *(r15+VS_topsil);
-  moveta r0,VR_topsil                                 VR_topsil = r0;
-  load   (r15+VS_bottomsil),r0                        r0 = *(r15+VS_bottomsil);
-  moveta r0,VR_bottomsil                              VR_bottomsil = r0;
-  load   (r15+VS_scalefrac),r0                        r0 = *(r15+VS_scalefrac);
-  moveta r0,VR_scalefrac                              VR_scalefrac = r0;
-  load   (r15+VS_scalestep),r0                        r0 = *(r15+VS_scalestep);
-  moveta r0,VR_scalestep                              VR_scalestep = r0;
-  load   (r15+VS_centerangle),r0                      r0 = *(r15 + VS_centerangle);
-  moveta r0,VR_centerangle                            VR_centerangle = r0;
-  load   (r15+VS_offset),r0                           r0 = *(r15 + VS_offset);
-  moveta r0,VR_offset                                 VR_offset = r0;
-  load   (r15+VS_distance),r0                         r0 = *(r15+VS_distance);
-  moveta r0,VR_distance                               VR_distance = r0;
-  load   (r15+VS_seglightlevel),r0                    r0 = *(r15+VS_seglightlevel);
-  moveta r0,VR_seglightlevel                          VR_seglightlevel = r0;
+      if(segl->actionbits & AC_BOTTOMTEXTURE)
+      {
+         // CALICO_TODO
+      } // L83
 
+      // CALICO_TODO
+      /*
+      movei #_R_SegLoop,r0
+      store r28,(FP) ; psuh ;(RETURNPOINT)
+      store r17,(FP+1) ; push ;(tex)
+      store r16,(FP+2) ; push ;(segl)
+      movei #L99,RETURNPOINT
+      jump  T,(r0)                                        call R_SegLoop;
+      store r15,(FP+3) ; delay slot push ;(i)
+      */
+      R_SegLoop(segl); // CALICO_TODO: other params?
+
+      ++segl;
+   }
+
+   /*
 ; lightmin = wl.seglightlevel - (255-wl.seglightlevel)*2;
 ; if (lightmin < 0)
 ;   lightmin = 0;
-sc_lightmin .equr	r5
-sc_lightmax .equr	r6
-
-  movefa VR_seglightlevel,sc_lightmin                 sc_lightmin = VR_seglightlevel;
-  movei  #255,r2                                      r2 = 255;
-  movefa VR_seglightlevel,r3                          r3 = VR_seglightlevel;
-  sub    r3,r2                                        r2 -= r3;
-  shlq   #1,r2                                        r2 <<= 1;
-  sub    r2,sc_lightmin                               sc_lightmin -= r2;
-  jr     PL,minnotneg                                 ????
-  nop
-  moveq  #0,sc_lightmin                               sc_lightmin = 0;
-minnotneg:
-  movei  #_lightmin,r0                                r0 = &lightmin;
-  store  sc_lightmin,(r0)                             *r0 = sc_lightmin;
-  
 ; lightmax = wl.seglightlevel;
-  movei  #_lightmax,r0                                r0 = &lightmax;
-  movefa VR_seglightlevel,sc_lightmax                 sc_lightmax = VR_seglightlevel;
-  store  sc_lightmax,(r0)                             *r0 = sc_lightmax;
-
 ; lightsub = 160*(lightmax-lightmin)/(800-160);
 ; lightcoef = ((lightmax-lightmin)<<16)/(800-160);
-  sub   sc_lightmin,sc_lightmax                       sc_lightmax -= sc_lightmin;
-  move  sc_lightmax,r1                                r1 = sc_lightmax;
-  movei #160,r2                                       r2 = 160;
-  mult  r1,r2                                         r2 *= r1;
-  movei #640,r4                                       r4 = 640;
-  div   r4,r2                                         r2 /= r4;
-  movei #_lightsub,r0                                 r0 = &lightsub;
-
-  move  sc_lightmax,r3                                r3 = sc_lightmax;
-  shlq  #16,r3                                        r3 <<= 16;
-  store r2,(r0) ; div hit                             *r0 = r2;
-  div   r4,r3                                         r3 /= r4;
   
-  movei #_lightcoef,r0                                r0 = &lightcoef;
-  store r3,(r0) ; div hit                             *r0 = r3;
-  
-  movefa VR_actionbits,r0                             r0 = VR_actionbits;
-  btst   #2,r0                                        if(!(r0 & 2))
-  movei  #L71,scratch                                   goto L71;
-  jump   EQ,(scratch)
-  nop
-
   movei #_toptex+12,r0                                r0 = &toptex + 12;
   load  (r15+7),r1                                    r1 = *(r15+7);
   store r1,(r0)                                       *r0 = r1;
@@ -1014,49 +946,7 @@ L71:
   addq  #16,r1                                        r1 += 16;
   load  (r1),r1                                       r1 = *r1;
   store r1,(r0)                                       *r0 = r1;
-
-L83:
-  movei #_R_SegLoop,r0
-  store r28,(FP) ; psuh ;(RETURNPOINT)
-  store r17,(FP+1) ; push ;(tex)
-  store r16,(FP+2) ; push ;(segl)
-  movei #L99,RETURNPOINT
-  jump  T,(r0)                                        call R_SegLoop;
-  store r15,(FP+3) ; delay slot push ;(i)
-L99:
-  load (FP+1),r17 ; pop ;(tex)
-  load (FP+2),r16 ; pop ;(segl)
-  load (FP+3),r15 ; pop ;(i)
-  load (FP),RETURNPOINT ; pop
-
-L59:
-  movei #112,r0                                       r0 = sizeof(viswall_t);
-  move  r16,r1 ;(segl)                                r1 = r16; // segl
-  add   r0,r1                                         r1 += r0;
-  move  r1,r16 ;(segl)                                r16 = r1; // segl
-
-L61: // loop end
-  move  r16,r0 ;(segl)                                r0 = r16; // segl
-  movei #_lastwallcmd,r1                              r1 = &lastwallcmd;
-  load  (r1),r1                                       r1 = *r1;
-  cmp   r0,r1                                         if(r0 < r1)
-  movei #L58,scratch                                    goto L58;
-  jump  U_LT,(scratch)
-  nop
-
-  movei #_phasetime+24,r0
-  movei #_samplecount,r1
-  load  (r1),r1
-  store r1,(r0)
-  
-  movei #_gpucodestart,r0
-  movei #_ref7_start,r1
-  store r1,(r0)
-
-L53:
-  jump T,(RETURNPOINT)
-  addq #32,FP ; delay slot
-   */
+  */
 }
 
 // EOF
