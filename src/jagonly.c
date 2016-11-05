@@ -1177,8 +1177,8 @@ void DoubleBufferObjList(void)
 
 #define IDWORD (('D'<<8)+'1')
 
-unsigned short eeread (int address);
-int eewrite (int data, int address);
+unsigned short eeread(int address);
+int eewrite(int data, int address);
 
 #define EEWORDS 8 // MUST BE EVEN!!!!!!
 
@@ -1206,7 +1206,7 @@ void ReadEEProm(void)
    for(i = 0; i < EEWORDS; i++)
    {
       eeprombuffer[i] = eeread(i);
-      if (i != EEWORDS-1)
+      if(i != EEWORDS-1)
          checksum += eeprombuffer[i];
    }
 

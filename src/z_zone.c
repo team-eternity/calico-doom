@@ -67,8 +67,8 @@ void Z_Init(void)
    if(!mem)
       I_Error("Z_Init: could not allocate %d bytes for zone", size);
 
-   mainzone = Z_InitZone(mem,0x80000);
-   refzone  = Z_InitZone(mem+0x80000,size-0x80000);
+   mainzone = Z_InitZone(mem, 0x80000);
+   refzone  = Z_InitZone(mem + 0x80000, size - 0x80000);
 }
 
 /*
@@ -109,7 +109,7 @@ void Z_Free2(memzone_t *mainzone, void *ptr)
 void *Z_Malloc2(memzone_t *mainzone, int size, int tag, void *user)
 {
    int         extra;
-   memblock_t *start, *rover, *new, *base;
+   memblock_t *start, *rover, *newblock, *base;
 
    //
    // scan through the block list looking for the first free block
@@ -117,7 +117,6 @@ void *Z_Malloc2(memzone_t *mainzone, int size, int tag, void *user)
    //
    size += sizeof(memblock_t); // account for size of block header
    size = (size + 7) & ~7;     // phrase align everything
-	
 	
    start = base = mainzone->rover;
 
@@ -169,28 +168,29 @@ backtostart:
    if(extra >  MINFRAGMENT)
    { 
       // there will be a free fragment after the allocated block
-      new = (memblock_t *) ((byte *)base + size );
-      new->size = extra;
-      new->user = NULL; // free block
-      new->tag = 0;
-      new->prev = base;
-      new->next = base->next;
-      if (new->next)
-         new->next->prev = new;
-      base->next = new;
+      newblock = (memblock_t *)((byte *)base + size);
+      newblock->size = extra;
+      newblock->user = NULL; // free block
+      newblock->tag = 0;
+      newblock->prev = base;
+      newblock->next = base->next;
+      if(newblock->next)
+         newblock->next->prev = newblock;
+      base->next = newblock;
       base->size = size;
    }
 	
    if(user)
    {
       base->user = user; // mark as an in use block
-      *(void **)user = (void *) ((byte *)base + sizeof(memblock_t));
+      *(void **)user = (void *)((byte *)base + sizeof(memblock_t));
    }
    else
    {
       if(tag >= PU_PURGELEVEL)
          I_Error("Z_Malloc: an owner is required for purgable blocks");
-      base->user = (void *)2; // mark as in use, but unowned
+      // CALICO_FIXME: non-portable idiom...
+      base->user = (void **)2; // mark as in use, but unowned
    }
    base->tag = tag;
    base->id = ZONEID;
@@ -215,13 +215,13 @@ void Z_FreeTags(memzone_t *mainzone)
 {
    memblock_t *block, *next;
 
-   for(block = &mainzone->blocklist ; block ; block = next)
+   for(block = &mainzone->blocklist; block; block = next)
    {
       next = block->next; // get link before freeing
       if(!block->user)
          continue;        // free block
       if(block->tag == PU_LEVEL || block->tag == PU_LEVSPEC)
-         Z_Free2(mainzone, (byte *)block+sizeof(memblock_t));
+         Z_Free2(mainzone, (byte *)block + sizeof(memblock_t));
    }
 }
 
@@ -237,19 +237,19 @@ memblock_t *checkblock;
 
 void Z_CheckHeap(memzone_t *mainzone)
 {
-   for(checkblock = &mainzone->blocklist ; checkblock; checkblock = checkblock->next)
+   for(checkblock = &mainzone->blocklist; checkblock; checkblock = checkblock->next)
    {
       if(!checkblock->next)
       {
          if((byte *)checkblock + checkblock->size - (byte *)mainzone != mainzone->size)
-            I_Error ("Z_CheckHeap: zone size changed\n");
+            I_Error("Z_CheckHeap: zone size changed\n");
          continue;
       }
 		
       if((byte *)checkblock + checkblock->size != (byte *)checkblock->next)
-         I_Error ("Z_CheckHeap: block size does not touch the next block\n");
+         I_Error("Z_CheckHeap: block size does not touch the next block\n");
       if(checkblock->next->prev != checkblock)
-         I_Error ("Z_CheckHeap: next block doesn't have proper back link\n");
+         I_Error("Z_CheckHeap: next block doesn't have proper back link\n");
    }
 }
 
@@ -267,9 +267,9 @@ void Z_ChangeTag(void *ptr, int tag)
 
    block = (memblock_t *)((byte *)ptr - sizeof(memblock_t));
    if(block->id != ZONEID)
-      I_Error ("Z_ChangeTag: freed a pointer without ZONEID");
-   if(tag >= PU_PURGELEVEL && (int)block->user < 0x100)
-      I_Error ("Z_ChangeTag: an owner is required for purgable blocks");
+      I_Error("Z_ChangeTag: freed a pointer without ZONEID");
+   if(tag >= PU_PURGELEVEL && (int)block->user < 0x100) // CALICO_FIXME: non-portable comparison
+      I_Error("Z_ChangeTag: an owner is required for purgable blocks");
    block->tag = tag;
 }
 
