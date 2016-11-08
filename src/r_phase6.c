@@ -14,7 +14,7 @@ static int clipbounds[SCREENWIDTH];
 // Check for a matching visplane in the visplanes array, or set up a new one
 // if no compatible match can be found.
 //
-static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, int picnum, 
+static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnum, 
                                int lightlevel, int start, int stop)
 {
    int i;
@@ -22,7 +22,7 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, int picnum,
    while(check < lastvisplane)
    {
       if(height == check->height && // same plane as before?
-         picnum == check->picnum && // CALICO_FIXME: not int
+         picnum == check->picnum &&
          lightlevel == check->lightlevel)
       {
          if(check->open[start] == OPENMARK)
@@ -44,7 +44,7 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, int picnum,
    ++lastvisplane;
 
    check->height = height;
-   check->picnum = picnum; // CALICO_FIXME: not int
+   check->picnum = picnum;
    check->lightlevel = lightlevel;
    check->minx = start;
    check->maxx = stop;
@@ -280,16 +280,8 @@ static void R_SegLoop(viswall_t *segl)
       //
       // get ceilingclipx and floorclipx from clipbounds
       //
-      floorclipx = clipbounds[x];
-      // CALICO_TODO: dunno what's going on here...
-      /*
-      move  sl_floorclipx,sl_ceilingclipx                 sl_ceilingclipx = sl_floorclipx;
-      shrq  #8,sl_ceilingclipx                            sl_ceilingclipx >>= 8;
-      shlq  #24,sl_floorclipx                             sl_floorclipx <<= 24;
-      subq  #1,sl_ceilingclipx                            sl_ceilingclipx -= 1;
-      shrq  #24,sl_floorclipx ; mask off top 24 bits      sl_floorclipx >>= 24;
-      */
-      //ceilingclipx = floorclipx;
+      floorclipx   = clipbounds[x] & 0x00ff;
+      ceilingclipx = ((clipbounds[x] & 0xff00) >> 8) - 1;
 
       //
       // texture only stuff
