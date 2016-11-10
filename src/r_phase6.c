@@ -562,18 +562,18 @@ void R_SegCommands(void)
 ; lightcoef = ((lightmax-lightmin)<<16)/(800-160);
   
   movei #_toptex+12,r0                                r0 = &toptex + 12;
-  load  (r15+7),r1                                    r1 = *(r15+7);
+  load  (r15+7),r1                                    r1 = *(r15+7); // VS_t_topheight
   store r1,(r0)                                       *r0 = r1;
   
   movei #_toptex+16,r0                                r0 = &toptex + 16;
-  load  (r15+8),r1                                    r1 = *(r15+8);
+  load  (r15+8),r1                                    r1 = *(r15+8); // VS_t_bottomheight
   store r1,(r0)                                       *r0 = r1;
   
   movei #_toptex+20,r0                                r0 = &toptex + 20;
-  load  (r15+9),r1                                    r1 = *(r15+9);
+  load  (r15+9),r1                                    r1 = *(r15+9); // VS_t_texturemid
   store r1,(r0)                                       *r0 = r1;
   
-  load  (r15+10),r0                                   r0 = *(r15+10);
+  load  (r15+10),r0                                   r0 = *(r15+10); // VS_t_texture
   move  r0,r17 ;(tex)                                 r17 = r0; // tex
   movei #_toptex+4,r0                                 r0 = &toptex + 4;
   move  r17,r1 ;(tex)                                 r1 = r17; // tex
@@ -601,18 +601,18 @@ L71:
   nop
 
   movei #_bottomtex+12,r0                             r0 = &bottomtex + 12;
-  load  (r15+11),r1                                   r1 = *(r15+11)
+  load  (r15+11),r1                                   r1 = *(r15+11) // VS_b_topheight
   store r1,(r0)                                       *r0 = r1;
   
   movei #_bottomtex+16,r0                             r0 = &bottomtex + 16;
-  load  (r15+12),r1                                   r1 = *(r15+12);
+  load  (r15+12),r1                                   r1 = *(r15+12); // VS_b_bottomheight
   store r1,(r0)                                       *r0 = r1;
   
   movei #_bottomtex+20,r0                             r0 = &bottomtex + 20;
-  load  (r15+13),r1                                   r1 = *(r15+13);
+  load  (r15+13),r1                                   r1 = *(r15+13); // VS_b_texturemid
   store r1,(r0)                                       *r0 = r1;
   
-  load  (r15+14),r0                                   r0 = *(r15+14);
+  load  (r15+14),r0                                   r0 = *(r15+14); // VS_b_texture
   move  r0,r17 ;(tex)                                 r17 = r0; // tex
   movei #_bottomtex+4,r0                              r0 = &bottomtex + 4;
   move  r17,r1 ;(tex)                                 r1 = r17; // tex
