@@ -8,6 +8,19 @@
 
 #define OPENMARK 0xff00
 
+typedef struct drawtex_s
+{
+   pixel_t *data;
+   int      width;
+   int      height;
+   int      topheight;
+   int      bottomheight;
+   int      texturemid;
+} drawtex_t;
+
+static drawtex_t toptex;
+static drawtex_t bottomtex;
+
 static int clipbounds[SCREENWIDTH];
 static int lightmin, lightmax, lightsub, lightcoef;
 
@@ -505,7 +518,7 @@ void R_SegCommands(void)
       *clip++ = SCREENHEIGHT;
    }
 
-   // CALICO_TODO: JAG SPECIFIC
+   // CALICO_TODO: JAG SPECIFIC (probably irrelevant to Calico)
    /*
    ; setup blitter
    movei #15737348,r0   r0 = 15737348; // 0xf02204
@@ -531,107 +544,32 @@ void R_SegCommands(void)
 
       if(segl->actionbits & AC_TOPTEXTURE)
       {
-         // CALICO_TODO
-      } // L71
+         texture_t *tex = segl->t_texture;
+
+         toptex.topheight    = segl->t_topheight;
+         toptex.bottomheight = segl->t_bottomheight;
+         toptex.texturemid   = segl->t_texturemid;
+         toptex.width        = tex->width;
+         toptex.height       = tex->height;
+         toptex.data         = tex->data;
+      }
 
       if(segl->actionbits & AC_BOTTOMTEXTURE)
       {
-         // CALICO_TODO
-      } // L83
+         texture_t *tex = segl->b_texture;
 
-      /*
-      movei #_R_SegLoop,r0
-      store r28,(FP) ; psuh ;(RETURNPOINT)
-      store r17,(FP+1) ; push ;(tex)
-      store r16,(FP+2) ; push ;(segl)
-      movei #L99,RETURNPOINT
-      jump  T,(r0)                                        call R_SegLoop;
-      store r15,(FP+3) ; delay slot push ;(i)
-      */
-      R_SegLoop(segl); // CALICO_TODO: other params?
+         bottomtex.topheight    = segl->b_topheight;
+         bottomtex.bottomheight = segl->b_bottomheight;
+         bottomtex.texturemid   = segl->b_texturemid;
+         bottomtex.width        = tex->width;
+         bottomtex.height       = tex->height;
+         bottomtex.data         = tex->data;
+      }
+
+      R_SegLoop(segl);
 
       ++segl;
    }
-
-   /*
-; lightmin = wl.seglightlevel - (255-wl.seglightlevel)*2;
-; if (lightmin < 0)
-;   lightmin = 0;
-; lightmax = wl.seglightlevel;
-; lightsub = 160*(lightmax-lightmin)/(800-160);
-; lightcoef = ((lightmax-lightmin)<<16)/(800-160);
-  
-  movei #_toptex+12,r0                                r0 = &toptex + 12;
-  load  (r15+7),r1                                    r1 = *(r15+7); // VS_t_topheight
-  store r1,(r0)                                       *r0 = r1;
-  
-  movei #_toptex+16,r0                                r0 = &toptex + 16;
-  load  (r15+8),r1                                    r1 = *(r15+8); // VS_t_bottomheight
-  store r1,(r0)                                       *r0 = r1;
-  
-  movei #_toptex+20,r0                                r0 = &toptex + 20;
-  load  (r15+9),r1                                    r1 = *(r15+9); // VS_t_texturemid
-  store r1,(r0)                                       *r0 = r1;
-  
-  load  (r15+10),r0                                   r0 = *(r15+10); // VS_t_texture
-  move  r0,r17 ;(tex)                                 r17 = r0; // tex
-  movei #_toptex+4,r0                                 r0 = &toptex + 4;
-  move  r17,r1 ;(tex)                                 r1 = r17; // tex
-  addq  #8,r1                                         r1 += 8;
-  load  (r1),r1                                       r1 = *r1;
-  store r1,(r0)                                       *r0 = r1;
-
-  movei #_toptex+8,r0                                 r0 = &toptex + 8;
-  move  r17,r1 ;(tex)                                 r1 = r17; // tex
-  addq  #12,r1                                        r1 += 12;
-  load  (r1),r1                                       r1 = *r1;
-  store r1,(r0)                                       *r0 = r1;
- 
-  movei #_toptex,r0                                   r0 = &toptex;
-  move  r17,r1 ;(tex)                                 r1 = r17; // tex
-  addq  #16,r1                                        r1 += 16;
-  load  (r1),r1                                       r1 = *r1;
-  store r1,(r0)                                       *r0 = r1;
-
-L71:
-  movefa VR_actionbits,r0                             r0 = VR_actionbits;
-  btst   #3,r0                                        if(!(r0 & AC_BOTTOMTEXTURE))
-  movei  #L83,scratch                                    goto L83;
-  jump   EQ,(scratch)
-  nop
-
-  movei #_bottomtex+12,r0                             r0 = &bottomtex + 12;
-  load  (r15+11),r1                                   r1 = *(r15+11) // VS_b_topheight
-  store r1,(r0)                                       *r0 = r1;
-  
-  movei #_bottomtex+16,r0                             r0 = &bottomtex + 16;
-  load  (r15+12),r1                                   r1 = *(r15+12); // VS_b_bottomheight
-  store r1,(r0)                                       *r0 = r1;
-  
-  movei #_bottomtex+20,r0                             r0 = &bottomtex + 20;
-  load  (r15+13),r1                                   r1 = *(r15+13); // VS_b_texturemid
-  store r1,(r0)                                       *r0 = r1;
-  
-  load  (r15+14),r0                                   r0 = *(r15+14); // VS_b_texture
-  move  r0,r17 ;(tex)                                 r17 = r0; // tex
-  movei #_bottomtex+4,r0                              r0 = &bottomtex + 4;
-  move  r17,r1 ;(tex)                                 r1 = r17; // tex
-  addq  #8,r1                                         r1 += 8;
-  load  (r1),r1                                       r1 = *r1;
-  store r1,(r0)                                       *r0 = r1;
-
-  movei #_bottomtex+8,r0                              r0 = &bottomtex + 8;
-  move  r17,r1 ;(tex)                                 r1 = r17; // tex
-  addq  #12,r1                                        r1 += 12;
-  load  (r1),r1                                       r1 = *r1;
-  store r1,(r0)                                       *r0 = r1;
- 
-  movei #_bottomtex,r0                                r0 = &bottomtex;
-  move  r17,r1 ;(tex)                                 r1 = r17; // tex
-  addq  #16,r1                                        r1 += 16;
-  load  (r1),r1                                       r1 = *r1;
-  store r1,(r0)                                       *r0 = r1;
-  */
 }
 
 // EOF
