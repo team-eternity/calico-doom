@@ -74,7 +74,7 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnu
    return check;
 }
 
-static void R_DrawTexture(void)
+static void R_DrawTexture(drawtex_t *tex)
 {
    // CALICO_TODO
    /*
@@ -321,9 +321,9 @@ static void R_SegLoop(viswall_t *segl)
          // draw textures
          //
          if(segl->actionbits & AC_TOPTEXTURE)
-            R_DrawTexture(/*toptex*/); // CALICO_TODO
+            R_DrawTexture(&toptex);
          if(segl->actionbits & AC_BOTTOMTEXTURE)
-            R_DrawTexture(/*bottomtex*/); // CALICO_TODO
+            R_DrawTexture(&bottomtex);
       }
 
       //
