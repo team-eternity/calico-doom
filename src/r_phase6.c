@@ -9,6 +9,7 @@
 #define OPENMARK 0xff00
 
 static int clipbounds[SCREENWIDTH];
+static int lightmin, lightmax, lightsub, lightcoef;
 
 //
 // Check for a matching visplane in the visplanes array, or set up a new one
@@ -225,7 +226,7 @@ fracpos:
 
   // JAG SPECIFIC STARTING FROM HERE (R_DrawColumn?)
 ; command
-  movei #1+(1<<8)+(1<<9)+(1<<10)+(1<<11)+(1<<13)+(1<<30)+(12<<21),dtb_command // ?????
+  movei #1+(1<<8)+(1<<9)+(1<<10)+(1<<11)+(1<<13)+(1<<30)+(12<<21),dtb_command // 1098919681 ?????
   
   movei #$f02200,dt_blitter                           dt_blitter = 0xf02200;
   movei #$f02270,dt_scratch2 ; iinc blitter register  dt_scratch2 = 0xf02270; // B_IINC
@@ -255,7 +256,8 @@ dt_wait: // busy loop
 //
 static void R_SegLoop(viswall_t *segl)
 {
-   int x, scale, scalefrac, floorclipx, ceilingclipx;
+   int x, scale, scalefrac, floorclipx, ceilingclipx, texturecol, iscale, 
+       low, high, top, bottom;
    visplane_t *ceiling, *floor;
 
    x = segl->start;
@@ -267,13 +269,8 @@ static void R_SegLoop(viswall_t *segl)
    do
    {
       scale = scalefrac / (1 << FIXEDTOSCALE);
-      // CALICO_TODO: ??? where is this value going ???
-      /*
-      L118:
-        movefa VR_scalestep,r2                              r2 = VR_scalestep;
-        add    r2,r1                                        r1 += r2;
-        store  r1,(FP+6)                                    *(FP+6) = r1;
-      */
+      scalefrac += segl->scalestep;
+
       if(scale >= 0x7fff)
          scale = 0x7fff; // fix the scale to maximum
 
@@ -288,516 +285,213 @@ static void R_SegLoop(viswall_t *segl)
       //
       if(segl->actionbits & AC_CALCTEXTURE)
       {
-      } // L129
+         // calculate texture offset
+         int texturelight;
+         fixed_t r = FixedMul(segl->distance, 
+                              finetangent[(segl->centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT]);
+
+         // other texture drawing info
+         texturecol = (segl->offset - r) / FRACUNIT;
+         iscale     = 33554432 / scale;
+
+         // calc light level
+         texturelight = ((scale * lightcoef) / FRACUNIT) - lightsub;
+         if(texturelight < lightmin)
+            texturelight = lightmin;
+         if(texturelight > lightmax)
+            texturelight = lightmax;
+
+         // convert to a hardware value
+         texturelight = -((255 - texturelight) << 14) & 0xffffff;
+
+         //
+         // draw textures
+         //
+         if(segl->actionbits & AC_TOPTEXTURE)
+            R_DrawTexture(/*toptex*/); // CALICO_TODO
+         if(segl->actionbits & AC_BOTTOMTEXTURE)
+            R_DrawTexture(/*bottomtex*/); // CALICO_TODO
+      }
+
+      //
+      // floor
+      //
+      if(segl->actionbits & AC_ADDFLOOR)
+      {
+         int top, bottom;
+         
+         top = CENTERY - ((scale * segl->floorheight) >> (HEIGHTBITS + SCALEBITS));
+         if(top <= ceilingclipx)
+            top = ceilingclipx + 1;
+         
+         bottom = floorclipx - 1;
+         
+         if(top <= bottom)
+         {
+            if(floor->open[x] != OPENMARK)
+            {
+               floor = R_FindPlane(floor + 1, segl->floorheight, segl->floorpic, 
+                                   segl->seglightlevel, x, segl->stop);
+            }
+            floor->open[x] = (unsigned short)((top << 8) + bottom);
+         }
+      }
+
+      //
+      // ceiling
+      //
+      if(segl->actionbits & AC_ADDCEILING)
+      {
+         int top, bottom;
+
+         top = ceilingclipx + 1;
+
+         bottom = CENTERY - 1 - ((scale * segl->ceilingheight) >> (HEIGHTBITS + SCALEBITS));
+         if(bottom >= floorclipx)
+            bottom = floorclipx - 1;
+         
+         if(top <= bottom)
+         {
+            if(ceiling->open[x] != OPENMARK)
+            {
+               ceiling = R_FindPlane(ceiling + 1, segl->ceilingheight, segl->ceilingpic, 
+                                     segl->seglightlevel, x, segl->stop);
+            }
+            ceiling->open[x] = (unsigned short)((top << 8) + bottom);
+         }
+      }
+
+      //
+      // calc high and low
+      //
+      low = CENTERY - ((scale * segl->floornewheight) >> (HEIGHTBITS + SCALEBITS));
+      if(low < 0)
+         low = 0;
+      if(low > floorclipx)
+         low = floorclipx;
+
+      high = CENTERY - 1 - ((scale * segl->ceilingnewheight) >> (HEIGHTBITS + SCALEBITS));
+      if(high > SCREENHEIGHT - 1)
+         high = SCREENHEIGHT - 1;
+      if(high < ceilingclipx)
+         high = ceilingclipx;
+
+      // bottom sprite clip sil
+      if(segl->actionbits & AC_BOTTOMSIL)
+         segl->bottomsil[x] = low;
+
+      // top sprite clip sil
+      if(segl->actionbits & AC_TOPSIL)
+         segl->topsil[x] = high + 1;
+
+      // sky mapping
+      if(segl->actionbits & AC_ADDSKY)
+      {
+         top = ceilingclipx + 1;
+         bottom = (CENTERY - ((scale * segl->ceilingheight) >> (HEIGHTBITS + SCALEBITS))) - 1;
+         if(bottom >= floorclipx)
+            bottom = floorclipx - 1;
+         if(top <= bottom)
+         {
+            int colnum = ((xtoviewangle[x] + viewangle) >> ANGLETOSKYSHIFT) & 0xff;
+            // CALICO_TODO: draw sky column
+            /*
+              shlq  #21,sl_colnum                                 sl_colnum <<= 21;
+              
+              movei #18204,r1                                     r1 = 18204; // ????
+              imult sl_top,r1                                     r1 *= sl_top;
+              add   r1,sl_colnum                                  sl_colnum += r1;
+              
+              shlq  #2,sl_colnum                                  sl_colnum <<= 2;
+             
+              movei #36,r0                                        r0 = 36; // ????
+              add   FP,r0 ; &count                                r0 += FP; // &count ?
+              move  sl_bottom,r1 ;(bottom)                        r1 = sl_bottom;
+              sub   sl_top,r1 ;(top)                              r1 -= sl_top;
+              moveq #1,r2                                         r2 = 1;
+              add   r2,r1                                         r1 += r2;
+              shlq  #16,r1                                        r1 <<= FRACBITS;
+              add   r2,r1                                         r1 += r2;
+              store r1,(r0)                                       *r0 = r1;
+            
+              // JAG SPECIFIC
+            L196:
+            L197:
+              movei #15737400,r0                                  r0 = 15737400; // 0xf02238 ????
+              load  (r0),r0                                       r0 = *r0;
+              moveq #1,r1                                         r1 = 1;
+              and   r1,r0                                         r0 &= r1;
+              moveq #0,r1                                         r1 = 0;
+              cmp   r0,r1                                         if(r0 == r1)
+              movei #L196,scratch                                   goto L196;
+              jump  EQ,(scratch)
+              nop
+            
+              movei #15737344,r0                                  r0 = 15737344; // 0xf02200 ????
+              movei #_skytexturep,r1                              r1 = &skytexturep;
+              load  (r1),r1                                       r1 = *r1;
+              addq  #16,r1                                        r1 += 16; // &texture_t::data
+              load  (r1),r1                                       r1 = *r1;
+              store r1,(r0)                                       *r0 = r1;
+            
+              movei #15737356,r0                                  r0 = 15737356; // 0xf0220c ????
+              move  sl_colnum,r1 ;(colnum)                        r1 = sl_colnum;
+              shrq  #16,r1                                        r1 >>= FRACBITS;
+              store r1,(r0)                                       *r0 = r1;
+             
+              movei #15737368,r0                                  r0 = 15737368; // 0xf02218 ????
+              movei #65535,r1                                     r1 = 65536;
+              move  sl_colnum,r2 ;(colnum)                        r2 = sl_colnum;
+              and   r1,r2                                         r2 &= r1;
+              move  r2,r1                                         r1 = r2;
+              store r1,(r0)                                       *r0 = r1;
+            
+              movei #15737360,r0                                  r0 = 15737360; // 0xf02210 ????
+              moveq #1,r1                                         r1 = 1;
+              store r1,(r0)                                       *r0 = r1;
+              
+              movei #15737364,r0                                  r0 = 15737364; // 0xf02214 ????
+              movei #7281,r1                                      r1 = 7281; // ????
+              store r1,(r0)                                       *r0 = r1;
+              
+              movei #15737392,r0                                  r0 = 15737392; // 0xf02230 ????
+              move  sl_top,r1 ;(top)                              r1 = sl_top;
+              shlq  #16,r1                                        r1 <<= FRACBITS;
+              add   sl_x,r1 ;(x)                                  r1 += sl_x;
+              store r1,(r0)                                       *r0 = r1;
+            
+              movei #15737456,r0                                  r0 = 15737456; // 0xf02270 ????
+              moveq #0,r1                                         r1 = 0;
+              store r1,(r0)                                       *r0 = r1;
+              
+              movei #15737404,r0                                  r0 = 15737404; // 0xf0223c ????
+              load  (FP+9),r1 ; local count                       r1 = *(FP+9);  // count
+              store r1,(r0)                                       *r0 = r1;
+              
+              movei #15737400,r0                                  r0 = 15737400;   // 0xf02238 ????
+              movei #1098919681,r1                                r1 = 1098919681; // 0x41802F01 ????
+              store r1,(r0)                                       *r0 = r1;
+            */
+         }
+      }
+
+      if(segl->actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
+      {
+         // rewrite clipbounds
+         if(segl->actionbits & AC_NEWFLOOR)
+            floorclipx = low;
+         if(segl->actionbits & AC_NEWCEILING)
+            ceilingclipx = high;
+
+         clipbounds[x] = ((ceilingclipx + 1) << 8) + floorclipx;
+      }
    }
-   while(++x <= segl->stop); // L121
-
-   /*
-
-; texture only stuff
-  btst  #BIT_CALCTEXTURE,sl_actionbits                if(!(sl_actionbits & BIT_CALCTEXTURE))
-  movei #L129,scratch                                   goto L129;
-  jump  EQ,(scratch)
-  nop
-
-; calculate texture offset
-  movefa VR_centerangle,r1                            r1 = VR_centerangle;
-  move   sl_x,r3 ;(x)                                 r3 = sl_x;
-  shlq   #2,r3                                        r3 <<= 2;
-  
-  movei #_xtoviewangle,r4                             r4 = &xtoviewangle;
-  add   r4,r3                                         r3 += r4;
-  load  (r3),r3                                       r3 = *r3;
-  add   r3,r1                                         r1 += r3;
-  shrq  #19,r1                                        rl >>= ANGLETOFINESHIFT;
-  shlq  #2,r1                                         r1 <<= 2;
-  movei #_finetangent,r0                              r0 = &finetangent;
-  add   r1,r0                                         r0 += r1;
-  
-  load   (r0),MATH_A                                  MATH_A = *r0;
-  movefa VR_distance,MATH_B                           MATH_B = VR_distance;
-;---------------------------------------
-;========== FixedMul r0,
-  move MATH_A,MATH_SIGN                               
-  xor  MATH_B,MATH_SIGN
-  abs  MATH_A
-  abs  MATH_B
-  move MATH_A,RETURNVALUE
-  mult MATH_B,RETURNVALUE              ; al*bl
-  shrq #16,RETURNVALUE
-  move MATH_B,scratch2
-  shrq #16,scratch2
-  mult MATH_A,scratch2                 ; al*bh
-  add  scratch2,RETURNVALUE
-  move MATH_A,scratch2
-  shrq #16,scratch2
-  mult MATH_B,scratch2                 ; bl*ah
-  add  scratch2, RETURNVALUE
-  move MATH_A,scratch2
-  shrq #16,scratch2
-  move MATH_B,scratch
-  shrq #16,scratch
-  mult scratch,scratch2                ; bh*ah
-  shlq #16,scratch2
-  add  scratch2, RETURNVALUE
-  btst #31,MATH_SIGN
-  jr   EQ,notneg
-  nop
-  neg  RETURNVALUE
-notneg:
-;---------------------------------------
-  movefa VR_offset,sl_texturecol                      sl_texturecol = VR_offset;
-  sub    RETURNVALUE,sl_texturecol                    sl_texturecol -= RETURNVALUE;
-  shrq   #16,sl_texturecol                            sl_texturecol >>= FRACBITS;
-
-;
-; other texture drawing info
-;
-  movei #33554432,sl_iscale                           sl_iscale = 33554432; // ???
-  ; let this div complete in background
-  div   sl_scale,sl_iscale                            sl_iscale /= sl_scale;
-
-;
-; calc light level
-;
-  movei #_lightcoef,r1                                r1 = &lightcoef;
-  load  (r1),r1                                       r1 = *r1;
-  mult  sl_scale,r1                                   r1 *= sl_scale;
-  shrq  #16,r1                                        r1 >>= FRACBITS;
-  movei #_lightsub,r2                                 r2 = &lightsub;
-  load  (r2),r2                                       r2 = *r2;
-  sub   r2,r1                                         r1 -= r2;
-  
-  movei #_lightmin,r0                                 r0 = &lightmin;
-  load  (r0),r0                                       r0 = *r0;
-  cmp   r0,r1                                         if(r0 < r1)
-  jr    S_LT,lightovermin                               goto lightovermin;
-  nop
-  move  r0,r1                                         r1 = r0;
-lightovermin:
-  movei #_lightmax,r0                                 r0 = &lightmax;
-  load  (r0),r0                                       r0 = *r0;
-  cmp   r0,r1                                         if(r0 > r1)
-  jr    S_GT,lightundermax                              goto lightundermax;
-  nop
-  move  r0,r1                                         r1 = r0;
-lightundermax:
-; convert to a hardware value
-  movei #255,r0                                       r0 = 255;
-  sub   r1,r0                                         r0 -= r1;
-  shlq  #14,r0                                        r0 <<= 14;
-  neg   r0                                            r0 = -r0;
-  movei #$ffffff,sl_texturelight                      sl_texturelight = 0xffffff;
-  and   r0,sl_texturelight                            sl_texturelight &= r0;
-
-;
-; draw textures
-;
-  btst  #BIT_TOPTEXTURE,sl_actionbits                 if(!(sl_actionbits & BIT_TOPTEXTURE) && !(sl_actionbits & BIT_BOTTOMTEXTURE)) // ????
-  jr    EQ,L137                                          goto L137;
-  btst  #BIT_BOTTOMTEXTURE,sl_actionbits ;delay slot
-
-  movei #_toptex,dt_tex ; parameter                   dt_tex = &toptex;
-  movei #_R_DrawTexture,r0                            r0 = R_DrawTexture;
-  move  PC,RETURNPOINT                                RETURNPOINT = PC;
-  jump  T,(r0)                                        call R_DrawTexture;
-  addq  #6,RETURNPOINT
-  movefa VR_actionbits,sl_actionbits                  sl_actionbits = VR_actionbits;
-
-  btst  #BIT_BOTTOMTEXTURE,sl_actionbits              if(!(sl_actionbits & BIT_BOTTOMTEXTURE))
-L137:                                                   goto L139;
-  jr    EQ,L139
-  nop
-
-  movei #_bottomtex,dt_tex	; parameter               dt_tex = &bottomtex;
-  movei #_R_DrawTexture,r0                            r0 = R_DrawTexture;
-  move  PC,RETURNPOINT
-  jump  T,(r0)                                        call R_DrawTexture;
-  addq  #6,RETURNPOINT
-  movefa VR_actionbits,sl_actionbits                  sl_actionbits = VR_actionbits;
-
-L139:
-L129:
-;-----------------------
-;
-; floor
-;
-;-----------------------
-  btst  #BIT_ADDFLOOR,sl_actionbits                   if(!(sl_actionbits & BIT_ADDFLOOR))
-  movei #L143,scratch                                    goto L143;
-  jump  EQ,(scratch)
-  nop
-  
-  movefa VR_floorheight,r0                            r0 = VR_floorheight;
-  imult  sl_scale,r0                                  r0 *= sl_scale;
-  sharq  #15,r0                                       r0 >>= 15;
-  movei  #90,sl_top                                   sl_top = CENTERY;
-  sub    r0,sl_top                                    sl_top -= r0;
-  cmp    sl_top,sl_ceilingclipx ;(top)(ceilingclipx)  if(sl_top > sl_ceilingclipx)
-  jr     S_GT,nocliptop                                 goto nocliptop;
-  nop
-  move  sl_ceilingclipx,sl_top                        sl_top = sl_ceilingclipx;
-  addq  #1,sl_top                                     sl_top += 1;
-nocliptop:
-  move  sl_floorclipx,sl_bottom                       sl_bottom = sl_floorclipx;
-  subq  #1,sl_bottom                                  sl_bottom -= 1;
-  
-  cmp   sl_top,sl_bottom ;(top)(bottom)               if(sl_top > sl_bottom)
-  movei #L147,scratch                                   goto L147;
-  jump  S_GT,(scratch)
-  nop
-  
-  move  sl_x,r0 ;(x)                                  r0 = sl_x;
-  load  (FP+7),r3 ; local floor                       r3 = *(FP+7);
-  shlq  #1,r0                                         r0 <<= 1;
-  addq  #24,r0                                        r0 += &visplane_t::open;
-  add   r3,r0                                         r0 += r3;
-  loadw (r0),r0 ; floor->open[x]                      r0 = *r0; 
-  movei #65280,r1                                     r1 = 65280; // ????
-  cmp   r0,r1                                         if(r0 == r1)
-  movei #L149,scratch                                   goto L149;
-  jump  EQ,(scratch)
-  nop
-
-  movefa  VR_floorheight,fp_height                    fp_height = VR_floorheight;
-  movefa  VR_floorpic,fp_picnum                       fp_picnum = VR_floorpic;
-  movefa  VR_seglightlevel,fp_lightlevel              fp_lightlevel = VR_seglightlevel;
-  movefa  VR_stop,fp_stop                             fp_stop = VR_stop;
-  movei   #348,fp_check                               fp_check = sizeof(visplane_t);
-  add     r3,fp_check ; fp_check = floor+1            fp_check += r3;
-  
-  movei #_R_FindPlane,r1                              r1 = R_FindPlane;
-  move  PC,RETURNPOINT
-  jump  T,(r1)                                        call R_FindPlane;
-  addq  #6,RETURNPOINT
-  movefa VR_actionbits,sl_actionbits                  sl_actionbits = VR_actionbits;
-  
-  store RETURNVALUE,(FP+7) ; floor                    *(FP+7) = RETURNVALUE; // visplane_t *floor
-
-L149:
-  move  sl_x,r0 ;(x)                                  r0 = sl_x;
-  shlq  #1,r0                                         r0 <<= 1;
-  load  (FP+7),r1 ; local floor                       r1 = *(FP+7); // floor
-  addq  #24,r1                                        r1 += &visplane_t::open;
-  add   r1,r0                                         r0 += r1;
-  move  sl_top,r1 ;(top)                              r1 = sl_top;
-  shlq  #8,r1                                         r1 <<= 8;
-  add   sl_bottom,r1 ;(bottom)                        r1 += sl_bottom;
-  storew r1,(r0) ; floor->open[x] = (top<<8)+bottom   *r0 = r1;
-
-L147:
-L143:
-;-----------------------
-;
-; ceiling
-;
-;-----------------------
-  btst  #BIT_ADDCEILING,sl_actionbits                 if(!(sl_actionbits & BIT_ADDCEILING))
-  movei #L157,scratch                                   goto L157;
-  jump  EQ,(scratch)
-  nop
-  
-  move  sl_ceilingclipx,sl_top                        sl_top = sl_ceilingclipx;
-  addq  #1,sl_top ; top = ceilingclipx+1              sl_top += 1;
-  
-  movei  #89,sl_bottom                                sl_bottom = 89;
-  movefa VR_ceilingheight,r1                          r1 = VR_ceilingheight;
-  imult  sl_scale,r1                                  r1 *= sl_scale;
-  sharq  #15,r1                                       r1 >>= 15;
-  sub    r1,sl_bottom                                 sl_bottom -= r1;
-  
-  cmp   sl_bottom,sl_floorclipx ;(bottom)(floorclipx) if(sl_bottom < sl_floorclipx)
-  jr    S_LT,noclipbottom                                goto noclipbottom;
-  nop
-  move  sl_floorclipx,sl_bottom                       sl_bottom = sl_floorclipx;
-  subq  #1,sl_bottom                                  sl_bottom -= 1;
-
-noclipbottom:
-  cmp   sl_top,sl_bottom ;(top)(bottom)               if(sl_bottom > sl_top)
-  movei #L161,scratch                                   goto L161;
-  jump  S_GT,(scratch)
-  nop
-  
-  move  sl_x,r0 ;(x)                                  r0 = sl_x;
-  shlq  #1,r0                                         r0 <<= 1;
-  load  (FP+8),r3 ; local ceiling                     r3 = *(FP+8); // ceiling
-  addq  #24,r0                                        r0 = &visplane_t::open;
-  add   r3,r0                                         r0 += r3;
-  loadw (r0),r0 ; ceiling->open[x]                    r0 = *r0;
-  movei #65280,r1                                     r1 = 65280; // ????
-  cmp   r0,r1                                         if(r0 == r1)
-  movei #L163,scratch                                   goto L163;
-  jump  EQ,(scratch)
-  nop
-
-  movefa VR_ceilingheight,fp_height                   fp_height = VR_ceilingheight;
-  movefa VR_ceilingpic,fp_picnum                      fp_picnum = VR_ceilingpic;
-  movefa VR_seglightlevel,fp_lightlevel               fp_lightlevel = VR_seglightlevel;
-  movefa VR_stop,fp_stop                              fp_stop = VR_stop;
-  movei  #348,fp_check                                fp_check = sizeof(visplane_t);
-  add    r3,fp_check ; fp_check = ceiling+1           fp_check += r3;
-  
-  movei #_R_FindPlane,r1
-  move  PC,RETURNPOINT
-  jump  T,(r1)                                        call R_FindPlane;
-  addq  #6,RETURNPOINT
-  movefa VR_actionbits,sl_actionbits                  sl_actionbits = VR_actionbits;
-  
-  store RETURNVALUE,(FP+8) ; ceiling                  *(FP+8) = RETURNVALUE; // ceiling
-
-L163:
-  move  sl_x,r0 ;(x)                                  r0 = sl_x;
-  shlq  #1,r0                                         r0 <<= 1;
-  load  (FP+8),r1 ; local ceiling                     r1 = *(FP+8); // ceiling
-  addq  #24,r1                                        r1 += &visplane_t::open;
-  add   r1,r0                                         r0 += r1;
-  move  sl_top,r1 ;(top)                              r1 = sl_top;
-  shlq  #8,r1                                         r1 <<= 8;
-  add   sl_bottom,r1 ;(bottom)                        r1 += sl_bottom;
-  storew r1,(r0)                                      *r0 = r1;
-
-L161:
-L157:
-;------------------------
-;
-; calc high and low
-;
-;------------------------
-  movefa VR_floornewheight,r0                         r0 = VR_floornewheight;
-  imult  sl_scale,r0                                  r0 *= sl_scale;
-  sharq  #15,r0                                       r0 >>= 15;
-  movei  #90,sl_low                                   sl_low = CENTERY;
-; low = CENTERY-(scale*wl.floornewheight)>>15
-  sub    r0,sl_low                                    sl_low -= r0;
-  jr     PL,lownotneg                                 ????
-  nop
-  moveq  #0,sl_low                                    sl_low = 0;
-lownotneg:
-  cmp   sl_low,sl_floorclipx                          if(sl_low < sl_floorclipx)
-  jr    S_LT,lowless                                    goto lowless;
-  nop
-  move  sl_floorclipx,sl_low                          sl_low = sl_floorclipx;
-lowless:
-  movefa VR_ceilingnewheight,r0                       r0 = VR_ceilingnewheight;
-  imult  sl_scale,r0                                  r0 *= sl_scale;
-  sharq  #15,r0                                       r0 >>= 15;
-  movei  #89,sl_high                                  sl_high = CENTERY - 1;
-; high = CENTERY-(scale*wl.ceilinewheight)>>15  
-  sub    r0,sl_high                                   sl_high -= r0;
-  movei  #179,r0                                      r0 = SCREENHEIGHT - 1;
-  cmp    r0,sl_high                                   if(r0 > sl_high)
-  jr     S_GT,highabove                                 goto highabove;
-  nop
-  move   r0,sl_high                                   sl_high = r0;
-highabove:
-  cmp    sl_high,sl_ceilingclipx                      if(sl_high > sl_ceilingclipx)
-  jr     S_GT,highcheck2                                 goto highcheck2;
-  nop
-  move   sl_ceilingclipx,sl_high                      sl_high = sl_ceilingclipx;
-highcheck2:
-;
-; bottom sprite clip sil
-;
-  btst #BIT_BOTTOMSIL,sl_actionbits                   if(!(sl_actionbits & BIT_BOTTOMSIL))
-  jr   EQ,nobottomsil                                    goto nobottomsil;
-  nop
-  
-  movefa VR_bottomsil,r1                              r1 = VR_bottomsil;
-  add    sl_x,r1                                      r1 += sl_x;
-  storeb sl_low,(r1)                                  *r1 = sl_low;
-
-nobottomsil:
-;
-; top sprite clip sil
-;
-  btst  #BIT_TOPSIL,sl_actionbits                     if(!(sl_actionbits & BIT_TOPSIL))
-  jr    EQ,notopsil                                     goto notopsil;
-  nop
-  
-  movefa VR_topsil,r1                                 r1 = VR_topsil;
-  add    sl_x,r1                                      r1 += sl_x;
-  move   sl_high,r0                                   r0 = sl_high;
-  addq   #1,r0                                        r0 += 1;
-  storeb r0,(r1)                                      *r1 = r0;
-
-notopsil:
-;--------------------------------------------------------------
-; sky mapping
-  btst  #BIT_ADDSKY,sl_actionbits                     if(!(sl_actionbits & BIT_ADDSKY))
-  movei #L190,scratch                                   goto L190;
-  jump  EQ,(scratch)
-  nop
-
-L187:
-  move   sl_ceilingclipx,sl_top                       sl_top = sl_ceilingclipx;
-  addq   #1,sl_top                                    sl_top += 1;
-  movei  #90,r0                                       r0 = CENTERY;
-  movefa VR_ceilingheight,r1                          r1 = VR_ceilingheight;
-  move   sl_scale,r2                                  r2 = sl_scale;
-  imult  r1,r2                                        r2 *= r1;
-
-L228:
-  move   r2,r1                                        r1 = r2;
-  sharq  #15,r1                                       r1 >>= 15;
-  sub    r1,r0                                        r0 -= r1;
-  subq   #1,r0                                        r0 -= 1;
-  move   r0,sl_bottom ;(bottom)                       sl_bottom = r0;
-  cmp    sl_bottom,sl_floorclipx;(bottom)(floorclipx) if(sl_bottom < sl_floorclipx)
-  movei  #L192,scratch                                   goto L192;
-  jump   S_LT,(scratch)
-  nop
-
-  move sl_floorclipx,r0 ;(floorclipx)                 r0 = sl_floorclipx;
-  subq #1,r0                                          r0 -= 1;
-  move r0,sl_bottom ;(bottom)                         sl_bottom = r0;
-
-L192:
-  cmp   sl_top,sl_bottom ;(top)(bottom)               if(sl_top ??? sl_bottom)
-  movei #L194,scratch                                   goto L194;
-  jump  PL,(scratch)
-  nop
-  
-  movei #L190,r0                                      goto L190
-  jump  T,(r0)
-  nop
-
-L194:
-  movei  #_viewangle,r0                               r0 = &viewangle;
-  load  (r0),r0                                       r0 = *r0;
-  move  sl_x,r1 ;(x)                                  r1 = sl_x;
-  shlq  #2,r1                                         r1 <<= 2;
-  movei #_xtoviewangle,r2                             r2 = &xtoviewangle;
-  add   r2,r1                                         r1 += r2;
-  load  (r1),r1                                       r1 = *r1;
-  add   r1,r0                                         r0 += r1;
-  shrq  #22,r0                                        r0 >>= 22;
-  move  r0,sl_colnum ;(colnum)                        sl_colnum = r0;
-  movei #255,r0                                       r0 = 255;
-  move  sl_colnum,r1 ;(colnum)                        r1 = sl_colnum;
-  and   r0,r1                                         r1 += r0;
-  move  r1,sl_colnum ;(colnum)                        sl_colnum = r1;
-
-
-  shlq  #21,sl_colnum                                 sl_colnum <<= 21;
-  
-  movei #18204,r1                                     r1 = 18204; // ????
-  imult sl_top,r1                                     r1 *= sl_top;
-  add   r1,sl_colnum                                  sl_colnum += r1;
-  
-  shlq  #2,sl_colnum                                  sl_colnum <<= 2;
- 
-  movei #36,r0                                        r0 = 36; // ????
-  add   FP,r0 ; &count                                r0 += FP; // &count ?
-  move  sl_bottom,r1 ;(bottom)                        r1 = sl_bottom;
-  sub   sl_top,r1 ;(top)                              r1 -= sl_top;
-  moveq #1,r2                                         r2 = 1;
-  add   r2,r1                                         r1 += r2;
-  shlq  #16,r1                                        r1 <<= FRACBITS;
-  add   r2,r1                                         r1 += r2;
-  store r1,(r0)                                       *r0 = r1;
-
-L196:
-L197:
-  movei #15737400,r0                                  r0 = 15737400; // 0xf02238 ????
-  load  (r0),r0                                       r0 = *r0;
-  moveq #1,r1                                         r1 = 1;
-  and   r1,r0                                         r0 &= r1;
-  moveq #0,r1                                         r1 = 0;
-  cmp   r0,r1                                         if(r0 == r1)
-  movei #L196,scratch                                   goto L196;
-  jump  EQ,(scratch)
-  nop
-
-  movei #15737344,r0                                  r0 = 15737344; // 0xf02200 ????
-  movei #_skytexturep,r1                              r1 = &skytexturep;
-  load  (r1),r1                                       r1 = *r1;
-  addq  #16,r1                                        r1 += 16; // &texture_t::data
-  load  (r1),r1                                       r1 = *r1;
-  store r1,(r0)                                       *r0 = r1;
-
-  movei #15737356,r0                                  r0 = 15737356; // 0xf0220c ????
-  move  sl_colnum,r1 ;(colnum)                        r1 = sl_colnum;
-  shrq  #16,r1                                        r1 >>= FRACBITS;
-  store r1,(r0)                                       *r0 = r1;
- 
-  movei #15737368,r0                                  r0 = 15737368; // 0xf02218 ????
-  movei #65535,r1                                     r1 = 65536;
-  move  sl_colnum,r2 ;(colnum)                        r2 = sl_colnum;
-  and   r1,r2                                         r2 &= r1;
-  move  r2,r1                                         r1 = r2;
-  store r1,(r0)                                       *r0 = r1;
-
-  movei #15737360,r0                                  r0 = 15737360; // 0xf02210 ????
-  moveq #1,r1                                         r1 = 1;
-  store r1,(r0)                                       *r0 = r1;
-  
-  movei #15737364,r0                                  r0 = 15737364; // 0xf02214 ????
-  movei #7281,r1                                      r1 = 7281; // ????
-  store r1,(r0)                                       *r0 = r1;
-  
-  movei #15737392,r0                                  r0 = 15737392; // 0xf02230 ????
-  move  sl_top,r1 ;(top)                              r1 = sl_top;
-  shlq  #16,r1                                        r1 <<= FRACBITS;
-  add   sl_x,r1 ;(x)                                  r1 += sl_x;
-  store r1,(r0)                                       *r0 = r1;
-
-  movei #15737456,r0                                  r0 = 15737456; // 0xf02270 ????
-  moveq #0,r1                                         r1 = 0;
-  store r1,(r0)                                       *r0 = r1;
-  
-  movei #15737404,r0                                  r0 = 15737404; // 0xf0223c ????
-  load  (FP+9),r1 ; local count                       r1 = *(FP+9);  // count
-  store r1,(r0)                                       *r0 = r1;
-  
-  movei #15737400,r0                                  r0 = 15737400;   // 0xf02238 ????
-  movei #1098919681,r1                                r1 = 1098919681; // 0x41802F01 ????
-  store r1,(r0)                                       *r0 = r1;
-
-L190:
-;--------------------------------------------------------------
-;if (!(actionbits & (AC_NEWFLOOR|AC_NEWCEILING)))
-; continue; // don't bother rewriting clipbounds[x]
-
-  movei #48,r0                                       r0 = (AC_NEWFLOOR|AC_NEWCEILING);
-  and   sl_actionbits,r0                             r0 &= sl_actionbits;
-  movei #L119,scratch                                if(!^^^^)
-  jump  EQ,(scratch)                                   goto L119;
-  nop
-  
-  btst  #BIT_NEWFLOOR,sl_actionbits                  if(!(sl_actionbits & BIT_NEWFLOOR))
-  jr    EQ,nonewfloor                                   goto nonewfloor;
-  nop
-  move  sl_low,sl_floorclipx                         sl_floorclipx = sl_low;
-  
-nonewfloor:
-  btst  #BIT_NEWCEILING,sl_actionbits                if(!(sl_actionbits & BIT_NEWCEILING))
-  jr    EQ,nonewceiling                                goto nonewceiling;
-  nop
-  move  sl_high,sl_ceilingclipx                      sl_ceilingclipx = sl_high;
-  
-nonewceiling:
-;clipbounds[x] = ((ceilingclipx+1)<<8) + floorclipx;
-  move  sl_x,r0 ;(x)                                  r0 = sl_x;
-  shlq  #2,r0                                         r0 <<= 2;
-  movei #_clipbounds,r1                               r1 = &clipbounds;
-  add   r1,r0                                         r0 += r1;
-  addq  #1,sl_ceilingclipx                            sl_ceilingclipx += 1;
-  shlq  #8,sl_ceilingclipx                            sl_ceilingclipx <<= 8;
-  add   sl_floorclipx,sl_ceilingclipx                 sl_ceilingclipx += sl_floorclipx;
-  store sl_ceilingclipx,(r0)                          *r0 = sl_ceilingclipx;
-  
-L119:
-; next
-  (up above ^^^^)
-
-L121:
-  (up above ^^^^)
-   */
+   while(++x <= segl->stop);
 }
 
 void R_SegCommands(void)
 {
-   int i, lightmin, lightmax, lightsub, lightcoef;
+   int i;
    int *clip;
    viswall_t *segl;
 
@@ -845,7 +539,6 @@ void R_SegCommands(void)
          // CALICO_TODO
       } // L83
 
-      // CALICO_TODO
       /*
       movei #_R_SegLoop,r0
       store r28,(FP) ; psuh ;(RETURNPOINT)
@@ -902,7 +595,7 @@ void R_SegCommands(void)
 
 L71:
   movefa VR_actionbits,r0                             r0 = VR_actionbits;
-  btst   #3,r0                                        if(!(r0 & 3))
+  btst   #3,r0                                        if(!(r0 & AC_BOTTOMTEXTURE))
   movei  #L83,scratch                                    goto L83;
   jump   EQ,(scratch)
   nop
