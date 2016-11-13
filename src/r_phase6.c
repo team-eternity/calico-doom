@@ -23,6 +23,7 @@ static drawtex_t bottomtex;
 
 static int clipbounds[SCREENWIDTH];
 static int lightmin, lightmax, lightsub, lightcoef;
+static int floorclipx, ceilingclipx, x, scale, iscale, texturecol, texturelight;
 
 //
 // Check for a matching visplane in the visplanes array, or set up a new one
@@ -76,164 +77,46 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnu
 
 static void R_DrawTexture(drawtex_t *tex)
 {
-   // CALICO_TODO
+   int top, bottom, colnum, frac, count;
+   int a1inc, a1incfrac, a1frac, a1pix, a2pix; // CALICO_TODO: Jag-specific values?
+
+   top = CENTERY - ((scale * tex->topheight) >> (HEIGHTBITS + SCALEBITS));
+
+   if(top <= ceilingclipx)
+      top = ceilingclipx + 1;
+
+   bottom = CENTERY - 1 - ((scale * tex->bottomheight) >> (HEIGHTBITS + SCALEBITS));
+
+   if(bottom >= floorclipx)
+      bottom = floorclipx - 1;
+
+   // column has no length?
+   if(top > bottom)
+      return;
+
+   colnum = texturecol;
+   frac = tex->texturemid - (CENTERY - top) * iscale;
+
+   while(frac < 0)
+   {
+      colnum--;
+      frac += tex->height << FRACBITS;
+   }
+
+   // CALICO: comment says this, but the code does otherwise...
+   // colnum = colnum - tex->width * (colnum / tex->width)
+   colnum &= (tex->width - 1);
+
+   // CALICO_TODO: Jaguar-specific blitter input calculation starts here.
+   a1inc = iscale / FRACUNIT;
+   a1incfrac = iscale & 0xffff;
+   count = (((bottom - top) + 1) << FRACBITS) + 1;
+   a2pix = (top << FRACBITS) | x;
+   frac += (colnum * tex->height) << FRACBITS;
+   a1pix = frac / FRACUNIT;
+   a1frac = frac & 0xffff;
+
    /*
-dt_tex		.equr	r15
-dt_blitter	.equr	r15
-
-dt_top		.equr	r16
-dt_bottom	.equr	r17
-dt_colnum	.equr	r18
-dt_frac		.equr	r5
-dt_centery	.equr	r7
-
-dt_scratch	.equr	r10
-dt_scratch2	.equr	r11
-dt_MATHA	.equr	r0
-dt_MATHB	.equr	r1
-
-dtb_base	.equr	r0
-dtb_a1pix	.equr	r1
-dtb_a1frac	.equr	r2
-dtb_a1inc	.equr	r3
-dtb_a1incfrac .equr r4
-
-dtb_count	.equr	r7
-dtb_command	.equr	r8
-
-;
-; common to draw texture
-;
-dt_floorclipx	.equr	r19
-dt_ceilingclipx	.equr	r20
-dt_x			.equr	r21
-dt_scale		.equr	r22
-
-dt_iscale		.equr	r23
-dt_texturecol	.equr	r24
-dt_texturelight	.equr	r25
-
-  ; tex->topheight
-  load  (dt_tex+3),dt_scratch                         dt_scratch = *(dt_tex+3);
-  
-  ; top = CENTERY - ((scale * tex->topheight) >> 15)
-  imult dt_scale,dt_scratch                           dt_scratch *= dt_scale;
-  sharq #15,dt_scratch                                dt_scratch >>= 15;
-  movei #90,dt_centery                                dt_centery = 90; // 180/2, CENTERY
-  move  dt_centery,dt_top                             dt_top = dt_centery;
-  sub   dt_scratch,dt_top                             dt_top -= dt_scratch;
-  
-  ; if (top > ceilingclipx)
-  cmp   dt_top,dt_ceilingclipx                        if(top > ceilingclipx)
-  jr    S_GT,dt_topok                                   goto dt_topok;
-  nop
-  move  dt_ceilingclipx,dt_top                        dt_top = dt_ceilingclipx;
-  addq  #1,dt_top                                     dt_top += 1;
-
-dt_topok:
-  ; tex->bottomheight
-  load  (dt_tex+4),dt_scratch                         dt_scratch = *(dt_tex+4);
-  
-  ; bottom = CENTERY - 1 - ((scale * tex->botheight) >> 15)
-  imult dt_scale,dt_scratch                           dt_scratch *= dt_scale;
-  sharq #15,dt_scratch                                dt_scratch >>= 15;
-  move  dt_centery,dt_bottom                          dt_bottom = dt_centery;
-  subq  #1,dt_bottom                                  dt_bottom -= 1;
-  sub   dt_scratch,dt_bottom                          dt_bottom -= dt_scratch;
-  
-  ; if (bottom < clipbottom)
-  cmp   dt_bottom,dt_floorclipx                       if(dt_bottom < dt_floorclipx)
-  jr    S_LT,dt_bottomok                                goto dt_bottomok;
-  nop
-  move  dt_floorclipx,dt_bottom                       dt_bottom = dt_floorclipx;
-  subqt #1,dt_bottom                                  dt_bottom -= 1;
- 
-dt_bottomok:
-  ; if (top>bottom) return
-  cmp   dt_top,dt_bottom                              if(dt_top > dt_bottom)
-  jump  S_GT,(RETURNPOINT)                              return;
-  nop
-
-;===========
-
-  move  dt_texturecol,dt_colnum                       dt_colnum = dt_texturecol;
-  
-; frac = tex->texturemid - (CENTERY - top) * tx_iscale
-  move  dt_centery,dt_MATHB                           MATHB = dt_centery;
-  sub   dt_top,dt_MATHB                               MATHB -= dt_top;
-  move  dt_MATHB,dt_scratch                           dt_scratch = MATHB;
-  move  dt_iscale,dt_MATHA                            MATHA = dt_iscale;
-  abs   dt_MATHB                                      MATHB = abs(MATHB);
-  move  dt_MATHA,dt_scratch2                          dt_scratch2 = MATHA;
-  shrq  #16,dt_scratch2                               dt_scratch2 >>= 16;
-  mult  dt_MATHB,dt_MATHA                             MATHA *= MATHB;
-  mult  dt_MATHB,dt_scratch2                          dt_scratch2 *= MATHB;
-  shlq  #16,dt_scratch2                               dt_scratch2 <<= 16;
-                                                      MATHA = dt_scratch2; // below...
-  btst  #31,dt_scratch                                if(!(dt_scratch & (1<<31)))
-  jr    EQ,dt_notneg                                    goto dt_notneg;
-  add   dt_scratch2,dt_MATHA ; delay slot              // above..
-  neg   dt_MATHA                                      MATHA = -MATHA;
-  
-dt_notneg:
-  ; tex->texturemid
-  load  (dt_tex+5),dt_frac                            dt_frac = *(dt_tex+5);
-  
-  sub   dt_MATHA,dt_frac                              dt_frac -= MATHA;
-
-; while(frac < 0) { colnum--; frac += tex->height<<16; }
-  jr    PL,fracpos                                    
-  nop
-subagain:
-  ; tex->height
-  load  (dt_tex+2),dt_scratch                         dt_scratch = *(dt_tex+2);
-  
-  shlq  #16,dt_scratch                                dt_scratch <<= 16;
-  add   dt_scratch,dt_frac                            dt_frac += dt_scratch;
-  jr    MI,subagain
-  subq  #1,dt_colnum                                    dt_colnum -= 1;
-
-fracpos:
-; colnum = colnum - tex->width * (colnum / tex->width)
-  load  (dt_tex+1),dt_scratch ; tex->width            dt_scratch = *(dt_tex+1);
-  subq  #1,scratch                                    scratch -= 1;
-  and   scratch,dt_colnum                             dt_colnum &= scratch;
-  
-; a1inc
-  move  dt_iscale,dtb_a1inc                           dtb_a1inc = dt_iscale;
-  shrq  #16,dtb_a1inc                                 dtb_a1inc >>= 16;
-  
-; a1incfrac
-  movei #$ffff,dtb_a1incfrac                          dtb_a1incfrac = 0xffff;
-  and   dt_iscale,dtb_a1incfrac                       dtb_a1incfrac &= dt_iscale;
-
-; count
-  move  dt_bottom,dtb_count                           dtb_count = dt_bottom;
-  sub   dt_top,dtb_count                              dtb_count -= dt_top;
-  addq  #1,dtb_count                                  dtb_count += 1;
-  shlq  #16,dtb_count                                 dtb_count <<= 16;
-  addq  #1,dtb_count                                  dtb_count += 1;
-  
-; a2pix
-  shlq  #16,dt_top                                    dt_top <<= 16;
-  or    dt_x,dt_top ; screen x                        dt_top |= dt_x;
-
-; frac += (colnum * tex->height) << 16
-  load  (dt_tex+2),dt_scratch ; tex->height           dt_scratch = *(dt_tex+2);
-  mult  dt_colnum,dt_scratch                          dt_scratch *= dt_colnum;
-  shlq  #16,dt_scratch                                dt_scratch <<= 16;
-  add   dt_scratch,dt_frac                            dt_frac += dt_scratch;
-
-; a1pix
-  move  dt_frac,dtb_a1pix                             dtb_a1pix = dt_frac;
-  shrq  #16,dtb_a1pix                                 dtb_a1pix >>= 16;
-  
-; a1pix frac
-  movei #$ffff,dtb_a1frac                             dtb_a1frac = 0xffff;
-  and   dt_frac,dtb_a1frac                            dtb_a1frac &= dt_frac;
-  
-;===========
-
 ; base
   load  (dt_tex),dtb_base ; dt->data                  dtb_base = *dt_tex;
 
@@ -269,8 +152,7 @@ dt_wait: // busy loop
 //
 static void R_SegLoop(viswall_t *segl)
 {
-   int x, scale, scalefrac, floorclipx, ceilingclipx, texturecol, iscale, 
-       low, high, top, bottom;
+   int scalefrac, low, high, top, bottom;
    visplane_t *ceiling, *floor;
 
    x = segl->start;
@@ -299,7 +181,6 @@ static void R_SegLoop(viswall_t *segl)
       if(segl->actionbits & AC_CALCTEXTURE)
       {
          // calculate texture offset
-         int texturelight;
          fixed_t r = FixedMul(segl->distance, 
                               finetangent[(segl->centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT]);
 
