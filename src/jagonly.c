@@ -3,6 +3,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "elib/configfile.h"
+#include "hal/hal_init.h"
+#include "hal/hal_input.h"
+#include "hal/hal_platform.h"
+#include "hal/hal_video.h"
 #include "doomdef.h"
 #include "m_argv.h"
 #include "r_local.h"
@@ -60,7 +65,10 @@ int *readylist_p = stopobj; /* list to display next frame */
 int *worklist_p, *work_p;   /* list currently being built */
 #endif
 
+#if 0
 int joypad[32]; 
+#endif
+
 int joystick1; 
 int ticcount; 
  
@@ -119,6 +127,22 @@ void Jag68k_main(int argc, const char *const *argv)
    myargc = argc;
    myargv = argv;
 
+   // CALICO: initialize HAL
+   if(!HAL_Init())
+      hal_platform.fatalError("HAL initialization failed");
+
+   hal_platform.debugMsg("HAL initialized\n");
+
+   // CALICO: read global configuration
+   Cfg_LoadFile();
+
+   hal_platform.debugMsg("Read config file\n");
+
+   // CALICO: initialize video
+   hal_video.initVideo();
+
+   hal_platform.debugMsg("Video initialized\n");
+
    debugscreenactive = debugscreenstate;
 
    // CALICO_FIXME: Jag-specific
@@ -142,7 +166,7 @@ void Jag68k_main(int argc, const char *const *argv)
 
    I_Print8(1, 0, "GPU_main");
 
-   // CALICO-FIXME: Jag-specific
+   // CALICO_FIXME: Jag-specific
 #if 0
    // copy dsp programs
    *(int *)0xf1a10c = 0x00050005;       /* operate in correct endian mode  */
@@ -192,7 +216,7 @@ void Jag68k_main(int argc, const char *const *argv)
 #endif
 
    I_Update();
-	
+
    // load defaults
    ReadEEProm();
 
@@ -410,6 +434,7 @@ byte *I_ZoneBase(int *size)
 // CALICO_FIXME: get SDL input
 int I_ReadControls(void) 
 { 
+#if 0
    static int oldticcount;
    int stoptic, i, cumulative;
 
@@ -418,7 +443,7 @@ int I_ReadControls(void)
       oldticcount = stoptic - 4;
    if(oldticcount >= stoptic)
       oldticcount = stoptic - 1;
-   cumulative = 0;	
+   cumulative = 0;
    for(i = oldticcount; i < stoptic; i++)
    {
       cumulative |= joypad[i&31];
@@ -427,6 +452,13 @@ int I_ReadControls(void)
    oldticcount = stoptic;
 
    return cumulative;
+#else 
+   // run event loop
+   hal_input.getEvents();
+
+   // CALICO_TODO: translate into Jaguar gamepad buttons
+   return 0;
+#endif
 } 
 
 // CALICO_FIXME: get time in tics

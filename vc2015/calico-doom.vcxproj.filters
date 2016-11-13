@@ -22,6 +22,27 @@
     <Filter Include="Source Files\win32">
       <UniqueIdentifier>{ce5c63ac-9ba2-4f26-9bb7-b255f91f8172}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\hal">
+      <UniqueIdentifier>{1bd4fd28-b6bf-4083-9e80-193e9de390b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\sdl">
+      <UniqueIdentifier>{41806c4a-1e39-4d7e-8b11-f7312e3a230c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\win32">
+      <UniqueIdentifier>{c4b0aab4-5a8b-4fe3-ad64-49ff40917ea9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\rb">
+      <UniqueIdentifier>{542c5b3f-35e3-42e2-9fac-5478c0d701ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\rb">
+      <UniqueIdentifier>{5403fc4b-ff18-4833-be8a-f9275f59fdb3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\elib">
+      <UniqueIdentifier>{6f8f8f00-4827-4344-b56e-5d1cccaa8019}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\elib">
+      <UniqueIdentifier>{962a0b65-cf27-4516-9764-d91672ad1993}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\am_main.c">
@@ -195,6 +216,66 @@
     <ClCompile Include="..\src\jagcry.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\sdl\sdl_init.c">
+      <Filter>Source Files\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hal\hal_ml.c">
+      <Filter>Source Files\hal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\sdl\sdl_hal.c">
+      <Filter>Source Files\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hal\hal_init.c">
+      <Filter>Source Files\hal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\win32\win32_platform.c">
+      <Filter>Source Files\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hal\hal_platform.c">
+      <Filter>Source Files\hal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\sdl\sdl_video.cpp">
+      <Filter>Source Files\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\rb\rb_draw.cpp">
+      <Filter>Source Files\rb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\rb\rb_main.cpp">
+      <Filter>Source Files\rb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\rb\rb_texture.cpp">
+      <Filter>Source Files\rb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\rb\valloc.cpp">
+      <Filter>Source Files\rb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hal\hal_video.c">
+      <Filter>Source Files\hal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hal\hal_input.c">
+      <Filter>Source Files\hal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\sdl\sdl_input.cpp">
+      <Filter>Source Files\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\elib\configfile.cpp">
+      <Filter>Source Files\elib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\elib\misc.cpp">
+      <Filter>Source Files\elib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\elib\parser.cpp">
+      <Filter>Source Files\elib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\elib\qstring.cpp">
+      <Filter>Source Files\elib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\elib\zone.cpp">
+      <Filter>Source Files\elib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\elib\atexit.cpp">
+      <Filter>Source Files\elib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\doomdata.h">
@@ -238,6 +319,87 @@
     </ClInclude>
     <ClInclude Include="..\src\w_iwad.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hal\hal_ml.h">
+      <Filter>Header Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sdl\sdl_init.h">
+      <Filter>Header Files\sdl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hal\hal_types.h">
+      <Filter>Header Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sdl\sdl_hal.h">
+      <Filter>Header Files\sdl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hal\hal_init.h">
+      <Filter>Header Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sdl\sdl_video.h">
+      <Filter>Header Files\sdl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hal\hal_platform.h">
+      <Filter>Header Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\win32\win32_platform.h">
+      <Filter>Header Files\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\rb_common.h">
+      <Filter>Header Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\rb_draw.h">
+      <Filter>Header Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\rb_main.h">
+      <Filter>Header Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\rb_texture.h">
+      <Filter>Header Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\rb_types.h">
+      <Filter>Header Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\valloc.h">
+      <Filter>Header Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\dllist.h">
+      <Filter>Header Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hal\hal_video.h">
+      <Filter>Header Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hal\hal_input.h">
+      <Filter>Header Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sdl\sdl_input.h">
+      <Filter>Header Files\sdl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\compare.h">
+      <Filter>Header Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\configfile.h">
+      <Filter>Header Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\misc.h">
+      <Filter>Header Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\parser.h">
+      <Filter>Header Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\qstring.h">
+      <Filter>Header Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\zone.h">
+      <Filter>Header Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\m_ctype.h">
+      <Filter>Header Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\elib.h">
+      <Filter>Header Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\atexit.h">
+      <Filter>Header Files\elib</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

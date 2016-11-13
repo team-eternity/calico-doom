@@ -1,5 +1,6 @@
 *.aps
 *.cal
+*.cfg
 *.db
 *.lib
 *.opendb

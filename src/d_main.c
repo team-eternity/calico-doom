@@ -263,9 +263,9 @@ int MiniLoop(void (*start)(void), void (*stop)(void),
    int exit;
    int buttons;
 
-   /* */
-   /* setup (cache graphics, etc) */
-   /* */
+   //
+   // setup (cache graphics, etc)
+   //
    start();
    exit = 0;
 
