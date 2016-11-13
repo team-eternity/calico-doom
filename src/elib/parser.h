@@ -33,7 +33,7 @@
 #include "qstring.h"
 
 //
-// Tokenizer class used by NoctParser
+// Tokenizer class used by Parser
 //
 class Tokenizer
 {

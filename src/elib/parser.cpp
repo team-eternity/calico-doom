@@ -32,7 +32,7 @@
 
 //=============================================================================
 //
-// NoctTokenizer
+// Tokenizer
 //
 // Does proper FSA tokenization
 //
