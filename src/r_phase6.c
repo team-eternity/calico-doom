@@ -662,7 +662,7 @@ typedef struct vissprite_s
 48:  fixed_t gz;
 52:  fixed_t gzt;
 56:  pixel_t *pixels;
-} vissprite_t;
+} vissprite_t; // sizeof() == 60
 
 typedef struct 
 { 
