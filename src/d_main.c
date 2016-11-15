@@ -1,5 +1,6 @@
 /* D_main.c  */
- 
+
+#include "hal/hal_input.h"
 #include "doomdef.h" 
 #include "m_argv.h"
  
@@ -399,6 +400,7 @@ void START_Title(void)
    DoubleBufferSetup ();
    titlepic = W_CacheLumpName ("title",PU_STATIC);
    S_StartSong(mus_intro, 0);
+   hal_appstate.setGrabState(HAL_FALSE); // CALICO: don't grab input
 }
 
 void STOP_Title(void)
@@ -419,7 +421,8 @@ void START_Credits(void)
 {
    backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
    DoubleBufferSetup();
-   titlepic = W_CacheLumpName("credits",PU_STATIC);
+   titlepic = W_CacheLumpName("credits", PU_STATIC);
+   hal_appstate.setGrabState(HAL_FALSE); // CALICO: don't grab input
 }
 
 void STOP_Credits(void)

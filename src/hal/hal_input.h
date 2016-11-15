@@ -36,6 +36,7 @@ typedef struct hal_appstate_s
    hal_bool (*mouseShouldBeGrabbed)(void);
    void     (*updateGrab)(void);
    void     (*updateFocus)(void);
+   void     (*setGrabState)(hal_bool state);
 } hal_appstate_t;
 
 typedef struct hal_input_s

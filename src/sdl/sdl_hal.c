@@ -70,6 +70,7 @@ void SDL2_InitHAL(void)
    hal_appstate.mouseShouldBeGrabbed = SDL2_MouseShouldBeGrabbed;
    hal_appstate.updateGrab           = SDL2_UpdateGrab;
    hal_appstate.updateFocus          = SDL2_UpdateFocus;
+   hal_appstate.setGrabState         = SDL2_SetGrabState;
 
    // Input
    hal_input.getEvents = SDL2_GetEvents;

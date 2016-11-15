@@ -85,10 +85,10 @@ int psnprintf(char *buf, size_t buf_len, const char *s, ...)
 //
 // Write a file from a data source
 //
-bool M_WriteFile(const char *filename, const void *source, size_t length)
+int M_WriteFile(const char *filename, const void *source, size_t length)
 {
    FILE *fp;
-   bool result;
+   int result;
 
    errno = 0;
 

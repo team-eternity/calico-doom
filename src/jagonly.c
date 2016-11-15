@@ -284,6 +284,9 @@ byte font8[] =
 
 void I_Print8(int x, int y, char *string)
 {
+   // CALICO: also output as a debug message
+   hal_platform.debugMsg(string);
+
    // CALICO_FIXME / CALICO_TODO: Jag-specific
 #if 0
    int c;
@@ -316,7 +319,6 @@ void I_Print8(int x, int y, char *string)
 
 char errormessage[80];
 
-// CALICO_FIXME: soft locks rather than exits
 void I_Error(const char *error, ...) 
 {
    va_list ap;
@@ -329,7 +331,12 @@ void I_Error(const char *error, ...)
    debugscreenactive = true;
    I_Update();
    while(1)
-      ;
+   {
+      // CALICO: run event loop
+      hal_input.getEvents();
+
+      // CALICO_TODO: keep screen refreshing also
+   }
 } 
 
 //

@@ -29,16 +29,24 @@
 #ifndef ZONE_H__
 #define ZONE_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void *E_Malloc(size_t size);
 void *E_Calloc(size_t count, size_t size);
 void *E_Realloc(void *ptr, size_t size);
 char *E_Strdup(const char *str);
 void  E_Free(void *ptr);
 
-#define ecalloc(type, count, size) static_cast<type *>(E_Calloc(count, size))
-#define emalloc(type, size)        static_cast<type *>(E_Malloc(size))
-#define erealloc(type, ptr, size)  static_cast<type *>(E_Realloc(ptr, size))
-#define estructalloc(type, num)    static_cast<type *>(E_Calloc(num, sizeof(type)))
+#ifdef __cplusplus
+}
+#endif
+
+#define ecalloc(type, count, size) (type *)(E_Calloc(count, size))
+#define emalloc(type, size)        (type *)(E_Malloc(size))
+#define erealloc(type, ptr, size)  (type *)(E_Realloc(ptr, size))
+#define estructalloc(type, num)    (type *)(E_Calloc(num, sizeof(type)))
 #define estrdup(str)               E_Strdup(str)
 #define efree(ptr)                 E_Free(ptr)
 

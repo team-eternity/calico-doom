@@ -28,15 +28,14 @@
 
 #ifdef _WIN32
 
-#include <stdarg.h>
-#include <stdio.h>
+#include "../elib/elib.h"
 #include <direct.h>
 #include <io.h>
 #include <Windows.h>
+
+#include "../elib/misc.h"
 #include "../hal/hal_ml.h"
 #include "../hal/hal_platform.h"
-
-extern int D_vsnprintf(char *str, size_t nmax, const char *format, va_list ap);
 
 //
 // Display a debug message. For Windows, this will open a debug console
@@ -70,7 +69,7 @@ static void Win32_ExitWithMsg(const char *msg, ...)
    char buf[1024];
 
    va_start(args, msg);
-   D_vsnprintf(buf, sizeof(buf), msg, args);
+   pvsnprintf(buf, sizeof(buf), msg, args);
    va_end(args);
 
    // try the media layer's method first; if it fails, use native
@@ -89,7 +88,7 @@ static void Win32_FatalError(const char *msg, ...)
    char buf[1024];
 
    va_start(args, msg);
-   D_vsnprintf(buf, sizeof(buf), msg, args);
+   pvsnprintf(buf, sizeof(buf), msg, args);
    va_end(args);
 
    // try the media layer's method first; if it fails, use native

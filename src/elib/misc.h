@@ -29,6 +29,10 @@
 #ifndef MISC_H__
 #define MISC_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // Portable snprintf
 //
@@ -40,7 +44,7 @@ int psnprintf(char *buf, size_t buf_len, const char *s, ...);
 // File IO Utils
 //
 
-bool    M_WriteFile(const char *filename, const void *source, size_t length);
+int     M_WriteFile(const char *filename, const void *source, size_t length);
 long    M_FileLength(FILE *f);
 size_t  M_ReadFile(const char *name, byte **buffer);
 char   *M_LoadStringFromFile(const char *filename);
@@ -58,6 +62,10 @@ char *M_Itoa(int value, char *string, int radix);
 //
 
 void M_NormalizeSlashes(char *str);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

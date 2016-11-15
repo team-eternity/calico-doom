@@ -1,5 +1,6 @@
 /* f_main.c -- finale */
 
+#include "hal/hal_input.h"
 #include "doomdef.h"
 #include "r_local.h"
 
@@ -255,6 +256,8 @@ void F_Start(void)
 {
    int i;
    int l;
+
+   hal_appstate.setGrabState(HAL_FALSE); // CALICO: don't grab input
 
    S_StartSong(2, 1);
 

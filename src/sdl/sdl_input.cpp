@@ -42,15 +42,22 @@
 
 static hal_bool windowFocused;
 static hal_bool screenVisible;
+static hal_bool shouldGrabInput;
+
+//
+// Set application input grabbing state
+//
+void SDL2_SetGrabState(hal_bool state)
+{
+   shouldGrabInput = state;
+}
 
 //
 // Determine whether or not mouse should be grabbed
 //
 hal_bool SDL2_MouseShouldBeGrabbed(void)
 {
-   // CALICO_TODO: invoke a game callback to get game status;
-   // ie., don't grab when playing a demo, paused, etc.
-   return windowFocused;
+   return (hal_bool)(windowFocused && shouldGrabInput);
 }
 
 //

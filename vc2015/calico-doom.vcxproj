@@ -200,6 +200,13 @@
     <ClInclude Include="..\src\st_main.h" />
     <ClInclude Include="..\src\win32\win32_platform.h" />
     <ClInclude Include="..\src\w_iwad.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="calico-doom.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\calico.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

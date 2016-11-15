@@ -5,7 +5,7 @@
 
   The MIT License (MIT)
   
-  Copyright (c) 2015 James Haley, Olde Skuul, id Software and ZeniMax Media
+  Copyright (C) 2016 James Haley
   
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal

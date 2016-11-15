@@ -35,6 +35,7 @@
 extern "C" {
 #endif
 
+void     SDL2_SetGrabState(hal_bool state);
 hal_bool SDL2_MouseShouldBeGrabbed(void);
 void     SDL2_UpdateGrab(void);
 void     SDL2_UpdateFocus(void);

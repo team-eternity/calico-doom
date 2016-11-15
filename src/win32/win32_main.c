@@ -38,7 +38,7 @@ extern void Jag68k_main(int argc, const char *const *argv);
 //
 // Remove slash characters from escaped quotation marks
 //
-static void UnEscapeQuotes(char *arg)
+static void Win32_unEscapeQuotes(char *arg)
 {
    char *last = NULL;
 
@@ -65,7 +65,7 @@ static void UnEscapeQuotes(char *arg)
 //
 // Parse the command line buffer into arguments
 //
-static int ParseCommandLine(char *cmdline, char **argv)
+static int Win32_parseCommandLine(char *cmdline, char **argv)
 {
    char *bufp;
    char *lastp = NULL;
@@ -120,7 +120,7 @@ static int ParseCommandLine(char *cmdline, char **argv)
 
       // strip out \ from \" sequences
       if(argv && last_argc != argc)
-         UnEscapeQuotes(argv[last_argc]);
+         Win32_unEscapeQuotes(argv[last_argc]);
       last_argc = argc;
    }
 
@@ -181,14 +181,14 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR szCmdLine, int sw)
    }
 
    // parse into argv, argc
-   argc = ParseCommandLine(cmdline, NULL);
+   argc = Win32_parseCommandLine(cmdline, NULL);
    argv = (char **)(calloc(argc + 1, sizeof(char *)));
    if(!argv)
    {
       OutOfMemory();
       return 0;
    }
-   ParseCommandLine(cmdline, argv);
+   Win32_parseCommandLine(cmdline, argv);
 
    // run application main program
    Jag68k_main(argc, argv);

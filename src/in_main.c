@@ -1,5 +1,6 @@
 
 /* in_main.c -- intermission */
+#include "hal/hal_input.h"
 #include "doomdef.h"
 #include "st_main.h"
 
@@ -250,6 +251,8 @@ void IN_SingleDrawer(void)
 void IN_Start(void)
 {	
    int i, l;
+
+   hal_appstate.setGrabState(HAL_FALSE); // CALICO: don't grab input
 
    earlyexit = false;
 

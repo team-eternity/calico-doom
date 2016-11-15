@@ -30,6 +30,7 @@
 #define ELIB_H__
 
 // C++ standard library
+#ifdef __cplusplus
 #include <cmath>
 #include <cstdarg>
 #include <cstdio>
@@ -37,15 +38,22 @@
 #include <cstring>
 #include <ctime>
 #include <memory>
+// ctypes replacement
+#include "m_ctype.h"
+#else
+#include <math.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#endif
 
 #include <stddef.h>
 #include <stdint.h>
 
 // Memory handling
 #include "zone.h"
-
-// ctypes replacement
-#include "m_ctype.h"
 
 // String case comparison
 #if defined(_MSC_VER) && !defined(strcasecmp)
@@ -65,7 +73,7 @@
    std::memset(&name, 0, sizeof(name))
 
 // Empty-or-null testing
-#define estrempty(str) ((str) == nullptr || *(str) == '\0')
+#define estrempty(str) ((str) == NULL || *(str) == '\0')
 
 // Types
 typedef uint8_t byte;

@@ -1,5 +1,6 @@
 /* m_main.c -- main menu */
 
+#include "hal/hal_input.h"
 #include "doomdef.h"
 	
 #define MOVEWAIT   3
@@ -70,6 +71,8 @@ void M_Start(void)
    playermap   = startmap;
 
    DoubleBufferSetup();
+
+   hal_appstate.setGrabState(HAL_FALSE); // CALICO: don't grab input
 }
 
 void M_Stop(void)
