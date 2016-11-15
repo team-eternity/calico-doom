@@ -1,0 +1,7 @@
+The jaguar icon file is derived from:
+https://commons.wikimedia.org/wiki/File:Jaguar_head_shot.jpg
+
+A photograph taken by MediaWiki Commons user Cburnett which is available under
+the Creative Commons Attribution-ShareAlike v3.0 Unported license, which can be
+read here:
+https://creativecommons.org/licenses/by-sa/3.0/
