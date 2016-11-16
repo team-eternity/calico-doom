@@ -73,9 +73,9 @@ int SlopeDiv(unsigned int num, unsigned int den)
 }
 
 angle_t R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
-{	
-   int		x;
-   int		y;
+{
+   int x;
+   int y;
 
    x = x2 - x1;
    y = y2 - y1;
@@ -95,7 +95,7 @@ angle_t R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
             return ANG90-1-tantoangle[ SlopeDiv(x,y)];  // octant 1
       }
       else
-      {	
+      {
          // y<0 
          y = -y;
          if(x > y)
@@ -109,7 +109,7 @@ angle_t R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
       // x<0
       x = -x;
       if(y>= 0)
-      {	
+      {
          // y>= 0 
          if(x > y)
             return ANG180-1-tantoangle[SlopeDiv(y, x)]; // octant 3 
@@ -125,7 +125,7 @@ angle_t R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
          else
             return ANG270-1-tantoangle[SlopeDiv(x, y)]; // octant 5
       }
-   }	
+   }
 
    return 0;
 }
@@ -153,13 +153,14 @@ int R_PointOnSide(int x, int y, node_t *node)
 
    dx = (x - node->x);
    dy = (y - node->y);
-	
+
    left  = (node->dy>>16) * (dx>>16);
    right = (dy>>16) * (node->dx>>16);
 
    if(right < left)
-      return 0;		// front side
-   return 1;			// back side 
+      return 0;  // front side
+
+   return 1;     // back side 
 }
 
 
@@ -298,7 +299,7 @@ void R_Setup(void)
 
    extralight = player->extralight << 6;
    fixedcolormap = player->fixedcolormap;
-		
+
    //
    // calc shadepixel
    //
@@ -355,32 +356,27 @@ void R_Setup(void)
 
    //
    // plane filling
-   //	
+   //
    lastvisplane = visplanes+1;       // visplanes[0] is left empty
    lastwallcmd = viswalls;           // no walls added yet 
    lastvissubsector = vissubsectors; // no subsectors visible yet
-	
+
    //
    // clear sprites
    //
    vissprite_p = vissprites;
    lastopening = openings;
-
-   // CALICO_TODO: non-portable
-#if 0
-   phasetime[0] = samplecount;
-#endif
 }
 
-void R_BSP(void);
-void R_WallPrep(void);
-void R_SpritePrep(void);
+void    R_BSP(void);
+void    R_WallPrep(void);
+void    R_SpritePrep(void);
 boolean R_LatePrep(void);
-void R_Cache(void);
-void R_SegCommands(void);
-void R_DrawPlanes(void);
-void R_Sprites(void);
-void R_Update(void);
+void    R_Cache(void);
+void    R_SegCommands(void);
+void    R_DrawPlanes(void);
+void    R_Sprites(void);
+void    R_Update(void);
 
 /*
 ==============
@@ -401,7 +397,7 @@ extern int ref6_start;
 extern int ref7_start;
 extern int ref8_start;
 
-extern	boolean	debugscreenactive;
+extern boolean debugscreenactive;
 
 void R_RenderPlayerView(void)
 {
