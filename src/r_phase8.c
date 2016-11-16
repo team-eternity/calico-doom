@@ -6,6 +6,8 @@
 
 #include "r_local.h"
 
+#define OPENMARK 0xff00
+
 static int spropening[SCREENWIDTH + 1];
 
 static void R_DrawVisSprite(vissprite_t *vis)
@@ -302,24 +304,21 @@ static void R_ClipVisSprite(vissprite_t *vis)
 {
    // CALICO_TODO
    /*
- movei #104,scratch
- sub scratch,FP
-
  move FP,r0                                r0 = FP
  addq #20,r0 ; &x1                         r0 += 20
  load (FP+26),r1 ; local vis               r1 = *(FP+26) // vis
- load (r1),r2                              r2 = *r1
+ load (r1),r2                              r2 = *r1 // vis->x1
  store r2,(r0)                             *r0 = r2
  move r1,r0                                r0 = r1
- addq #4,r0                                r0 += 4
+ addq #4,r0                                r0 += &vissprite_t::x2
  load (r0),r0                              r0 = *r0
- move r0,r22 ;(x2)                         r22 = r0 // x2
+ move r0,r22 ;(x2)                         x2 = r0 
  move FP,r0                                r0 = FP
  addq #32,r0 ; &gz                         r0 += 32 // gz
- movei #48,r2                              r2 = 48
+ movei #48,r2                              r2 = &vissprite_t::gz
  move r1,r3                                r3 = r1
  add r2,r3                                 r3 += r2
- load (r3),r2                              r2 = *r3
+ load (r3),r2                              r2 = *r3 // vis->gz
  movei #_viewz,r3                          r3 = &viewz
  load (r3),r3                              r3 = *r3
  sub r3,r2                                 r2 -= r3
@@ -328,28 +327,28 @@ static void R_ClipVisSprite(vissprite_t *vis)
  store r2,(r0)                             *r0 = r2
  movei #36,r0                              r0 = 36
  add FP,r0 ; &gzt                          r0 += FP // gzt
- movei #52,r2                              r2 = 52
+ movei #52,r2                              r2 = &vissprite_t::gzt
  move r1,r5                                r5 = r1
  add r2,r5                                 r5 += r2
- load (r5),r2                              r2 = *r5
+ load (r5),r2                              r2 = *r5 // vis->gzt
  sub r3,r2                                 r2 -= r3
  sha r4,r2                                 r2 >>= r4 // right since 10 >= 0
  store r2,(r0)                             *r0 = r2
  move FP,r0                                r0 = FP
  addq #12,r0 ; &scalefrac                  r0 += 12 // scalefrac
  move r1,r2                                r2 = r1
- addq #20,r2                               r2 += 20
+ addq #20,r2                               r2 += &vissprite_t::yscale
  load (r2),r2                              r2 = *r2
  store r2,(r0)                             *r0 = r2
- load (r1),r0                              r0 = *r1
- move r0,r15 ;(x)                          r15 = r0 // x
+ load (r1),r0                              r0 = *r1 // vis->x1
+ move r0,r15 ;(x)                          x = r0
 
  movei #L80,r0                             goto L80
  jump T,(r0)
  nop
 
 L77: // loop start
- move r15,r0 ;(x)                          r0 = r15 // x
+ move r15,r0 ;(x)                          r0 = x
  shlq #2,r0                                r0 <<= 2
  movei #_spropening,r1                     r1 = &spropening
  add r1,r0                                 r0 += r1
@@ -357,55 +356,55 @@ L77: // loop start
  store r1,(r0)                             *r0 = r1
 
 L78: // loop increment
- move r15,r0 ;(x)                          r0 = r15 // x
+ move r15,r0 ;(x)                          r0 = x
  addq #1,r0                                r0 += 1
- move r0,r15 ;(x)                          r15 = r0 // x
+ move r0,r15 ;(x)                          x = r0
 
 L80: // loop end
- cmp r15,r22 ;(x)(x2)                      if(r15 <= r22)
+ cmp r15,r22 ;(x)(x2)                      if(x <= x2)
  movei #L77,scratch                           goto L77
  jump PL,(scratch)
  nop
 
  movei #_lastwallcmd,r0                    r0 = &lastwallcmd
  load (r0),r0                              r0 = *r0
- movei #-112,r1                            r1 = -112
+ movei #-112,r1                            r1 = -sizeof(viswall_t)
  add r1,r0                                 r0 += r1
- move r0,r17 ;(ds)                         r17 = r0 // ds
+ move r0,r17 ;(ds)                         ds = r0 // ds
 
  movei #L84,r0                             goto L84
  jump T,(r0)
  nop
 
 L81: // start loop to L84
- move r17,r0 ;(ds)                         r0 = r17 // ds
- addq #4,r0                                r0 += 4
+ move r17,r0 ;(ds)                         r0 = ds
+ addq #4,r0                                r0 += &viswall_t::start
  load (r0),r0                              r0 = *r0
- cmp r0,r22 ;(x2)                          if(r0 > r22)
+ cmp r0,r22 ;(x2)                          if(r0 > x2)
  movei #L89,scratch                           goto L89
  jump MI,(scratch)
  nop
- move r17,r0 ;(ds)                         r0 = r17 // ds
- addq #8,r0                                r0 += 8
+ move r17,r0 ;(ds)                         r0 = ds
+ addq #8,r0                                r0 += &viswall_t::stop
  load (r0),r0                              r0 = *r0
- load (FP+5),r1 ; local x1                 r1 = *(FP+5) // x1
+ load (FP+5),r1 ; local x1                 r1 = x1
  cmp r0,r1                                 if(r0 < r1)
  movei #L89,scratch                           goto L89
  jump S_LT,(scratch)
  nop
- movei #84,r0                              r0 = 84
- move r17,r1 ;(ds)                         r1 = r17 // ds
+ movei #84,r0                              r0 = &viswall_t::scalefrac
+ move r17,r1 ;(ds)                         r1 = ds
  add r0,r1                                 r1 += r0
  load (r1),r0                              r0 = *r1
- load (FP+3),r1 ; local scalefrac          r1 = *(FP+3) // scalefrac
+ load (FP+3),r1 ; local scalefrac          r1 = scalefrac
  cmp r0,r1                                 if(r0 >= r1)
  movei #L90,scratch                           goto L90
  jump EQ,(scratch)
  nop
  jump CS,(scratch)
  nop
- movei #88,r0                              r0 = 88
- move r17,r2 ;(ds)                         r2 = r17 // ds
+ movei #88,r0                              r0 = &viswall_t::scale2
+ move r17,r2 ;(ds)                         r2 = ds
  add r0,r2                                 r2 += r0
  load (r2),r0                              r0 = *r0
  cmp r0,r1                                 if(r0 < r1)
@@ -413,10 +412,10 @@ L81: // start loop to L84
  jump U_LT,(scratch)
  nop
 L90:
- move r17,r0 ;(ds)                         r0 = r17 // ds
- addq #24,r0                               r0 += 24
+ move r17,r0 ;(ds)                         r0 = ds
+ addq #24,r0                               r0 += &viswall_t::actionbits
  load (r0),r0                              r0 = *r0
- movei #1792,r1                            r1 = 1792 // ??
+ movei #1792,r1                            r1 = (AC_TOPSIL|AC_BOTTOMSIL|AC_SOLIDSIL)
  and r1,r0                                 r0 &= r1
  moveq #0,r1                               r1 = 0
  cmp r0,r1                                 if(r0 != r1)
@@ -429,17 +428,17 @@ L89:
  nop
 
 L85:
- movei #84,r0                              r0 = 84
- move r17,r1 ;(ds)                         r1 = r17 // ds
+ movei #84,r0                              r0 = &viswall_t::scalefrac
+ move r17,r1 ;(ds)                         r1 = ds
  add r0,r1                                 r1 += r0
  load (r1),r0                              r0 = *r1
- load (FP+3),r1 ; local scalefrac          r1 = *(FP+3) // scalefrac
+ load (FP+3),r1 ; local scalefrac          r1 = scalefrac
  cmp r0,r1                                 if(r0 <= r1)
  movei #L91,scratch                           goto L91
  jump CC,(scratch)
  nop
- movei #88,r0                              r0 = 88
- move r17,r2 ;(ds)                         r2 = r17 // ds
+ movei #88,r0                              r0 = &viswall_t::scale2
+ move r17,r2 ;(ds)                         r2 = ds
  add r0,r2                                 r2 += r0
  load (r2),r0                              r0 = *r2
  cmp r0,r1                                 if(r0 <= r1)
@@ -452,15 +451,15 @@ L85:
  nop
 
 L91:
- store r17,(FP) ; arg[] ;(ds)              *FP = r17 // ds (arg)
- load (FP+26),r0 ; local vis               r0 = *(FP+26) // vis
- movei #40,r1                              r1 = 40
+ store r17,(FP) ; arg[] ;(ds)              *FP = ds
+ load (FP+26),r0 ; local vis               r0 = vis
+ movei #40,r1                              r1 = &vissprite_t::gx
  move r0,r2                                r2 = r0
  add r1,r2                                 r2 += r1
  load (r2),r1                              r1 = *r2
  or r1,scratch ; scoreboard bug
  store r1,(FP+1) ; arg[]                   *(FP+1) = r1 // arg
- movei #44,r1                              r1 = 44
+ movei #44,r1                              r1 = &vissprite_t::gy
  add r1,r0                                 r0 += r1
  load (r0),r0                              r0 = *r0
  or r0,scratch ; scoreboard bug
@@ -499,10 +498,10 @@ L133:
 
 L94:
 L93:
- move r17,r0 ;(ds)                         r0 = r17 // ds
- addq #4,r0                                r0 += 4
+ move r17,r0 ;(ds)                         r0 = ds
+ addq #4,r0                                r0 += &viswall_t::start
  load (r0),r0                              r0 = *r0
- load (FP+5),r1 ; local x1                 r1 = *(FP+5) // x1
+ load (FP+5),r1 ; local x1                 r1 = x1
  cmp r0,r1                                 if(r0 >= r1)
  movei #L97,scratch                           goto L97
  jump EQ,(scratch)
@@ -511,7 +510,7 @@ L93:
  nop
  movei #40,r0                              r0 = 40
  add FP,r0 ; &96                           r0 += FP // 96?
- load (FP+5),r1 ; local x1                 r1 = *(FP+5) // x1
+ load (FP+5),r1 ; local x1                 r1 = x1
  store r1,(r0)                             *r0 = r1
  movei #L98,r0                             goto L98
  jump T,(r0)
@@ -519,8 +518,8 @@ L93:
 L97:
  movei #40,r0                              r0 = 40
  add FP,r0 ; &96                           r0 += FP // 96?
- move r17,r1 ;(ds)                         r1 = r17 // ds
- addq #4,r1                                r1 += 4
+ move r17,r1 ;(ds)                         r1 = ds
+ addq #4,r1                                r1 += &viswall_t::start
  load (r1),r1                              r1 = *r1
  store r1,(r0)                             *r0 = r1
 L98:
@@ -528,53 +527,53 @@ L98:
  addq #28,r0 ; &r1                         r0 += 28
  load (FP+10),r1 ; local 96                r1 = *(FP+10) // 96?
  store r1,(r0)                             *r0 = r1
- move r17,r0 ;(ds)                         r0 = r17 // ds
- addq #8,r0                                r0 += 8
+ move r17,r0 ;(ds)                         r0 = ds
+ addq #8,r0                                r0 += &viswall_t::stop
  load (r0),r0                              r0 = *r0
- cmp r0,r22 ;(x2)                          if(r0 <= r22)
+ cmp r0,r22 ;(x2)                          if(r0 <= x2)
  movei #L99,scratch                           goto L99
  jump PL,(scratch)
  nop
  movei #40,r0                              r0 = 40
  add FP,r0 ; &96                           r0 += FP // 96?
- store r22,(r0) ;(x2)                      *r0 = r22 // x2
+ store r22,(r0) ;(x2)                      *r0 = x2
  movei #L100,r0                            goto L100
  jump T,(r0)
  nop
 L99:
  movei #40,r0                              r0 = 40
  add FP,r0 ; &96                           r0 += FP // 96?
- move r17,r1 ;(ds)                         r1 = r17 // ds
- addq #8,r1                                r1 += 8
+ move r17,r1 ;(ds)                         r1 = ds
+ addq #8,r1                                r1 += &viswall_t::stop
  load (r1),r1                              r1 = *r1
  store r1,(r0)                             *r0 = r1
 L100:
  load (FP+10),r0 ; local 96                r0 = *(FP+10) // 96?
- move r0,r18 ;(r2)                         r18 = r0
+ move r0,r18 ;(r2)                         r18 = r0 // "r2"
  move FP,r0                                r0 = FP
  addq #16,r0 ; &silhouette                 r0 += 16 // silhouette
- move r17,r1 ;(ds)                         r1 = r17 // ds
- addq #24,r1                               r1 += 24
+ move r17,r1 ;(ds)                         r1 = ds
+ addq #24,r1                               r1 += &viswall_t::actionbits
  load (r1),r1                              r1 = *r1
- movei #1792,r2                            r2 = 1792 // ???
+ movei #1792,r2                            r2 = (AC_TOPSIL|AC_BOTTOMSIL|AC_SOLIDSIL)
  and r2,r1                                 r1 &= r2
  store r1,(r0)                             *r0 = r1
  load (r0),r0                              r0 = *r0
- movei #1024,r1                            r1 = 1024
+ movei #1024,r1                            r1 = AC_SOLIDSIL
  cmp r0,r1                                 if(r0 != r1)
  movei #L101,scratch                          goto L101
  jump NE,(scratch)
  nop
 
- load (FP+7),r0 ; local r1                 r0 = *(FP+7)
- move r0,r15 ;(x)                          r15 = r0 // x
+ load (FP+7),r0 ; local r1                 r0 = *(FP+7) // "r1"
+ move r0,r15 ;(x)                          x = r0
 
  movei #L106,r0                            goto L106
  jump T,(r0)
  nop
 
 L103: // loop start
- move r15,r0 ;(x)                          r0 = r15 // x
+ move r15,r0 ;(x)                          r0 = x
  shlq #2,r0                                r0 <<= 2
  movei #_spropening,r1                     r1 = &spropening
  add r1,r0                                 r0 += r1
@@ -582,12 +581,12 @@ L103: // loop start
  store r1,(r0)                             *r0 = r1
 
 L104: // loop increment
- move r15,r0 ;(x)                          r0 = r15 // x
+ move r15,r0 ;(x)                          r0 = x
  addq #1,r0                                r0 += 1
- move r0,r15 ;(x)                          r15 = r0 // x
+ move r0,r15 ;(x)                          x = r0
 
 L106: // loop end
- cmp r15,r18 ;(x)(r2)                      if(r15 <= r18) // x, r2
+ cmp r15,r18 ;(x)(r2)                      if(x <= r18) // x, "r2"
  movei #L103,scratch                          goto L103
  jump PL,(scratch)
  nop
@@ -599,39 +598,39 @@ L106: // loop end
 L101:
  move FP,r0                                r0 = FP
  addq #24,r0 ; &topsil                     r0 += 24 // topsil
- movei #76,r1                              r1 = 76
- move r17,r2 ;(ds)                         r2 = r17 // ds
+ movei #76,r1                              r1 = &viswall_t::topsil
+ move r17,r2 ;(ds)                         r2 = ds
  add r1,r2                                 r2 += r1
  load (r2),r1                              r1 = *r2
  store r1,(r0)                             *r0 = r1
- movei #80,r0                              r0 = 80
- move r17,r1 ;(ds)                         r1 = r17 // ds
+ movei #80,r0                              r0 = &viswall_t::bottomsil
+ move r17,r1 ;(ds)                         r1 = ds
  add r0,r1                                 r1 += r0
  load (r1),r0                              r0 = *r1
- move r0,r21 ;(bottomsil)                  r21 = r0 // bottomsil
- load (FP+4),r0 ; local silhouette         r0 = *(FP+4) // silhouette
- movei #512,r1                             r1 = 512
+ move r0,r21 ;(bottomsil)                  bottomsil = r0
+ load (FP+4),r0 ; local silhouette         r0 = silhouette
+ movei #512,r1                             r1 = AC_BOTTOMSIL
  cmp r0,r1                                 if(r0 != r1)
  movei #L107,scratch                          goto L107
  jump NE,(scratch)
  nop
 
- load (FP+7),r0 ; local r1                 r0 = *(FP+7)
- move r0,r15 ;(x)                          r15 = r0 // x
+ load (FP+7),r0 ; local r1                 r0 = *(FP+7) // "r1"
+ move r0,r15 ;(x)                          x = r0 // x
 
  movei #L112,r0                            goto L112
  jump T,(r0)
  nop
 
 L109: // loop start
- move r15,r0 ;(x)                          r0 = r15 // x
+ move r15,r0 ;(x)                          r0 = x
  shlq #2,r0                                r0 <<= 2
  movei #_spropening,r1                     r1 = &spropening
  add r1,r0                                 r0 += r1
  load (r0),r0                              r0 = *r0
- move r0,r16 ;(opening)                    r16 = r0 // opening
+ move r0,r16 ;(opening)                    opening = r0
  movei #255,r0                             r0 = 255
- move r16,r1 ;(opening)                    r1 = r16 // opening
+ move r16,r1 ;(opening)                    r1 = opening
  and r0,r1                                 r1 &= r0
  movei #180,r0                             r0 = SCREENHEIGHT
  cmp r1,r0                                 if(r1 != r0)
@@ -639,27 +638,27 @@ L109: // loop start
  jump NE,(scratch)
  nop
 
- move r15,r0 ;(x)                          r0 = r15 // x
+ move r15,r0 ;(x)                          r0 = x
  shlq #2,r0                                r0 <<= 2
  movei #_spropening,r1                     r1 = &spropening
  add r1,r0                                 r0 += r1
  movei #65280,r1                           r1 = OPENMARK
- move r16,r2 ;(opening)                    r2 = r16 // opening
+ move r16,r2 ;(opening)                    r2 = opening
  and r1,r2                                 r1 &= r2
- move r15,r1 ;(x)                          r1 = r15 // x
- add r21,r1 ;(bottomsil)                   r1 += r21 // bottomsil
+ move r15,r1 ;(x)                          r1 = x
+ add r21,r1 ;(bottomsil)                   r1 += bottomsil
  loadb (r1),r1                             r1 = *r1
  add r1,r2                                 r2 += r1
  store r2,(r0)                             *r0 = r2
 
 L113:
 L110: // loop increment
- move r15,r0 ;(x)                          r0 = r15
+ move r15,r0 ;(x)                          r0 = x
  addq #1,r0                                r0 += 1
- move r0,r15 ;(x)                          r15 = r0
+ move r0,r15 ;(x)                          x = r0
 
 L112: // loop end
- cmp r15,r18 ;(x)(r2)                      if(r15 <= r18) // x, r2
+ cmp r15,r18 ;(x)(r2)                      if(x <= r18) // x, "r2"
  movei #L109,scratch                          goto L109
  jump PL,(scratch)
  nop
@@ -669,29 +668,29 @@ L112: // loop end
  nop
 
 L107:
- load (FP+4),r0 ; local silhouette         r0 = *(FP+4) // silhouette
- movei #256,r1                             r1 = 256
+ load (FP+4),r0 ; local silhouette         r0 = silhouette
+ movei #256,r1                             r1 = AC_TOPSIL
  cmp r0,r1                                 if(r0 != r1)
  movei #L115,scratch                          goto L115
  jump NE,(scratch)
  nop
 
- load (FP+7),r0 ; local r1                 r0 = *(FP+7)
- move r0,r15 ;(x)                          r15 = r0 // x
+ load (FP+7),r0 ; local r1                 r0 = *(FP+7) // "r1"
+ move r0,r15 ;(x)                          x = r0
 
  movei #L120,r0                            goto L120
  jump T,(r0)
  nop
 
 L117: // start inner loop
- move r15,r0 ;(x)                          r0 = r15 // x
+ move r15,r0 ;(x)                          r0 = x
  shlq #2,r0                                r0 <<= 2
  movei #_spropening,r1                     r1 = &spropening
  add r1,r0                                 r0 += r1
  load (r0),r0                              r0 = *r0
- move r0,r16 ;(opening)                    r16 = r0 // opening
+ move r0,r16 ;(opening)                    opening = r0
  movei #65280,r0                           r0 = OPENMARK
- move r16,r1 ;(opening)                    r1 = r16 // opening
+ move r16,r1 ;(opening)                    r1 = opening
  and r0,r1                                 r1 &= r0
  moveq #0,r0                               r0 = 0
  cmp r1,r0                                 if(r1 != r0)
@@ -699,29 +698,29 @@ L117: // start inner loop
  jump NE,(scratch)
  nop
 
- move r15,r0 ;(x)                          r0 = r15 // x
+ move r15,r0 ;(x)                          r0 = x
  shlq #2,r0                                r0 <<= 2
  movei #_spropening,r1                     r1 = &spropening
  add r1,r0                                 r0 += r1
- load (FP+6),r1 ; local topsil             r1 = *(FP+6) // topsil
- move r15,r2 ;(x)                          r2 = r15 // x
+ load (FP+6),r1 ; local topsil             r1 = topsil
+ move r15,r2 ;(x)                          r2 = x
  add r1,r2                                 r2 += r1
  loadb (r2),r1                             r1 = *r2
  shlq #8,r1                                r1 <<= 8
  movei #255,r2                             r2 = 255
- move r16,r3 ;(opening)                    r3 = r16 // opening
+ move r16,r3 ;(opening)                    r3 = opening
  and r2,r3                                 r3 += r2
  add r3,r1                                 r1 += r3
  store r1,(r0)                             *r0 = r1
 
 L121:
 L118: // loop increment
- move r15,r0 ;(x)                          r0 = r15 // x
+ move r15,r0 ;(x)                          r0 = x
  addq #1,r0                                r0 += 1
- move r0,r15 ;(x)                          r15 = r0
+ move r0,r15 ;(x)                          x = r0
 
 L120: // end inner loop
- cmp r15,r18 ;(x)(r2)                      if(r15 <= r18) // x, r2
+ cmp r15,r18 ;(x)(r2)                      if(x <= r18) // x, "r2"
  movei #L117,scratch                          goto L117
  jump PL,(scratch)
  nop
@@ -731,75 +730,75 @@ L120: // end inner loop
  nop
 
 L115:
- load (FP+4),r0 ; local silhouette         r0 = *(FP+4) // silhouette
- movei #768,r1                             r1 = 768
+ load (FP+4),r0 ; local silhouette         r0 = silhouette
+ movei #768,r1                             r1 = (AC_TOPSIL|AC_BOTTOMSIL)
  cmp r0,r1                                 if(r0 != r1)
  movei #L123,scratch                          goto L123 // continue; (outer loop)
  jump NE,(scratch)
  nop
 
- load (FP+7),r0 ; local r1                 r0 = *(FP+7) // r1
- move r0,r15 ;(x)                          r15 = r0 // x
+ load (FP+7),r0 ; local r1                 r0 = *(FP+7) // "r1"
+ move r0,r15 ;(x)                          x = r0
 
  movei #L128,r0                            goto L128
  jump T,(r0)
  nop
 
 L125: // start inner loop
- move r15,r0 ;(x)                          r0 = r15 // x
+ move r15,r0 ;(x)                          r0 = x
  shlq #2,r0                                r0 <<= 2
  movei #_spropening,r1                     r1 = &spropening
  add r1,r0                                 r0 += r1
  load (r0),r0                              r0 = *r0
- move r0,r19 ;(top)                        r19 = r0 // top
- move r19,r0 ;(top)                        r0 = r19 // top
+ move r0,r19 ;(top)                        top = r0
+ move r19,r0 ;(top)                        r0 = top
  movei #255,r1                             r1 = 255
  and r1,r0                                 r0 &= r1
- move r0,r20 ;(bottom)                     r20 = r0 // bottom
- move r19,r0 ;(top)                        r0 = r19 // top
+ move r0,r20 ;(bottom)                     bottom = r0
+ move r19,r0 ;(top)                        r0 = top
  sharq #8,r0                               r0 >>= 8
- move r0,r19 ;(top)                        r19 = r0 // top
+ move r0,r19 ;(top)                        top = r0
  movei #180,r0                             r0 = SCREENHEIGHT
- cmp r20,r0 ;(bottom)                      if(r20 != r0) // bottom 
+ cmp r20,r0 ;(bottom)                      if(bottom != r0)
  movei #L129,scratch                          goto L129
  jump NE,(scratch)
  nop
 
- move r15,r0 ;(x)                          r0 = r15 // x
- add r21,r0 ;(bottomsil)                   r0 += r21 // bottomsil
+ move r15,r0 ;(x)                          r0 = x
+ add r21,r0 ;(bottomsil)                   r0 += bottomsil
  loadb (r0),r0                             r0 = *r0
- move r0,r20 ;(bottom)                     r20 = r0 // bottom
+ move r0,r20 ;(bottom)                     bottom = r0
 
 L129:
  moveq #0,r0                               r0 = 0
- cmp r19,r0 ;(top)                         if(r19 != r0) // top
+ cmp r19,r0 ;(top)                         if(top != r0)
  movei #L131,scratch                          goto L131
  jump NE,(scratch)
  nop
 
- load (FP+6),r0 ; local topsil             r0 = *(FP+6) // topsil
- move r15,r1 ;(x)                          r1 = r15 // x
+ load (FP+6),r0 ; local topsil             r0 = topsil
+ move r15,r1 ;(x)                          r1 = x
  add r0,r1                                 r1 += r0
  loadb (r1),r0                             r0 = *r1
- move r0,r19 ;(top)                        r19 = r0 // top
+ move r0,r19 ;(top)                        top = r0
 
 L131:
- move r15,r0 ;(x)                          r0 = r15 // x
+ move r15,r0 ;(x)                          r0 = x
  shlq #2,r0                                r0 <<= 2
  movei #_spropening,r1                     r1 = &spropening
  add r1,r0                                 r0 += r1
- move r19,r1 ;(top)                        r1 = r19 // top
+ move r19,r1 ;(top)                        r1 = top
  shlq #8,r1                                r1 >>= 8 
- add r20,r1 ;(bottom)                      r1 += r20 // bottom
+ add r20,r1 ;(bottom)                      r1 += bottom
  store r1,(r0)                             *r0 = r1
 
 L126: // increment inner loop
- move r15,r0 ;(x)                          r0 = r15 // x
+ move r15,r0 ;(x)                          r0 = x
  addq #1,r0                                r0 += 1
- move r0,r15 ;(x)                          r15 = r0 // x
+ move r0,r15 ;(x)                          x = r0
 
 L128: // end inner loop
- cmp r15,r18 ;(x)(r2)                      if(r15 <= r18) // x, r2
+ cmp r15,r18 ;(x)(r2)                      if(x <= r18) // x, "r2"
  movei #L125,scratch                          goto L125
  jump PL,(scratch)
  nop
@@ -808,13 +807,13 @@ L123:
 L116:
 L108:
 L82: // outer loop increment
- movei #-112,r0                            r0 = -112
- move r17,r1 ;(ds)                         r1 = r17 // ds
+ movei #-112,r0                            r0 = -sizeof(viswall_t)
+ move r17,r1 ;(ds)                         r1 = ds
  add r0,r1                                 r1 += r0
- move r1,r17 ;(ds)                         r17 = r1 // ds
+ move r1,r17 ;(ds)                         ds = r1
 
 L84: // end outer loop
- move r17,r0 ;(ds)                         r0 = r17 // ds
+ move r17,r0 ;(ds)                         r0 = ds
  movei #_viswalls,r1                       r1 = &viswalls
  cmp r0,r1                                 if(r0 >= r1)
  movei #L81,scratch                           goto L81
