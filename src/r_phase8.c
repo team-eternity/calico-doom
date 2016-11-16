@@ -6,7 +6,9 @@
 
 #include "r_local.h"
 
-static void R_DrawVisSprite(void)
+static int spropening[SCREENWIDTH + 1];
+
+static void R_DrawVisSprite(vissprite_t *vis)
 {
    // CALICO_TODO
    /*
@@ -296,7 +298,7 @@ static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)
 //
 // Clip a sprite to the openings created by walls
 //
-static void R_ClipVisSprite(void)
+static void R_ClipVisSprite(vissprite_t *vis)
 {
    // CALICO_TODO
    /*
@@ -833,247 +835,64 @@ L76:
 //
 void R_Sprites(void)
 {
-   // CALICO_TODO: R_Sprites
+   // Jag-specific blitter setup
    /*
- movei #44,scratch
- sub scratch,FP
-
- // Jag-specific blitter setup
- movei #15737348,r0                         r0 = 0xf02204
- movei #145440,r1                           r1 = 0x23820
- store r1,(r0)                              *r0 = r1
-
- movei #15737384,r0                         r0 = 0xf02228
- movei #145952,r1                           r1 = 0x23A20
- store r1,(r0)                              *r0 = r1
-
- movei #_lastsprite_p,r0                    r0 = &lastsprite_p
- load (r0),r0                               r0 = *r0
- movei #_vissprites,r1                      r1 = &vissprites
- sub r1,r0                                  r0 -= r1
- movei #60,r1                               r1 = sizeof(vissprite_t)
- move r1,MATH_SIGN                          MATH_SIGN = r1
- move r1,MATH_B                             MATH_B = r1
- xor r0,MATH_SIGN                           MATH_SIGN ^= r0
- abs MATH_B                                 MATH_B = abs(MATH_B)
- abs r0                                     r0 = abs(r0)
- div MATH_B,r0                              r0 /= MATH_B
- btst #31, MATH_SIGN                        if(MATH_SIGN >= 0)
- jr EQ,L72                                    goto L72
- nop
- neg r0                                     r0 = -r0
-L72:
- move r0,r19 ;(count)                       count = r0
- moveq #0,r0                                r0 = 0
- move r0,r18 ;(best)                        best = r0
- moveq #0,r0                                r0 = 0
- move r0,r16 ;(i)                           i = 0
-
- movei #L55,r0                              goto L55
- jump T,(r0)
- nop
-
-L52: // begin loop
- movei #2147483647,r0                       r0 = INT_MAX
- move r0,r17 ;(bestscale)                   bestscale = r0
- movei #_vissprites,r0                      r0 = &vissprites
- move r0,r15 ;(ds)                          ds = r0
-
- movei #L59,r0                              goto L59
- jump T,(r0)
- nop
-
-L56:
- move r15,r0 ;(ds)                          r0 = ds
- addq #12,r0                                r0 += &vissprite_t::xscale
- load (r0),r0                               r0 = *r0
- cmp r0,r17 ;(bestscale)                    if(r0 == bestscale)
- movei #L60,scratch                            goto L60
- jump EQ,(scratch)
- nop
- jump MI,(scratch)                          if(r0 > bestscale)
- nop                                           goto L60
-
- move r15,r0 ;(ds)                          r0 = ds
- addq #12,r0                                r0 += &vissprite_t::xscale
- load (r0),r0                               r0 = *r0
- move r0,r17 ;(bestscale)                   bestscale = r0
- move r15,r18 ;(ds)(best)                   best = ds
-
-L60:
-L57:
- movei #60,r0                               r0 = sizeof(vissprite_t)
- move r15,r1 ;(ds)                          r1 = ds
- add r0,r1                                  r1 += r0
- move r1,r15 ;(ds)                          ds = r1
-
-L59:
- move r15,r0 ;(ds)                          r0 = ds
- movei #_lastsprite_p,r1                    r1 = &lastsprite_p
- load (r1),r1                               r1 = *r1
- cmp r0,r1                                  if(r0 != r1)
- movei #L56,scratch                           goto L56
- jump NE,(scratch)
- nop
-
- move r18,r0 ;(best)                        r0 = best
- addq #32,r0                                r0 += &visprite_t::patch
- load (r0),r0                               r0 = *r0
- moveq #0,r1                                r1 = 0
- cmp r0,r1                                  if(r0 == r1)
- movei #L62,scratch                            goto L62
- jump EQ,(scratch)
- nop
-
- store r18,(FP) ; arg[] ;(best)             *FP = best
- movei #_R_ClipVisSprite,r0                 r0 = R_ClipVisSprite
- store r28,(FP+1) ; push ;(RETURNPOINT)
- store r20,(FP+2) ; push ;(stopx)
- store r19,(FP+3) ; push ;(count)
- store r18,(FP+4) ; push ;(best)
- store r17,(FP+5) ; push ;(bestscale)
- store r16,(FP+6) ; push ;(i)
- movei #L73,RETURNPOINT                     RETURNPOINT = L73
- jump T,(r0)                                call R_ClipVisSprite
- store r15,(FP+7) ; delay slot push ;(ds)
-L73:
- load (FP+2),r20 ; pop ;(stopx)
- load (FP+3),r19 ; pop ;(count)
- load (FP+4),r18 ; pop ;(best)
- load (FP+5),r17 ; pop ;(bestscale)
- load (FP+6),r16 ; pop ;(i)
- load (FP+7),r15 ; pop ;(ds)
- load (FP+1), RETURNPOINT ; pop             RETURNPOINT = *(FP+1)
-
- store r18,(FP) ; arg[] ;(best)             *(FP) = best
- movei #_R_DrawVisSprite,r0                 r0 = R_DrawVisSprite
- store r28,(FP+1) ; push ;(RETURNPOINT)
- store r20,(FP+2) ; push ;(stopx)
- store r19,(FP+3) ; push ;(count)
- store r18,(FP+4) ; push ;(best)
- store r17,(FP+5) ; push ;(bestscale)
- store r16,(FP+6) ; push ;(i)
- movei #L74,RETURNPOINT                     RETURNPOINT = L74
- jump T,(r0)                                call R_DrawVisSprite
- store r15,(FP+7) ; delay slot push ;(ds)
-L74:
- load (FP+2),r20 ; pop ;(stopx)
- load (FP+3),r19 ; pop ;(count)
- load (FP+4),r18 ; pop ;(best)
- load (FP+5),r17 ; pop ;(bestscale)
- load (FP+6),r16 ; pop ;(i)
- load (FP+7),r15 ; pop ;(ds)
- load (FP+1), RETURNPOINT ; pop             RETURNPOINT = *(FP+1)
-
-L62:
- move r18,r0 ;(best)                        r0 = best
- addq #12,r0                                r0 += &vissprite_t::xscale
- movei #2147483647,r1                       r1 = INT_MAX
- store r1,(r0)                              *r0 = r1
-
-L53: // loop increment
- move r16,r0 ;(i)                          r0 = i
- addq #1,r0                                r0 += 1
- move r0,r16 ;(i)                          i = r0
-
-L55: // end loop
- cmp r16,r19 ;(i)(count)                    if(i < count)
- movei #L52,scratch                           goto L52
- jump S_LT,(scratch)
- nop
-
- movei #L65,r0                              goto L65
- jump T,(r0)
- nop
-
-L64: // loop start
- movei #_lastsprite_p,r0                    r0 = &lastsprite_p
- load (r0),r0                               r0 = *r0
- move r0,r1                                 r1 = r0
- addq #4,r1                                 r1 += &vissprite_t::x2
- load (r1),r1                               r1 = *r1
- addq #1,r1                                 r1 += 1
- move r1,r20 ;(stopx)                       stopx = r1
- load (r0),r0                               r0 = *r0
- move r0,r16 ;(i)                           i = r0
-
- movei #L70,r0                              goto L70
- jump T,(r0)
- nop
-
-L67:
- move r16,r0 ;(i)                           r0 = i
- shlq #2,r0                                 r0 <<= 2
- movei #_spropening,r1                      r1 = &spropening
- add r1,r0                                  r0 += r1
- movei #180,r1                              r1 = SCREENHEIGHT
- store r1,(r0)                              *r0 = r1
-
-L68:
- move r16,r0 ;(i)                           r0 = i
- addq #1,r0                                 r0 += 1
- move r0,r16 ;(i)                           i = r0
-
-L70:
- move r16,r0 ;(i)                           r0 = i
- cmp r0,r20 ;(stopx)                        if(i < stopx)
- movei #L67,scratch                           goto L67
- jump U_LT,(scratch)
- nop
-
- movei #_lastsprite_p,r0                    r0 = &lastsprite_p
- load (r0),r0                               r0 = *r0
- store r0,(FP) ; arg[]                      *FP = r0
- movei #_R_DrawVisSprite,r0                 r0 = R_DrawVisSprite
- store r28,(FP+1) ; push ;(RETURNPOINT)
- store r20,(FP+2) ; push ;(stopx)
- store r19,(FP+3) ; push ;(count)
- store r18,(FP+4) ; push ;(best)
- store r17,(FP+5) ; push ;(bestscale)
- store r16,(FP+6) ; push ;(i)
- movei #L75,RETURNPOINT                     RETURNPOINT = L75
- jump T,(r0)                                call R_DrawVisSprite
- store r15,(FP+7) ; delay slot push ;(ds)
-L75:
- load (FP+2),r20 ; pop ;(stopx)
- load (FP+3),r19 ; pop ;(count)
- load (FP+4),r18 ; pop ;(best)
- load (FP+5),r17 ; pop ;(bestscale)
- load (FP+6),r16 ; pop ;(i)
- load (FP+7),r15 ; pop ;(ds)
- load (FP+1), RETURNPOINT ; pop             RETURNPOINT = *(FP+1)
-
- // loop increment
- movei #_lastsprite_p,r0                    r0 = &lastsprite_p
- load (r0),r1                               r1 = *r0
- movei #60,r2                               r2 = sizeof(vissprite_t)
- add r2,r1                                  r1 += r2
- store r1,(r0)                              *r0 = r1
-
-L65: // loop end
- movei #_lastsprite_p,r0                    r0 = &lastsprite_p
- load (r0),r0                               r0 = *r0
- movei #_vissprite_p,r1                     r1 = &vissprite_p
- load (r1),r1                               r1 = *r1
- cmp r0,r1                                  if(r0 < r1)
- movei #L64,scratch                           goto L64
- jump U_LT,(scratch)
- nop
-
- movei #_phasetime+32,r0
- movei #_samplecount,r1
- load (r1),r1
- store r1,(r0)
-
- movei #_gpucodestart,r0
- movei #_ref9_start,r1
- store r1,(r0)
- 
-L51:
- movei #44,scratch
- jump T,(RETURNPOINT)
- add scratch,FP ; delay slot
+   movei #15737348,r0                         r0 = 0xf02204
+   movei #145440,r1                           r1 = 0x23820
+   store r1,(r0)                              *r0 = r1
+   
+   movei #15737384,r0                         r0 = 0xf02228
+   movei #145952,r1                           r1 = 0x23A20
+   store r1,(r0)                              *r0 = r1
    */
+
+   ptrdiff_t i = 0, count = lastsprite_p - vissprites;
+   vissprite_t *best = NULL;
+
+   // draw mobj sprites
+   while(i < count)
+   {
+      fixed_t bestscale = MAXINT;
+      vissprite_t *ds = vissprites;
+
+      while(ds != lastsprite_p)
+      {
+         if(ds->xscale < bestscale)
+         {
+            bestscale = ds->xscale;
+            best = ds;
+         }
+         ++ds;
+      }
+
+      if(best->patch != NULL)
+      {
+         R_ClipVisSprite(best);
+         R_DrawVisSprite(best);
+      }
+
+      best->xscale = MAXINT;
+
+      ++i;
+   }
+
+   // draw psprites
+   while(lastsprite_p < vissprite_p)
+   {
+      ptrdiff_t stopx = lastsprite_p->x2 + 1;
+      i = lastsprite_p->x1;
+      
+      // clear out the clipping array across the range of the psprite
+      while(i < stopx)
+      {
+         spropening[i] = SCREENHEIGHT;
+         ++i;
+      }
+
+      R_DrawVisSprite(lastsprite_p);
+      
+      ++lastsprite_p;
+   }
 }
 
 // EOF
