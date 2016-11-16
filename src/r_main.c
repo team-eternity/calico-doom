@@ -3,7 +3,7 @@
 #include "doomdef.h"
 #include "r_local.h"
 
-/*===================================== */
+//=====================================
 
 // subsectors
 subsector_t *vissubsectors[MAXVISSSEC], **lastvissubsector;
@@ -20,7 +20,7 @@ vissprite_t vissprites[MAXVISSPRITES], *lastsprite_p, *vissprite_p;
 // openings / misc refresh memory
 unsigned short openings[MAXOPENINGS], *lastopening;
 
-/*===================================== */
+//=====================================
 
 boolean phase1completed;
 
@@ -32,24 +32,24 @@ angle_t   viewangle;
 fixed_t   viewcos, viewsin;
 player_t *viewplayer;
 
-int validcount = 1; /* increment every time a check is made */
-int framecount;     /* incremented every frame */
+int validcount = 1; // increment every time a check is made 
+int framecount;     // incremented every frame
 
 
 boolean fixedcolormap;
 
-int lightlevel; /* fixed light level */
-int extralight; /* bumped light from gun blasts */
+int lightlevel; // fixed light level
+int extralight; // bumped light from gun blasts
 
-/* */
-/* sky mapping */
-/* */
+//
+// sky mapping
+//
 int skytexture;
 
 
-/* */
-/* precalculated math */
-/* */
+//
+// precalculated math
+//
 angle_t clipangle, doubleclipangle;
 fixed_t *finecosine = &finesine[FINEANGLES/4];
 
@@ -85,45 +85,45 @@ angle_t R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 
    if(x >= 0)
    {
-      /* x >=0 */
+      // x >=0
       if(y >= 0)
       {
-         /* y>= 0 */
+         // y>= 0
          if(x > y)
-            return tantoangle[SlopeDiv(y, x)];          /* octant 0 */
+            return tantoangle[SlopeDiv(y, x)];          // octant 0 
          else
-            return ANG90-1-tantoangle[ SlopeDiv(x,y)];  /* octant 1 */
+            return ANG90-1-tantoangle[ SlopeDiv(x,y)];  // octant 1
       }
       else
       {	
-         /* y<0 */
+         // y<0 
          y = -y;
          if(x > y)
-            return -tantoangle[SlopeDiv(y, x)];         /* octant 8 */
+            return -tantoangle[SlopeDiv(y, x)];         // octant 8
          else
-            return ANG270 + tantoangle[SlopeDiv(x, y)]; /* octant 7 */
+            return ANG270 + tantoangle[SlopeDiv(x, y)]; // octant 7
       }
    }
    else
    {
-      /* x<0 */
+      // x<0
       x = -x;
       if(y>= 0)
       {	
-         /* y>= 0 */
+         // y>= 0 
          if(x > y)
-            return ANG180-1-tantoangle[SlopeDiv(y, x)]; /* octant 3 */
+            return ANG180-1-tantoangle[SlopeDiv(y, x)]; // octant 3 
          else
-            return ANG90 + tantoangle[SlopeDiv(x, y)];  /* octant 2 */
+            return ANG90 + tantoangle[SlopeDiv(x, y)];  // octant 2 
       }
       else
       {
-         /* y<0 */
+         // y<0 
          y = -y;
          if(x > y)
-            return ANG180+tantoangle[SlopeDiv(y, x)];   /* octant 4 */
+            return ANG180+tantoangle[SlopeDiv(y, x)];   // octant 4
          else
-            return ANG270-1-tantoangle[SlopeDiv(x, y)]; /* octant 5 */
+            return ANG270-1-tantoangle[SlopeDiv(x, y)]; // octant 5
       }
    }	
 
@@ -158,8 +158,8 @@ int R_PointOnSide(int x, int y, node_t *node)
    right = (dy>>16) * (node->dx>>16);
 
    if(right < left)
-      return 0;		/* front side */
-   return 1;			/* back side */
+      return 0;		// front side
+   return 1;			// back side 
 }
 
 
@@ -177,22 +177,22 @@ struct subsector_s *R_PointInSubsector(fixed_t x, fixed_t y)
    node_t *node;
    int     side, nodenum;
 
-   if(!numnodes) /* single subsector is a special case */
+   if(!numnodes) // single subsector is a special case 
       return subsectors;
 
    nodenum = numnodes-1;
 
-   while(!(nodenum & NF_SUBSECTOR) )
+   while(!(nodenum & NF_SUBSECTOR))
    {
       node = &nodes[nodenum];
-      side = R_PointOnSide (x, y, node);
+      side = R_PointOnSide(x, y, node);
       nodenum = node->children[side];
    }
 	
    return &subsectors[nodenum & ~NF_SUBSECTOR];
 }
 
-/*============================================================================= */
+//=============================================================================
 
 /*
 ==============
@@ -215,7 +215,7 @@ void R_Init(void)
    viewplayer = &players[0];
 }
 
-/*============================================================================= */
+//============================================================================= 
 
 extern int ticsinframe;
 
@@ -252,11 +252,11 @@ void R_DebugScreen(void)
 #endif
 }
 
-/*============================================================================= */
+//=============================================================================
 
 int    shadepixel;
 extern int workpage;
-extern pixel_t *screens[2]; /* [SCREENWIDTH*SCREENHEIGHT];  */
+extern pixel_t *screens[2]; // [SCREENWIDTH*SCREENHEIGHT]; 
 
 /*
 ==================
@@ -272,16 +272,16 @@ void R_Setup(void)
    player_t *player;
    int shadex, shadey, shadei;
 
-   /* */
-   /* set up globals for new frame */
-   /* */
+   //
+   // set up globals for new frame
+   //
    workingscreen = screens[workpage];
 
    // CALICO_TODO: non-portable
 #if 0
-   *(pixel_t  **)0xf02224 = workingscreen;  /* a2 base pointer */
-   *(int *)0xf02234 = 0x10000;              /* a2 outer loop add (+1 y) */
-   *(int *)0xf0226c = *(int *)0xf02268 = 0; /* pattern compare */
+   *(pixel_t  **)0xf02224 = workingscreen;  // a2 base pointer
+   *(int *)0xf02234 = 0x10000;              // a2 outer loop add (+1 y)
+   *(int *)0xf0226c = *(int *)0xf02268 = 0; // pattern compare
 #endif
 
    framecount++;	
@@ -299,9 +299,9 @@ void R_Setup(void)
    extralight = player->extralight << 6;
    fixedcolormap = player->fixedcolormap;
 		
-   /* */
-   /* calc shadepixel */
-   /* */
+   //
+   // calc shadepixel
+   //
    player = &players[consoleplayer];
 
    damagecount = player->damagecount;
@@ -318,9 +318,9 @@ void R_Setup(void)
 
    shadei += player->extralight<<3;
 
-   /* */
-   /* pwerups */
-   /* */
+   //
+   // pwerups
+   //
    if(player->powers[pw_invulnerability] > 60 || (player->powers[pw_invulnerability]&4))
    {
       shadex -= 8;
@@ -334,9 +334,9 @@ void R_Setup(void)
       shadex += (8 - (player->powers[pw_strength]>>3));
 
 
-   /* */
-   /* bound and store shades */
-   /* */
+   //
+   // bound and store shades
+   //
    if(shadex > 7)
       shadex = 7;
    else if(shadex < -8)
@@ -353,16 +353,16 @@ void R_Setup(void)
    shadepixel = ((shadex<<12)&0xf000) + ((shadey<<8)&0xf00) + (shadei&0xff);
 
 
-   /* */
-   /* plane filling */
-   /*	 */
-   lastvisplane = visplanes+1;		/* visplanes[0] is left empty */
-   lastwallcmd = viswalls;			/* no walls added yet */
-   lastvissubsector = vissubsectors;	/* no subsectors visible yet */
+   //
+   // plane filling
+   //	
+   lastvisplane = visplanes+1;       // visplanes[0] is left empty
+   lastwallcmd = viswalls;           // no walls added yet 
+   lastvissubsector = vissubsectors; // no subsectors visible yet
 	
-   /*	 */
-   /* clear sprites */
-   /* */
+   //
+   // clear sprites
+   //
    vissprite_p = vissprites;
    lastopening = openings;
 
@@ -371,7 +371,6 @@ void R_Setup(void)
    phasetime[0] = samplecount;
 #endif
 }
-
 
 void R_BSP(void);
 void R_WallPrep(void);
@@ -382,7 +381,6 @@ void R_SegCommands(void);
 void R_DrawPlanes(void);
 void R_Sprites(void);
 void R_Update(void);
-
 
 /*
 ==============
@@ -407,9 +405,9 @@ extern	boolean	debugscreenactive;
 
 void R_RenderPlayerView(void)
 {
-   /* */
-   /* initial setup */
-   /* */
+   //
+   // initial setup
+   //
    if(debugscreenactive)
       R_DebugScreen();
 
@@ -418,7 +416,7 @@ void R_RenderPlayerView(void)
    R_BSP();
    R_WallPrep();
    R_SpritePrep();
-   /* the rest of the refresh can be run in parallel with the next game tic */
+   // the rest of the refresh can be run in parallel with the next game tic
    if(R_LatePrep())
       R_Cache();
    R_SegCommands();
