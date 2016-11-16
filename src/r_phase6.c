@@ -522,7 +522,7 @@ typedef struct
 100:   unsigned int  offset;
 104:   unsigned int  distance;
 108:   unsigned int  seglightlevel;
-} viswall_t;
+} viswall_t; // sizeof() = 112
 
 typedef struct seg_s
 {
