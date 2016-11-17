@@ -623,7 +623,7 @@ int     I_GetTime(void);
 
 void I_Update(void);
 void I_Error(const char *error, ...);
-void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale, fixed_t dc_texturemid, inpixel_t *dc_source);
+void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, fixed_t fracstep, inpixel_t *dc_source);
 void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t *ds_source) ;
 void I_Print8(int x, int y, char *string);
 

@@ -31,10 +31,12 @@
 #include "../hal/hal_input.h"
 #include "../hal/hal_platform.h"
 #include "../hal/hal_video.h"
+#include "../rb/rb_common.h"
 #include "../rb/rb_draw.h"
 #include "../rb/rb_main.h"
 #include "../rb/rb_texture.h"
 #include "../rb/valloc.h"
+#include "gl_render.h"
 
 //=============================================================================
 //
@@ -71,7 +73,7 @@ static void GL_setDefaultStates()
 //
 // Bind vertex draw pointers and output two triangles
 //
-void GL_DrawRectImmediate(vtx_t v[4])
+static void GL_drawRectImmediate(vtx_t v[4])
 {
    // set states
    GL_setDefaultStates();
@@ -88,7 +90,7 @@ void GL_DrawRectImmediate(vtx_t v[4])
 // Draw a rect from game coordinates (gx, gy) to translated framebuffer
 // coordinates with the provided information.
 //
-void GL_DrawGameRect(int gx, int gy, int gw, int gh, rbTexture *tx, vtx_t v[4])
+static void GL_drawGameRect(int gx, int gy, int gw, int gh, rbTexture *tx, vtx_t v[4])
 {
    float sx, sy, sw, sh;
 
@@ -104,7 +106,7 @@ void GL_DrawGameRect(int gx, int gy, int gw, int gh, rbTexture *tx, vtx_t v[4])
 
    GL_initVtxCoords(v, sx, sy, sw, sh);
 
-   GL_DrawRectImmediate(v);
+   GL_drawRectImmediate(v);
 }
 
 //=============================================================================
@@ -113,6 +115,46 @@ void GL_DrawGameRect(int gx, int gy, int gw, int gh, rbTexture *tx, vtx_t v[4])
 //
 
 static uint32_t framebuffer[CALICO_ORIG_SCREENWIDTH * CALICO_ORIG_SCREENHEIGHT];
+static rbTexture fbtex;
+
+//
+// Create the GL texture handle for the framebuffer texture
+//
+void GL_InitFramebufferTexture(void)
+{
+   fbtex.init(rbTexture::TCR_RGBA, CALICO_ORIG_SCREENWIDTH, CALICO_ORIG_SCREENHEIGHT);
+   fbtex.upload((byte *)framebuffer, rbTexture::TC_CLAMP, rbTexture::TF_AUTO);
+}
+
+VALLOCATION(fbtex)
+{
+   fbtex.abandonTexture();
+   GL_InitFramebufferTexture();
+}
+
+//
+// Return the pointer to the local 32-bit framebuffer
+//
+void *GL_GetFramebuffer(void)
+{
+   return framebuffer;
+}
+
+void GL_RenderFrame(void)
+{
+   vtx_t v[4];
+   RB_SetVertexColors(v, 4, 0xff, 0xff, 0xff, 0xff);
+   RB_DefTexCoords(v, &fbtex);
+
+   fbtex.update((byte *)framebuffer);
+   GL_drawGameRect(0, 0, CALICO_ORIG_SCREENWIDTH, CALICO_ORIG_SCREENHEIGHT, &fbtex, v);
+
+   hal_video.endFrame();
+
+   // CALICO_TODO: TEMP: clear framebuffer until everything is drawing
+   for(int i = 0; i < earrlen(framebuffer); i++)
+      framebuffer[i] = D_RGBA(0x80, 0x80, 0x80, 0xff);
+}
 
 // EOF
 

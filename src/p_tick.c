@@ -422,7 +422,7 @@ void DrawSinglePlaque(jagobj_t *pl)
 */ 
  
 void P_Drawer(void) 
-{ 	
+{
    static boolean refreshdrawn;
 
    if(players[consoleplayer].automapflags & AF_OPTIONSACTIVE)

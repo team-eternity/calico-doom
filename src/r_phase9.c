@@ -4,9 +4,13 @@
   Renderer phase 9 - Refresh
 */
 
+#include "doomdef.h"
+
 void R_Update(void)
 {
-   // CALICO_TODO: R_Update
+   // CALICO: Invoke I_Update
+   I_Update();
+
    // NB: appears completely Jag-specific; our drawing may end in phase 8.
    /*
  subq #16,FP
@@ -188,7 +192,6 @@ void R_Update(void)
  nop
 
 L52:
-
  movei #80,r0
  move r15,r1 ;(worklist_p)
  add r0,r1
@@ -198,7 +201,6 @@ L52:
  move r0,r16 ;(link)
 
 L53:
-
  movei #40,r0
  move r0,r17 ;(pwidth)
  movei #48,r0
@@ -391,13 +393,11 @@ L53:
  nop
 
 L54:
-
  movei #_stopobj,r0
  sharq #3,r0
  move r0,r16 ;(link)
 
 L55:
-
  movei #96,r0
  move r15,r1 ;(worklist_p)
  add r0,r1
@@ -507,14 +507,12 @@ L55:
  store r0,(r1)
 
 L56:
-
  movei #_junk,r0
  movei #_ticcount,r1
  load (r1),r1
  store r1,(r0)
 
 L57:
-
  movei #_junk,r0
  load (r0),r0
  movei #_lastticcount,r1
@@ -533,14 +531,12 @@ L57:
  store r15,(r0) ;(worklist_p)
 
 L59:
-
  movei #_junk,r0
  movei #_displaylist_p,r1
  load (r1),r1
  store r1,(r0)
 
 L60:
-
  movei #_junk,r0
  load (r0),r0
  movei #_readylist_p,r1
@@ -580,7 +576,6 @@ L60:
  load (r0),r1
  xor r2,r1
  store r1,(r0)
-
 
 L51:
  jump T,(RETURNPOINT)

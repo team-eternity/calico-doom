@@ -80,8 +80,8 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnu
 //
 static void R_DrawTexture(drawtex_t *tex)
 {
-   int top, bottom, colnum, frac, count;
-   int a1inc, a1incfrac, a1frac, a1pix, a2pix; // CALICO_TODO: Jag-specific values?
+   int top, bottom, colnum, frac;
+   pixel_t *src;
 
    top = CENTERY - ((scale * tex->topheight) >> (HEIGHTBITS + SCALEBITS));
 
@@ -110,54 +110,10 @@ static void R_DrawTexture(drawtex_t *tex)
    // colnum = colnum - tex->width * (colnum / tex->width)
    colnum &= (tex->width - 1);
 
-   // CALICO_TODO: Jaguar-specific blitter input calculation starts here.
-   a1inc = iscale / FRACUNIT;
-   a1incfrac = iscale & 0xffff;
-   count = (((bottom - top) + 1) << FRACBITS) + 1;
-   a2pix = (top << FRACBITS) | x;
-   frac += (colnum * tex->height) << FRACBITS;
-   a1pix = frac / FRACUNIT;
-   a1frac = frac & 0xffff;
-
-   /*
-; base
-  load  (dt_tex),dtb_base ; dt->data                  dtb_base = *dt_tex;
-
-  // JAG SPECIFIC STARTING FROM HERE (R_DrawColumn?)
-; command
-  movei #1+(1<<8)+(1<<9)+(1<<10)+(1<<11)+(1<<13)+(1<<30)+(12<<21),dtb_command // 1098919681 ?????
-  // SRCSHADE | (SRCANDDEST, SRCANDNOTDEST) | GOURZ | DSTA2 | UPDA2 | UPDA1 | UPDA1F | SRCEN
-  // * enable source data read
-  // * update fractional part of A1 step value to fractional part of A1 pointer between inner loop
-  //   operations in outer loop
-  // * Add A1 step value to A1 pointer between inner loop operations in outer loop
-  // * Add A2 step value to A2 pointer between inner loop operations in outer loop
-  // * Reverse normal role of address regs from A1 as dest, A2 as src to A2 dest, A1 src
-  // * Enable polygon Z data updates w/i inner loop
-  // * LFU func = (src & dest) | (src & ~dest) ie, copy src to dest
-  // * Use IINC reg to modify intensity of source data
-  
-  movei #$f02200,dt_blitter                           dt_blitter = 0xf02200;
-  movei #$f02270,dt_scratch2 ; iinc blitter register  dt_scratch2 = 0xf02270; // B_IINC
-   
-dt_wait: // busy loop
-  load  (dt_blitter+14),dt_scratch                    dt_scratch = *(dt_blitter+14);
-  btst  #0,dt_scratch                                 if(blitter is busy)
-  jr    EQ,dt_wait                                      goto dt_wait;
-  nop
-
-  store dtb_base,(dt_blitter)                         *(dt_blitter+0)  = dtb_base;         0xf02200 A1 base addr
-  store dtb_a1pix,(dt_blitter+3)                      *(dt_blitter+3)  = dtb_a1pix;        0xf0220c A1 pixel ptr
-  store dtb_a1frac,(dt_blitter+6)                     *(dt_blitter+6)  = dtb_a1frac;       0xf02218 A1 pixel ptr fractional
-  store dtb_a1inc,(dt_blitter+4)                      *(dt_blitter+4)  = dtb_a1inc;        0xf02210 A1 step integer part
-  store dtb_a1incfrac,(dt_blitter+5)                  *(dt_blitter+5)  = dtb_a1incfrac;    0xf02214 A1 step fractional part
-  store dt_top,(dt_blitter+12)                        *(dt_blitter+12) = dt_top;           0xf02230 A2 pixel pointer
-  store dt_texturelight,(dt_scratch2)                 *(dt_scratch2)   = dt_texturelight;  0xf02270 B_IINC
-  store dtb_count,(dt_blitter+15)                     *(dt_blitter+15) = dtb_count;        0xf0223C COUNT
-  jump  T,(RETURNPOINT)                               return;
-  store dtb_command,(dt_blitter+14) ; delay slot        *(dt_blitter+14) = dtb_command;    0xf02238 COMMAND
-  // END JAG SPECIFIC
-   */
+   // CALICO: Jaguar-specific GPU blitter input calculation starts here.
+   // We invoke a software column drawer instead.
+   src = tex->data + colnum * tex->height;
+   I_DrawColumn(x, top, bottom, texturelight, frac, iscale, src);
 }
 
 //

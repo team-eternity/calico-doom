@@ -1,22 +1,22 @@
 /*
   CALICO
-
-  Jaguar CRY Color Space Utilities
-
+  
+  OpenGL rendering
+  
   The MIT License (MIT)
-
-  Copyright (c) 2016 James Haley
-
+  
+  Copyright (C) 2016 James Haley
+  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
   in the Software without restriction, including without limitation the rights
   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
   copies of the Software, and to permit persons to whom the Software is
   furnished to do so, subject to the following conditions:
-
+  
   The above copyright notice and this permission notice shall be included in all
   copies or substantial portions of the Software.
-
+  
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,27 +26,20 @@
   SOFTWARE.
 */
 
-#ifndef JAGCRY_H__
-#define JAGCRY_H__
+#ifndef GL_RENDER_H__
+#define GL_RENDER_H__
 
-#include <stdint.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#define CRY_CMASK 0xF000
-#define CRY_RMASK 0x0F00
-#define CRY_YMASK 0x00FF
+void  GL_InitFramebufferTexture(void);
+void *GL_GetFramebuffer(void);
+void  GL_RenderFrame(void);
 
-#define CRY_COLORMASK (CRY_CMASK | CRY_RMASK)
-
-#define CRY_CSHIFT 12
-#define CRY_RSHIFT 8
-#define CRY_YSHIFT 0
-
-#define CRY_IINCSHIFT 16
-
-// Main CRY translation table
-extern uint32_t CRYToRGB[0x10000];
-
-void CRY_BuildRGBTable(void);
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

@@ -46,6 +46,9 @@
     <Filter Include="Source Files\gl">
       <UniqueIdentifier>{ab39f6d2-f9ac-46c9-9c71-846f8bb03305}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\gl">
+      <UniqueIdentifier>{690e0459-1128-45c1-823a-c0fffe9189ca}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\am_main.c">
@@ -412,6 +415,9 @@
     </ClInclude>
     <ClInclude Include="..\src\jagcry.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gl\gl_render.h">
+      <Filter>Header Files\gl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

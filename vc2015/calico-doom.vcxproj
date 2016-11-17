@@ -171,6 +171,7 @@
     <ClInclude Include="..\src\elib\parser.h" />
     <ClInclude Include="..\src\elib\qstring.h" />
     <ClInclude Include="..\src\elib\zone.h" />
+    <ClInclude Include="..\src\gl\gl_render.h" />
     <ClInclude Include="..\src\hal\hal_init.h" />
     <ClInclude Include="..\src\hal\hal_input.h" />
     <ClInclude Include="..\src\hal\hal_ml.h" />

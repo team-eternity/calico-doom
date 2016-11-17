@@ -233,7 +233,7 @@ unsigned int GetDemoCmd(void)
 {
    unsigned int cmd;
 
-   cmd = *demo_p++;
+   cmd = BIGLONG(*demo_p++); // CALICO: correct endianness
 
    return NetToLocal(cmd);
 }
@@ -315,7 +315,7 @@ int MiniLoop(void (*start)(void), void (*stop)(void),
          ticbuttons[!consoleplayer] = NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
 
       if(demorecording)
-         *demo_p++ = buttons;
+         *demo_p++ = BIGLONG(buttons); // CALICO: correct endianness
 
       if((demorecording || demoplayback) && (buttons & BT_PAUSE))
          exit = ga_completed;

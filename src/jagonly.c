@@ -8,7 +8,9 @@
 #include "hal/hal_input.h"
 #include "hal/hal_platform.h"
 #include "hal/hal_video.h"
+#include "gl/gl_render.h"
 #include "doomdef.h"
+#include "jagcry.h"
 #include "m_argv.h"
 #include "r_local.h"
 #include "w_iwad.h"
@@ -17,16 +19,16 @@
 
 JAGUAR MEMORY MAP
 
-0x  4000		text/data/bss
-0x 80000		start heap
-0x1c8000		sbarback (0x3210)
-0x1cb210		sbarfront (0x3200)
-0x1ce410		debugscreen (0x1bf0)
-0x1d0000		screens[0]
-0x1e0000		screens[1]
-0x1f0000		soundbuffer
-0x1f4000		stack (8 bytes of screenshade)
-0x200000		end of ram
+0x  4000    text/data/bss
+0x 80000    start heap
+0x1c8000    sbarback (0x3210)
+0x1cb210    sbarfront (0x3200)
+0x1ce410    debugscreen (0x1bf0)
+0x1d0000    screens[0]
+0x1e0000    screens[1]
+0x1f0000    soundbuffer
+0x1f4000    stack (8 bytes of screenshade)
+0x200000    end of ram
 
 at all times,
 
@@ -97,6 +99,8 @@ void Spin(void)
 
 void ReadEEProm(void);
 
+static void I_GetFramebuffer(void);
+
 /* 
 ================ 
 = 
@@ -140,6 +144,8 @@ void Jag68k_main(int argc, const char *const *argv)
 
    // CALICO: initialize video
    hal_video.initVideo();
+   CRY_BuildRGBTable();
+   I_GetFramebuffer();
 
    hal_platform.debugMsg("Video initialized\n");
 
@@ -499,7 +505,16 @@ fixed_t FixedDiv(fixed_t a, fixed_t b)
 //
 //=============================================================================
 
-byte *framebuffer_p;
+uint32_t *framebuffer_p;
+
+//
+// CALICO: Get the framebuffer pointer from the low-level graphics code
+//
+static void I_GetFramebuffer(void)
+{
+   GL_InitFramebufferTexture();
+   framebuffer_p = GL_GetFramebuffer();
+}
 
 // 
 // Source is the top of the column to scale 
@@ -507,27 +522,44 @@ byte *framebuffer_p;
 void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, 
                   fixed_t fracstep, inpixel_t *dc_source) 
 { 
-   int      count; 
-   pixel_t *dest;
+   int        count;
+   inpixel_t  cry;
+   int32_t    y;
+   uint32_t  *dest;
+   uint32_t   rgb;
 
-   count = dc_yh - dc_yl; 
-   if(count < 0) 
-      return; 
+   count = dc_yh - dc_yl;
+   if(count < 0)
+      return;
 
-#ifdef RANGECHECK 
-   if((unsigned int)dc_x >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT) 
-      I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x); 
-#endif 
+#ifdef RANGECHECK
+   if((unsigned int)dc_x >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT)
+      I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+#endif
 
-   dest = (pixel_t *)(framebuffer_p + dc_yl*320 + dc_x*2);  
+   // CALICO: our destination framebuffer is 32-bit
+   dest = framebuffer_p + dc_yl * (SCREENWIDTH << 2) + (dc_x << 2);
 
-   do 
-   { 
-      *dest = dc_source[(frac>>FRACBITS)&127]; 
-      dest += SCREENWIDTH; 
-      frac += fracstep; 
+   do
+   {
+      // CALICO: calculate CRY lighting and lookup RGB
+      cry = dc_source[(frac >> FRACBITS)&127];
+      y = (cry & CRY_YMASK) << CRY_IINCSHIFT;
+      y += (0xFF000000 | light);
+      y >>= CRY_IINCSHIFT;
+      if(y < 0)
+         y = 0;
+      cry = (cry & CRY_COLORMASK) | (y & 0xff);
+      rgb = CRYToRGB[cry];
+
+      // CALICO: scale up to 640x480 destination buffer
+      *dest = *(dest+1) = *(dest+2) = *(dest+3) = rgb;
+      dest += (SCREENWIDTH << 2);
+      *dest = *(dest+1) = *(dest+2) = *(dest+3) = rgb;
+      dest += (SCREENWIDTH << 2);
+      frac += fracstep;
    }
-   while (count--); 
+   while(count--);
 } 
  
 void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, 
@@ -842,6 +874,8 @@ void I_Update(void)
    while (junk != (int)readylist_p);
    lasttics = ticcount - lastticcount;
    lastticcount = ticcount;
+#else
+   GL_RenderFrame();
 #endif
 }
 

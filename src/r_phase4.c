@@ -98,7 +98,7 @@ static void R_SetupCalc(viswall_t *wc)
       rw_offset = -rw_offset;
 
    wc->offset += rw_offset;
-   wc->centerangle = viewangle + ANG90 - normalangle;
+   wc->centerangle = ANG90 + viewangle - normalangle;
 }
 
 //
