@@ -509,7 +509,6 @@ void R_DrawPlanes(void)
    angle_t angle;
    visplane_t *pl;
 
-   // CALICO_TODO: R_DrawPlanes
    /*
 ;================
 ; load constants into alternate register bank

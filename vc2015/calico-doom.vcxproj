@@ -90,6 +90,7 @@
     <ClCompile Include="..\src\elib\qstring.cpp" />
     <ClCompile Include="..\src\elib\zone.cpp" />
     <ClCompile Include="..\src\f_main.c" />
+    <ClCompile Include="..\src\gl\gl_render.cpp" />
     <ClCompile Include="..\src\g_game.c" />
     <ClCompile Include="..\src\hal\hal_init.c" />
     <ClCompile Include="..\src\hal\hal_input.c" />
@@ -177,6 +178,7 @@
     <ClInclude Include="..\src\hal\hal_types.h" />
     <ClInclude Include="..\src\hal\hal_video.h" />
     <ClInclude Include="..\src\info.h" />
+    <ClInclude Include="..\src\jagcry.h" />
     <ClInclude Include="..\src\keywords.h" />
     <ClInclude Include="..\src\music.h" />
     <ClInclude Include="..\src\m_argv.h" />

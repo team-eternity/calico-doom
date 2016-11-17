@@ -75,6 +75,9 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnu
    return check;
 }
 
+//
+// Render a wall texture as columns
+//
 static void R_DrawTexture(drawtex_t *tex)
 {
    int top, bottom, colnum, frac, count;

@@ -46,6 +46,7 @@ typedef struct hal_video_s
    int           (*transformWidth)(int w);
    int           (*transformHeight)(int h);
    int           (*toggleGLSwap)(hal_bool swap);
+   void          (*endFrame)(void);
    int           (*isFullScreen)(void);
    int           (*getCurrentDisplay)(void);
    unsigned int  (*getWindowFlags)(void);

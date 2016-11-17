@@ -60,6 +60,7 @@ void SDL2_InitHAL(void)
    hal_video.transformWidth       = SDL2_TransformWidth;
    hal_video.transformHeight      = SDL2_TransformHeight;
    hal_video.toggleGLSwap         = SDL2_ToggleGLSwap;
+   hal_video.endFrame             = SDL2_EndFrame;
    hal_video.isFullScreen         = SDL2_IsFullScreen;
    hal_video.getCurrentDisplay    = SDL2_GetCurrentDisplay;
    hal_video.getWindowFlags       = SDL2_GetWindowFlags;

@@ -409,6 +409,15 @@ int SDL2_ToggleGLSwap(hal_bool swap)
    return SDL_GL_SetSwapInterval(!!swap);
 }
 
+//
+// End frame and swap buffers
+//
+void SDL2_EndFrame(void)
+{
+   if(mainwindow)
+      SDL_GL_SwapWindow(mainwindow);
+}
+
 #endif
 
 // EOF

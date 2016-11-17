@@ -43,6 +43,9 @@
     <Filter Include="Source Files\elib">
       <UniqueIdentifier>{962a0b65-cf27-4516-9764-d91672ad1993}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\gl">
+      <UniqueIdentifier>{ab39f6d2-f9ac-46c9-9c71-846f8bb03305}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\am_main.c">
@@ -276,6 +279,9 @@
     <ClCompile Include="..\src\elib\atexit.cpp">
       <Filter>Source Files\elib</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gl\gl_render.cpp">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\doomdata.h">
@@ -402,6 +408,9 @@
       <Filter>Header Files\elib</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\jagcry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

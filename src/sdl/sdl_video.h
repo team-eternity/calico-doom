@@ -54,6 +54,7 @@ int          SDL2_GetCurrentDisplay(void);
 unsigned int SDL2_GetWindowFlags(void);
 void         SDL2_SetGrab(hal_bool grab);
 void         SDL2_WarpMouse(int x, int y);
+void         SDL2_EndFrame(void);
 
 #ifdef __cplusplus
 }
