@@ -27,6 +27,8 @@
 */
 
 #include <stdint.h>
+#include "rb/rb_common.h"
+#include "jagcry.h"
 
 // Main CRY translation table
 uint32_t CRYToRGB[0x10000];
@@ -106,16 +108,15 @@ void CRY_BuildRGBTable(void)
 
    for(i = 0; i < 0x10000; i++)
    {
-      uint32_t cyan = (i & 0xF000) >> 12;
-      uint32_t red  = (i & 0x0F00) >> 8;
-      uint32_t intensity = (i & 0x00FF);
+      uint32_t cyan = (i & CRY_CMASK) >> CRY_CSHIFT;
+      uint32_t red  = (i & CRY_RMASK) >> CRY_RSHIFT;
+      uint32_t intensity = (i & CRY_YMASK);
 
       uint32_t r = (((uint32_t)cryred  [cyan][red]) * intensity) >> 8;
       uint32_t g = (((uint32_t)crygreen[cyan][red]) * intensity) >> 8;
       uint32_t b = (((uint32_t)cryblue [cyan][red]) * intensity) >> 8;
 
-      // CALICO_TODO: use a color macro once I have one in the project
-      CRYToRGB[i] = 0xFF000000 | (b << 16) | (g << 8) | r;
+      CRYToRGB[i] = D_RGBA(r, g, b, 0xff);
    }
 }
 
