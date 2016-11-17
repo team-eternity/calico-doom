@@ -40,18 +40,18 @@ boolean debugscreenstate = false;
 
 boolean debugscreenactive;
 
-pixel_t *screens[2];  /* [SCREENWIDTH*SCREENHEIGHT];  */
-short   *palette8;    /* [256] for translating 8 bit source to 16 bit */
-int     *screenshade; /* pixels for screen shifting */
+pixel_t        *screens[2];     // [SCREENWIDTH*SCREENHEIGHT];
+unsigned short *palette8;       // [256] for translating 8 bit source to 16 bit
+int            *screenshade;    // pixels for screen shifting
 
 byte *debugscreen;
-extern	jagobj_t *sbar;
-extern	byte     *sbartop;
+extern jagobj_t *sbar;
+extern byte     *sbartop;
 
-int workpage; /* which frame is not being displayed */
-int worklist; /* which listbuffer is not being used */
+int workpage; // which frame is not being displayed
+int worklist; // which listbuffer is not being used
 
-int isrvmode = 0xC1 + (7<<9); /* vmode value set by ISR each screen */
+int isrvmode = 0xC1 + (7<<9); // vmode value set by ISR each screen
 
 // CALICO_FIXME: Jag-specific
 #if 0
@@ -86,17 +86,6 @@ extern jagobj_t *sbar;
 
 char hexdigits[] = "0123456789ABCDEF";
 
-void InitDisplay(void);
-
-// CALICO_FIXME: ??
-void Spin(void)
-{
-   I_Print8(1, 24, "Spin...");
-
-   while (1)
-      ;
-}
-
 void ReadEEProm(void);
 
 static void I_GetFramebuffer(void);
@@ -118,7 +107,7 @@ extern short video_height;
 extern short a_vdb, a_vde, a_hdb, a_hde;
 #endif
 
-unsigned BASEORGY;
+unsigned int BASEORGY;
 
 // CALICO_FIXME: Jag-specific bits need emulation or replacement
 void Jag68k_main(int argc, const char *const *argv)
@@ -348,20 +337,17 @@ void I_Error(const char *error, ...)
 //
 // Called after all other subsystems have been started
 //
-// CALICO_FIXME: Jag-specific
-//
 void I_Init(void) 
 {
-#if 0
-   int	i;
-#endif
+   int i;
 
    palette8 = W_CacheLumpName("CRYPAL", PU_STATIC);
-
-#if 0
+   
+   // CALICO: reverse CRY for endianness
    for(i = 0; i < 256; i++)
-      ((pixel_t *)0xf00400)[i] = palette8[i];
-#endif
+   {
+      palette8[i] = BIGSHORT(palette8[i]);
+   }
 } 
 
 void I_DrawSbar(void)
@@ -987,6 +973,9 @@ void EraseBlock(int x, int y, int width, int height)
 
 }
 
+#define JAGOBJ_SCALEFACTOR_X (CALICO_ORIG_SCREENWIDTH  / 320)
+#define JAGOBJ_SCALEFACTOR_Y (CALICO_ORIG_SCREENHEIGHT / 240)
+
 void DrawJagobj(jagobj_t *jo, int x, int y)
 {
    int srcx, srcy;
@@ -1056,20 +1045,33 @@ void DrawJagobj(jagobj_t *jo, int x, int y)
 
 #else
    {
-      byte *dest;
-      byte *source;
+      uint32_t *dest;
+      byte     *source;
 
       source = jo->data + srcx + srcy*rowsize;
 
-      dest = bufferpage + 320 * y + x;
+      y += 8;
+
+      // CALICO: scale up for 640x480
+      x *= JAGOBJ_SCALEFACTOR_X;
+      y *= JAGOBJ_SCALEFACTOR_Y;
+
+      dest = framebuffer_p + y * CALICO_ORIG_SCREENWIDTH + x;
       for(; height; height--)
       {
-         // CALICO_FIXME: requires working video
-#if 0
-         D_memcpy(dest, source, width);
-#endif
+         int i, r = 0;
+         for(; r < JAGOBJ_SCALEFACTOR_Y; r++)
+         {
+            uint32_t *tdst = dest + (CALICO_ORIG_SCREENWIDTH * r);
+            for(i = 0; i < rowsize; i++)
+            {
+               if(source[i])
+                  *tdst = *(tdst+1) = CRYToRGB[palette8[source[i]]];
+               tdst += JAGOBJ_SCALEFACTOR_X;
+            }
+         }
          source += rowsize;
-         dest += 320;
+         dest += CALICO_ORIG_SCREENWIDTH * JAGOBJ_SCALEFACTOR_Y;
       }
    }
 #endif
@@ -1080,6 +1082,7 @@ void DoubleBufferObjList(void);
 // CALICO_FIXME: Jag-specific
 void UpdateBuffer(void)
 {
+   I_Update();
 #if 0
    /* copy entire page with blitter */
 
@@ -1103,6 +1106,76 @@ void UpdateBuffer(void)
       + (12<<21)				/* copy source */
       ;				
 #endif
+}
+
+//
+// CALICO: Separated out of DoubleBufferObjList
+//
+void DrawMTitle(void)
+{
+   // CALICO_FIXME: not working currently, draws a bunch of garbage...
+#if 0
+   jagobj_t *backgroundpic;
+   int width, height;
+   int clipwidth, clipheight;
+   byte *data;
+
+   backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
+   width  = BIGSHORT(backgroundpic->width);
+   height = BIGSHORT(backgroundpic->height) - 8;
+   data   = backgroundpic->data;
+
+   clipwidth = width;
+   if(clipwidth > 320)
+      clipwidth = 320;
+
+   clipheight = height;
+   if(clipheight > 240)
+      clipheight = 240;
+
+   {
+      uint32_t *dest;
+      byte     *source;
+
+      source = data + 8 * width;
+
+      dest = framebuffer_p;
+      for(; clipheight; clipheight--)
+      {
+         int i, r = 0;
+         for(; r < JAGOBJ_SCALEFACTOR_Y; r++)
+         {
+            uint32_t *tdst = dest + (CALICO_ORIG_SCREENWIDTH * r);
+            for(i = 0; i < clipwidth; i++)
+            {
+               if(source[i])
+                  *tdst = *(tdst+1) = CRYToRGB[palette8[source[i]]];
+               tdst += JAGOBJ_SCALEFACTOR_X;
+            }
+         }
+         source += width;
+         dest += CALICO_ORIG_SCREENWIDTH * JAGOBJ_SCALEFACTOR_Y;
+      }
+   }
+#endif
+   /*
+   pwidth = backgroundpic->width/16;
+
+   *work_p++ = 
+      ((int)backgroundpic->data<<8)		// data pointer
+
+   *work_p++ =
+      + (backgroundpic->height<<14)		* height
+      + ((BASEORGY-8)<<4)					* ypos 
+
+   *work_p++ =
+      + (40<<(38-32))					* color index 
+      + ((pwidth)>>4);					* iwidth 
+
+   *work_p++ =
+      ((pwidth)<<28)						* iwidth 
+      + ((pwidth)<<18)					* dwidth 
+   */
 }
 
 // CALICO_FIXME: Jag-specific

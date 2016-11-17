@@ -28,8 +28,6 @@
 
 #include "../elib/elib.h"
 #include "../hal/hal_types.h"
-#include "../hal/hal_input.h"
-#include "../hal/hal_platform.h"
 #include "../hal/hal_video.h"
 #include "../rb/rb_common.h"
 #include "../rb/rb_draw.h"

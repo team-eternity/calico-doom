@@ -397,7 +397,7 @@ jagobj_t *titlepic;
 void START_Title(void)
 {
    backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
-   DoubleBufferSetup ();
+   DoubleBufferSetup();
    titlepic = W_CacheLumpName ("title",PU_STATIC);
    S_StartSong(mus_intro, 0);
    hal_appstate.setGrabState(HAL_FALSE); // CALICO: don't grab input
@@ -411,6 +411,7 @@ void STOP_Title(void)
 
 void DRAW_Title(void)
 {
+   DrawMTitle();
    DrawJagobj(titlepic, 0, 0);
    UpdateBuffer();
 }
@@ -536,9 +537,10 @@ void D_DoomMain(void)
    while(1)
    {
       RunTitle();
-      RunDemo("DEMO1");
-      RunCredits();
-      RunDemo("DEMO2");
+      // CALICO_FIXME: DEBUG
+      //RunDemo("DEMO1");
+      //RunCredits();
+      //RunDemo("DEMO2");
    }
 } 
  

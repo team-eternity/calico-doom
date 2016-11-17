@@ -815,6 +815,7 @@ typedef struct
 #endif
 
 void DoubleBufferSetup(void);
+void DrawMTitle(void);        // CALICO
 void EraseBlock(int x, int y, int width, int height);
 void DrawJagobj(jagobj_t *jo, int x, int y);
 void UpdateBuffer(void);
@@ -834,7 +835,7 @@ extern int gpufinished;
 extern volatile int dspcodestart, dspcodeend, dspfinished;
 #endif
 
-extern short *palette8;
+extern unsigned short *palette8;
 extern int zero, ZERO, zero2;
 
 extern boolean   gamepaused;
