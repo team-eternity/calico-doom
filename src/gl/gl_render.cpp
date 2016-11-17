@@ -88,8 +88,7 @@ void GL_DrawRectImmediate(vtx_t v[4])
 // Draw a rect from game coordinates (gx, gy) to translated framebuffer
 // coordinates with the provided information.
 //
-void GL_DrawGameRect(int gx, int gy, unsigned int gw, unsigned int gh,
-                     rbTexture *tx, vtx_t v[4])
+void GL_DrawGameRect(int gx, int gy, int gw, int gh, rbTexture *tx, vtx_t v[4])
 {
    float sx, sy, sw, sh;
 
@@ -113,7 +112,7 @@ void GL_DrawGameRect(int gx, int gy, unsigned int gw, unsigned int gh,
 // Software Framebuffer
 //
 
-uint32_t framebuffer[CALICO_ORIG_SCREENWIDTH * CALICO_ORIG_SCREENHEIGHT];
+static uint32_t framebuffer[CALICO_ORIG_SCREENWIDTH * CALICO_ORIG_SCREENHEIGHT];
 
 // EOF
 
