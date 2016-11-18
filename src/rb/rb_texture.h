@@ -90,8 +90,8 @@ public:
    void bind(bool forDraw = true);
    void deleteTexture();
    void abandonTexture();
-   void upload(rbbyte *data, texClampMode_t clamp, texFilterMode_t filter);
-   void update(rbbyte *data);
+   void upload(void *data, texClampMode_t clamp, texFilterMode_t filter);
+   void update(void *data);
    void fromFrameBuffer();
 
    // CALICO_TODO: screenshot function

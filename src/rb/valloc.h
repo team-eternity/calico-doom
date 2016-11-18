@@ -30,7 +30,7 @@
 #ifndef VALLOC_H__
 #define VALLOC_H__
 
-#include "dllist.h"
+#include "../elib/dllist.h"
 
 class VAllocItem
 {

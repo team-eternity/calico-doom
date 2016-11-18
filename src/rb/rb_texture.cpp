@@ -351,7 +351,7 @@ static inline GLenum RB_glTexForTCR(rbTexture::texColorMode_t tcm)
 //
 // Create a GL texture and upload image data to it.
 //
-void rbTexture::upload(rbbyte *data, texClampMode_t clamp, texFilterMode_t filter)
+void rbTexture::upload(void *data, texClampMode_t clamp, texFilterMode_t filter)
 {
    // delete any previous created resources
    deleteTexture();
@@ -384,7 +384,7 @@ void rbTexture::upload(rbbyte *data, texClampMode_t clamp, texFilterMode_t filte
 
    if(data)
    {
-      rbbyte *src = data;
+      void *src = data;
 
       if(use_arb_pbo && pboid)
       {
@@ -411,7 +411,8 @@ void rbTexture::upload(rbbyte *data, texClampMode_t clamp, texFilterMode_t filte
             0,
             RB_glTexForTCR(this->colorMode),
             GL_UNSIGNED_BYTE,
-            src);
+            src
+         );
       }
    }
 
@@ -424,14 +425,14 @@ void rbTexture::upload(rbbyte *data, texClampMode_t clamp, texFilterMode_t filte
 //
 // Upload new contents to an existing texture.
 //
-void rbTexture::update(rbbyte *data)
+void rbTexture::update(void *data)
 {
    if(this->texid == 0)
       return;
 
    bind(false);
 
-   rbbyte *src = data;
+   void *src = data;
 
    if(use_arb_pbo && pboid)
    {
@@ -458,7 +459,8 @@ void rbTexture::update(rbbyte *data)
          this->height,
          RB_glTexForTCR(this->colorMode),
          GL_UNSIGNED_BYTE,
-         src);
+         src
+      );
    }
 }
 

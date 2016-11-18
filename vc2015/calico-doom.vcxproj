@@ -91,6 +91,7 @@
     <ClCompile Include="..\src\elib\zone.cpp" />
     <ClCompile Include="..\src\f_main.c" />
     <ClCompile Include="..\src\gl\gl_render.cpp" />
+    <ClCompile Include="..\src\gl\resource.cpp" />
     <ClCompile Include="..\src\g_game.c" />
     <ClCompile Include="..\src\hal\hal_init.c" />
     <ClCompile Include="..\src\hal\hal_input.c" />
@@ -165,6 +166,7 @@
     <ClInclude Include="..\src\elib\atexit.h" />
     <ClInclude Include="..\src\elib\compare.h" />
     <ClInclude Include="..\src\elib\configfile.h" />
+    <ClInclude Include="..\src\elib\dllist.h" />
     <ClInclude Include="..\src\elib\elib.h" />
     <ClInclude Include="..\src\elib\misc.h" />
     <ClInclude Include="..\src\elib\m_ctype.h" />
@@ -172,6 +174,7 @@
     <ClInclude Include="..\src\elib\qstring.h" />
     <ClInclude Include="..\src\elib\zone.h" />
     <ClInclude Include="..\src\gl\gl_render.h" />
+    <ClInclude Include="..\src\gl\resource.h" />
     <ClInclude Include="..\src\hal\hal_init.h" />
     <ClInclude Include="..\src\hal\hal_input.h" />
     <ClInclude Include="..\src\hal\hal_ml.h" />
@@ -185,7 +188,6 @@
     <ClInclude Include="..\src\m_argv.h" />
     <ClInclude Include="..\src\p_local.h" />
     <ClInclude Include="..\src\p_spec.h" />
-    <ClInclude Include="..\src\rb\dllist.h" />
     <ClInclude Include="..\src\rb\rb_common.h" />
     <ClInclude Include="..\src\rb\rb_draw.h" />
     <ClInclude Include="..\src\rb\rb_main.h" />

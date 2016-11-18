@@ -43,10 +43,18 @@
 
 #define CRY_IINCSHIFT 16
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Main CRY translation table
 extern uint32_t CRYToRGB[0x10000];
 
 void CRY_BuildRGBTable(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

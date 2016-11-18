@@ -1007,43 +1007,6 @@ void DrawJagobj(jagobj_t *jo, int x, int y)
    if(width < 1 || height < 1)
       return;
 
-   // CALICO_FIXME: Jag-specific
-#ifdef JAGUAR
-		
-	*(int *)0xf02200 = (int)bufferpage;	/* a1 base pointer */
-	
-	*(int *)0xf02204 = (3<<3)		 	/* 8 bit pixels */
-					+ (33<<9)			/* 320 wide */
-					+ (1<<16)			/* add 1 x */
-					;					/* a1 flags */
-					
-	*(int *)0xf0220c = (y<<16)+x;		/* a1 pixel pointers */
-
-	*(int *)0xf02210 = (1<<16)+ ((-width)&0xffff);	/* a1 pixel step */
-
-
-	*(int *)0xf02224 = (int)jo->data;	/* a2 base pointer */
-	
-	*(int *)0xf02228 = (3<<3)		 	/* 8 bit pixels */
-					+ (1<<16)			/* add 1 x */
-					;					/* a1 flags */
-					
-	*(int *)0xf02230 = srcy*rowsize+srcx;		/* a2 pixel pointers */
-
-	*(int *)0xf02234 = rowsize-width;			/* a2 pixel step */
-
-
-	
-	*(int *)0xf0223c = (height<<16) + width;	/* count */
-
-	*(int *)0xf02238 =
-				(1<<0)					/* source read */
-				+(1<<9)					/* add a1 step value in outer */
-				+(1<<10)				/* add a2 step value in outer */
-				+ (12<<21)				/* copy source */
-				;
-
-#else
    {
       uint32_t *dest;
       byte     *source;
@@ -1074,7 +1037,6 @@ void DrawJagobj(jagobj_t *jo, int x, int y)
          dest += CALICO_ORIG_SCREENWIDTH * JAGOBJ_SCALEFACTOR_Y;
       }
    }
-#endif
 }
 
 void DoubleBufferObjList(void);
@@ -1108,37 +1070,31 @@ void UpdateBuffer(void)
 #endif
 }
 
+#define TITLE_PALSHIFT (40 << 1)
+#define TITLE_XSTART   16
+
 //
 // CALICO: Separated out of DoubleBufferObjList
 //
 void DrawMTitle(void)
 {
    // CALICO_FIXME: not working currently, draws a bunch of garbage...
-#if 0
    jagobj_t *backgroundpic;
    int width, height;
-   int clipwidth, clipheight;
    byte *data;
 
    backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
    width  = BIGSHORT(backgroundpic->width);
-   height = BIGSHORT(backgroundpic->height) - 8;
+   height = BIGSHORT(backgroundpic->height);
    data   = backgroundpic->data;
-
-   clipwidth = width;
-   if(clipwidth > 320)
-      clipwidth = 320;
-
-   clipheight = height;
-   if(clipheight > 240)
-      clipheight = 240;
 
    {
       uint32_t *dest;
       byte     *source;
+      int       p;
 
-      source = data + 8 * width;
 
+      /*
       dest = framebuffer_p;
       for(; clipheight; clipheight--)
       {
@@ -1156,8 +1112,9 @@ void DrawMTitle(void)
          source += width;
          dest += CALICO_ORIG_SCREENWIDTH * JAGOBJ_SCALEFACTOR_Y;
       }
+      */
    }
-#endif
+
    /*
    pwidth = backgroundpic->width/16;
 

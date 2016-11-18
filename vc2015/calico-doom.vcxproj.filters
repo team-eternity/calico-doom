@@ -285,6 +285,9 @@
     <ClCompile Include="..\src\gl\gl_render.cpp">
       <Filter>Source Files\gl</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gl\resource.cpp">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\doomdata.h">
@@ -371,9 +374,6 @@
     <ClInclude Include="..\src\rb\valloc.h">
       <Filter>Header Files\rb</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\rb\dllist.h">
-      <Filter>Header Files\rb</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\hal\hal_video.h">
       <Filter>Header Files\hal</Filter>
     </ClInclude>
@@ -418,6 +418,12 @@
     </ClInclude>
     <ClInclude Include="..\src\gl\gl_render.h">
       <Filter>Header Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gl\resource.h">
+      <Filter>Header Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\dllist.h">
+      <Filter>Header Files\elib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
