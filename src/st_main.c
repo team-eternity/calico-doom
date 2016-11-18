@@ -3,7 +3,7 @@
 #include "doomdef.h"
 #include "st_main.h"
 
-stbar_t	  stbar;
+stbar_t   stbar;
 jagobj_t *micronums[NUMMICROS];
 int       micronums_x[NUMMICROS] = {249,261,272,249,261,272};
 int       micronums_y[NUMMICROS] = {15,15,15,25,25,25};
@@ -13,8 +13,8 @@ int       newface;
 int       card_x[NUMCARDS] = {KEYX,KEYX,KEYX,KEYX+3, KEYX+3, KEYX+3};
 int       card_y[NUMCARDS] = {BLUKEYY,YELKEYY,REDKEYY,BLUKEYY,YELKEYY,REDKEYY};
 
-boolean   flashInitialDraw; /* INITIALLY DRAW FRAG AMOUNTS (flag) */
-sbflash_t yourFrags;        /* INFO FOR YOUR FRAG FLASHING */
+boolean   flashInitialDraw; // INITIALLY DRAW FRAG AMOUNTS (flag)
+sbflash_t yourFrags;        // INFO FOR YOUR FRAG FLASHING
 sbflash_t hisFrags;
 
 boolean   gibdraw;
@@ -30,6 +30,7 @@ int spclfaceSprite[NUMSPCLFACES] =
    sbf_gotgat,
    sbf_mowdown
 };
+
 boolean    doSpclFace;
 spclface_e spclFaceType;
 
@@ -38,7 +39,7 @@ byte     *sbartop;
 jagobj_t *faces[NUMFACES];
 jagobj_t *sbobj[NUMSBOBJ];
 
-sbflash_t flashCards[NUMCARDS]; /* INFO FOR FLASHING CARDS & SKULLS */
+sbflash_t flashCards[NUMCARDS]; // INFO FOR FLASHING CARDS & SKULLS 
 
 /*
 ====================
@@ -66,20 +67,20 @@ void ST_Init(void)
       micronums[i] = W_CacheLumpNum(l+i, PU_STATIC);
 }
 
-/*================================================== */
-/* */
-/*  Init this stuff EVERY LEVEL */
-/* */
-/*================================================== */
+//==================================================
+//
+//  Init this stuff EVERY LEVEL
+//
+//==================================================
 void ST_InitEveryLevel(void)
 {
    int i;
 
-   /* force everything to be updated on next ST_Update */
-   D_memset(&stbar, 0x80, sizeof(stbar) );
+   // force everything to be updated on next ST_Update
+   D_memset(&stbar, 0x80, sizeof(stbar));
    facetics = 0;
 
-   /* DRAW FRAG COUNTS INITIALLY */
+   // DRAW FRAG COUNTS INITIALLY
    if(netgame == gt_deathmatch)
    {
       yourFrags.active = false;
@@ -96,9 +97,9 @@ void ST_InitEveryLevel(void)
       stbar.yourFrags = players[consoleplayer].frags;
       stbar.hisFrags = players[!consoleplayer].frags;
    }
-	
+
    stbar.gotgibbed = false;
-   gibdraw = false;	/* DON'T DRAW GIBBED HEAD SEQUENCE */
+   gibdraw = false;    // DON'T DRAW GIBBED HEAD SEQUENCE
    doSpclFace = false;
    stbar.specialFace = f_none;
 
@@ -106,13 +107,12 @@ void ST_InitEveryLevel(void)
    {
       stbar.tryopen[i] = false;
       flashCards[i].active = false;
-      flashCards[i].x = KEYX + (i>2?3:0);
+      flashCards[i].x = KEYX + (i > 2 ? 3 : 0);
       flashCards[i].y = card_y[i];
       flashCards[i].w = KEYW;
       flashCards[i].h = KEYH;
    }
 }
-
 
 /*
 ====================
@@ -126,21 +126,21 @@ void ST_Ticker(void)
 {
    int ind;
 
-   /* */
-   /* Animate face */
-   /* */
+   //
+   // Animate face
+   //
    if(--facetics <= 0)
    {
-      facetics = M_Random()&15;
-      newface  = M_Random()&3;
+      facetics = M_Random() & 15;
+      newface  = M_Random() & 3;
       if(newface == 3)
          newface = 1;
       doSpclFace = false;
    }
-	
-   /* */
-   /* Draw special face? */
-   /* */
+
+   //
+   // Draw special face?
+   //
    if(stbar.specialFace)
    {
       doSpclFace = true;
@@ -148,10 +148,10 @@ void ST_Ticker(void)
       facetics = 15;
       stbar.specialFace = f_none;
    }
-	
-   /* */
-   /* Flash YOUR FRAGS amount */
-   /* */
+
+   //
+   // Flash YOUR FRAGS amount
+   //
    if(yourFrags.active && !--yourFrags.delay)
    {
       yourFrags.delay = FLASHDELAY;
@@ -159,12 +159,12 @@ void ST_Ticker(void)
       if(!--yourFrags.times)
          yourFrags.active = false;
       if(yourFrags.doDraw && yourFrags.active)
-         S_StartSound(NULL,sfx_itemup);
+         S_StartSound(NULL, sfx_itemup);
    }
-	
-   /* */
-   /* Flash HIS FRAGS amount */
-   /* */
+
+   //
+   // Flash HIS FRAGS amount
+   //
    if(hisFrags.active && !--hisFrags.delay)
    {
       hisFrags.delay = FLASHDELAY;
@@ -174,10 +174,10 @@ void ST_Ticker(void)
       if(hisFrags.doDraw && hisFrags.active)
          S_StartSound(NULL, sfx_itemup);
    }
-	
-   /* */
-   /* Did we get gibbed? */
-   /* */
+
+   //
+   // Did we get gibbed?
+   //
    if(stbar.gotgibbed && !gibdraw)
    {
       gibdraw = true;
@@ -185,13 +185,13 @@ void ST_Ticker(void)
       gibdelay = GIBTIME;
       stbar.gotgibbed = false;
    }
-	
-   /* */
-   /* Tried to open a CARD or SKULL door? */
-   /* */
+
+   //
+   // Tried to open a CARD or SKULL door?
+   //
    for(ind = 0; ind < NUMCARDS; ind++)
    {
-      /* CHECK FOR INITIALIZATION */
+      // CHECK FOR INITIALIZATION
       if(stbar.tryopen[ind])
       {
          stbar.tryopen[ind] = false;
@@ -201,7 +201,7 @@ void ST_Ticker(void)
          flashCards[ind].doDraw = false;
       }
 
-      /* MIGHT AS WELL DO TICKING IN THE SAME LOOP! */
+      // MIGHT AS WELL DO TICKING IN THE SAME LOOP!
       if(flashCards[ind].active && !--flashCards[ind].delay)
       {
          flashCards[ind].delay = FLASHDELAY;
@@ -209,11 +209,10 @@ void ST_Ticker(void)
          if(!--flashCards[ind].times)
             flashCards[ind].active = false;
          if(flashCards[ind].doDraw && flashCards[ind].active)
-            S_StartSound(NULL,sfx_itemup);
+            S_StartSound(NULL, sfx_itemup);
       }
    }
 }
-
 
 /*
 ====================
@@ -229,13 +228,13 @@ void ST_Drawer(void)
    int       ind;
    player_t *p;
 
-   bufferpage = sbartop; /* draw into status bar overlay */
+   bufferpage = sbartop; // draw into status bar overlay
 
    p = &players[consoleplayer];
-	
-   /* */
-   /* Ammo */
-   /* */
+
+   //
+   // Ammo
+   //
    if(p->readyweapon == wp_nochange)
       i = 0;
    else
@@ -246,42 +245,42 @@ void ST_Drawer(void)
       else
          i = p->ammo[i];
    }
-	
+
    if(stbar.ammo != i)
    {
       stbar.ammo = i;
-      EraseBlock(0,AMMOY,14*3,16);
-      ST_DrawValue(AMMOX,AMMOY,i);
+      EraseBlock(0, AMMOY, 14*3, 16);
+      ST_DrawValue(AMMOX, AMMOY, i);
    }
-	
-   /* */
-   /* Health */
-   /* */
+
+   //
+   // Health
+   //
    i = p->health;
    if(stbar.health != i)
    {
       stbar.health = i;
-      EraseBlock(HEALTHX - 14*3 - 4,HEALTHY,14*3,(sbobj[0])->height);
-      DrawJagobj(sbobj[sb_percent],HEALTHX,HEALTHY);
+      EraseBlock(HEALTHX - 14*3 - 4, HEALTHY, 14*3, sbobj[0]->height);
+      DrawJagobj(sbobj[sb_percent], HEALTHX, HEALTHY);
       ST_DrawValue(HEALTHX,HEALTHY,i);
-      stbar.face = -1;	/* update face immediately */
+      stbar.face = -1;    // update face immediately
    }
 
-   /* */
-   /* Armor */
-   /* */
+   //
+   // Armor
+   //
    i = p->armorpoints;
    if(stbar.armor != i)
    {
       stbar.armor = i;
-      EraseBlock(ARMORX - 14*3 - 4,ARMORY,14*3,(sbobj[0])->height);
-      DrawJagobj(sbobj[sb_percent],ARMORX,ARMORY);
-      ST_DrawValue(ARMORX,ARMORY,i);
+      EraseBlock(ARMORX - 14*3 - 4, ARMORY, 14*3, sbobj[0]->height);
+      DrawJagobj(sbobj[sb_percent], ARMORX, ARMORY);
+      ST_DrawValue(ARMORX, ARMORY, i);
    }
 
-   /* */
-   /* Cards & skulls */
-   /* */
+   //
+   // Cards & skulls
+   //
    for(ind = 0; ind < NUMCARDS; ind++)
    {
       i = p->cards[ind];
@@ -293,10 +292,10 @@ void ST_Drawer(void)
             DrawJagobj(sbobj[sb_card_b + ind],card_x[ind],card_y[ind]);
       }
    }
-	
-   /* */
-   /* Weapons & level */
-   /* */
+
+   //
+   // Weapons & level
+   //
    if(netgame != gt_deathmatch)
    {
       i = gamemap;
@@ -304,28 +303,28 @@ void ST_Drawer(void)
       {
          int x = MAPX;
          stbar.currentMap = i;
-         /* CENTER THE LEVEL # IF < 10 */
+         // CENTER THE LEVEL # IF < 10
          if(stbar.currentMap < 10)
             x -= 6;
          EraseBlock(MAPX - 30,MAPY,30,16);
          ST_DrawValue(x,MAPY,i);
       }
-		
+
       for(ind = 0; ind < NUMMICROS; ind++)
       {
          if(p->weaponowned[ind+1] != stbar.weaponowned[ind])
          {
             stbar.weaponowned[ind] = p->weaponowned[ind+1];
             if(stbar.weaponowned[ind])
-               DrawJagobj(micronums[ind], micronums_x[ind],micronums_y[ind]);
+               DrawJagobj(micronums[ind], micronums_x[ind], micronums_y[ind]);
             else
-               EraseBlock(micronums_x[ind],micronums_y[ind],4,6);
+               EraseBlock(micronums_x[ind], micronums_y[ind], 4, 6);
          }
       }
    }
-   /* */
-   /* Or, frag counts! */
-   /* */
+   //
+   // Or, frag counts!
+   //
    else
    {
       int yours;
@@ -338,7 +337,7 @@ void ST_Drawer(void)
       {
          stbar.yourFrags = yours;
 
-         /* SIGNAL THE FLASHING FRAGS! */
+         // SIGNAL THE FLASHING FRAGS!
          yourFrags.active = true;
          yourFrags.delay  = FLASHDELAY;
          yourFrags.times  = FLASHTIMES;
@@ -349,48 +348,48 @@ void ST_Drawer(void)
       {
          stbar.hisFrags = his;
 
-         /* SIGNAL THE FLASHING FRAGS! */
+         // SIGNAL THE FLASHING FRAGS!
          hisFrags.active = true;
          hisFrags.delay  = FLASHDELAY;
          hisFrags.times  = FLASHTIMES;
          hisFrags.doDraw = false;
       }
    }
-	
-   /* */
-   /* Draw YOUR FRAGS if it's time */
-   /* */
+
+   //
+   // Draw YOUR FRAGS if it's time
+   //
    if (yourFrags.active)
    {
-      if (yourFrags.doDraw)
-         ST_DrawValue(yourFrags.x,yourFrags.y,stbar.yourFrags);
+      if(yourFrags.doDraw)
+         ST_DrawValue(yourFrags.x, yourFrags.y, stbar.yourFrags);
       else
-         EraseBlock(yourFrags.x - yourFrags.w, yourFrags.y,yourFrags.w,yourFrags.h);
-   }
-	
-   /* */
-   /* Draw HIS FRAGS if it's time */
-   /* */
-   if (hisFrags.active)
-   {
-      if (hisFrags.doDraw)
-         ST_DrawValue(hisFrags.x,hisFrags.y,stbar.hisFrags);
-      else
-         EraseBlock(hisFrags.x - hisFrags.w, hisFrags.y,hisFrags.w,hisFrags.h);
+         EraseBlock(yourFrags.x - yourFrags.w, yourFrags.y, yourFrags.w, yourFrags.h);
    }
 
-   if (flashInitialDraw)
+   //
+   // Draw HIS FRAGS if it's time
+   //
+   if(hisFrags.active)
+   {
+      if(hisFrags.doDraw)
+         ST_DrawValue(hisFrags.x,hisFrags.y,stbar.hisFrags);
+      else
+         EraseBlock(hisFrags.x - hisFrags.w, hisFrags.y, hisFrags.w, hisFrags.h);
+   }
+
+   if(flashInitialDraw)
    {
       flashInitialDraw = false;
-      EraseBlock(yourFrags.x - yourFrags.w,yourFrags.y, yourFrags.w,yourFrags.h);
-      EraseBlock(hisFrags.x - hisFrags.w,hisFrags.y, hisFrags.w,hisFrags.h);
-      ST_DrawValue(yourFrags.x,yourFrags.y,stbar.yourFrags);
-      ST_DrawValue(hisFrags.x,hisFrags.y,stbar.hisFrags);
+      EraseBlock(yourFrags.x - yourFrags.w, yourFrags.y, yourFrags.w, yourFrags.h);
+      EraseBlock(hisFrags.x - hisFrags.w, hisFrags.y, hisFrags.w, hisFrags.h);
+      ST_DrawValue(yourFrags.x, yourFrags.y, stbar.yourFrags);
+      ST_DrawValue(hisFrags.x, hisFrags.y, stbar.hisFrags);
    }
-	
-   /* */
-   /* Flash CARDS or SKULLS if no key for door */
-   /* */
+
+   //
+   // Flash CARDS or SKULLS if no key for door
+   //
    for(ind = 0; ind < NUMCARDS; ind++)
    {
       if(flashCards[ind].active)
@@ -401,28 +400,28 @@ void ST_Drawer(void)
             EraseBlock(flashCards[ind].x,flashCards[ind].y, flashCards[ind].w,flashCards[ind].h);
       }
    }
-	
-   /* */
-   /* Draw gibbed head */
-   /* */
-   if (gibdraw && !--gibdelay)
+
+   //
+   // Draw gibbed head
+   //
+   if(gibdraw && !--gibdelay)
    {
       DrawJagobj(faces[FIRSTSPLAT + gibframe++], FACEX, FACEY);
       gibdelay = GIBTIME;
       if(gibframe > 6)
          gibdraw = false;
    }
-		
-   /*                    */
-   /* God mode cheat */
-   /* */
+
+   //
+   // God mode cheat
+   //
    i = p->cheats & CF_GODMODE;
    if(stbar.godmode != i)
       stbar.godmode = i;
 
-   /* */
-   /* face change */
-   /* */
+   //
+   // face change
+   //
    if(stbar.godmode)
       DrawJagobj(faces[GODFACE], FACEX, FACEY);
    else if(!stbar.health)
@@ -446,32 +445,32 @@ void ST_Drawer(void)
    }
 }
 
-/*================================================= */
-/* */
-/* Debugging print */
-/* */
-/*================================================= */
+//=================================================
+//
+// Debugging print
+//
+//=================================================
 void ST_Num(int x, int y, int num)
 {
-   char	str[8];
+   char str[8];
 
    NumToStr(num, str);
    I_Print8(x, y, str+1);
 }
 
-/*================================================= */
-/* */
-/*	Convert an int to a string (my_itoa?) */
-/* */
-/*================================================= */
+//=================================================
+//
+// Convert an int to a string (my_itoa?)
+//
+//=================================================
 void valtostr(char *string,int val)
 {
    char temp[10];
-   int	index = 0, i, dindex = 0;
+   int  index = 0, i, dindex = 0;
 
    do
    {
-      temp[index++] = val%10 + '0';
+      temp[index++] = val % 10 + '0';
       val /= 10;
    } 
    while(val);
@@ -481,11 +480,11 @@ void valtostr(char *string,int val)
       string[dindex++] = temp[i];
 }
 
-/*================================================= */
-/* */
-/* Draws a number in the Status Bar # font */
-/* */
-/*================================================= */
+//=================================================
+//
+// Draws a number in the Status Bar # font
+//
+//=================================================
 void ST_DrawValue(int x, int y, int value)
 {
    char v[4];
@@ -497,7 +496,7 @@ void ST_DrawValue(int x, int y, int value)
    while(j >= 0)
    {
       index = sb_0 + (v[j--] - '0');
-      x -= (sbobj[index])->width + 1;
+      x -= sbobj[index]->width + 1;
       DrawJagobj(sbobj[index], x, y);
    }
 }
