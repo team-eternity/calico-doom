@@ -40,7 +40,8 @@
 // This class is intentionally a POD and will most likely remain that way
 // for speed and efficiency concerns.
 //
-template<typename T> class DLListItem
+template<typename T> 
+class DLListItem
 {
 public:
    DLListItem<T>  *dllNext;
@@ -82,7 +83,8 @@ public:
 // regulated. Use is strictly optional. Provide the type and a member to
 // pointer to the DLListItem field in the class the list will use for links.
 //
-template<typename T, DLListItem<T> T::* link> class DLList
+template<typename T, DLListItem<T> T::* link> 
+class DLList
 {
 public:
    DLListItem<T> *head;

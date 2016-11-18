@@ -492,6 +492,7 @@ fixed_t FixedDiv(fixed_t a, fixed_t b)
 //=============================================================================
 
 uint32_t *framebuffer_p;
+boolean   fbneedsupdate;
 
 //
 // CALICO: Get the framebuffer pointer from the low-level graphics code
@@ -522,6 +523,8 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
    if((unsigned int)dc_x >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT)
       I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
+
+   fbneedsupdate = true;
 
    // CALICO: our destination framebuffer is 32-bit
    dest = framebuffer_p + dc_yl * (SCREENWIDTH << 2) + (dc_x << 2);
@@ -861,6 +864,8 @@ void I_Update(void)
    lasttics = ticcount - lastticcount;
    lastticcount = ticcount;
 #else
+   if(fbneedsupdate)
+      GL_UpdateFramebuffer();
    GL_RenderFrame();
 #endif
 }
@@ -1007,13 +1012,15 @@ void DrawJagobj(jagobj_t *jo, int x, int y)
    if(width < 1 || height < 1)
       return;
 
+   fbneedsupdate = true;
+
    {
       uint32_t *dest;
       byte     *source;
 
       source = jo->data + srcx + srcy*rowsize;
 
-      y += 8;
+      y += 16;
 
       // CALICO: scale up for 640x480
       x *= JAGOBJ_SCALEFACTOR_X;
@@ -1070,69 +1077,31 @@ void UpdateBuffer(void)
 #endif
 }
 
-#define TITLE_PALSHIFT (40 << 1)
-#define TITLE_XSTART   16
-
 //
 // CALICO: Separated out of DoubleBufferObjList
 //
 void DrawMTitle(void)
 {
-   // CALICO_FIXME: not working currently, draws a bunch of garbage...
+   static void *m_titleres;
    jagobj_t *backgroundpic;
-   int width, height;
-   byte *data;
+   unsigned int width, height;
 
    backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
-   width  = BIGSHORT(backgroundpic->width);
-   height = BIGSHORT(backgroundpic->height);
-   data   = backgroundpic->data;
+   width  = (unsigned int)(BIGSHORT(backgroundpic->width));
+   height = (unsigned int)(BIGSHORT(backgroundpic->height));
 
+   if(!m_titleres)
    {
-      uint32_t *dest;
-      byte     *source;
-      int       p;
+      int   shift = BIGSHORT(backgroundpic->index);
+      byte *data  = backgroundpic->data;
 
+      if(!shift)
+         shift = 40;
 
-      /*
-      dest = framebuffer_p;
-      for(; clipheight; clipheight--)
-      {
-         int i, r = 0;
-         for(; r < JAGOBJ_SCALEFACTOR_Y; r++)
-         {
-            uint32_t *tdst = dest + (CALICO_ORIG_SCREENWIDTH * r);
-            for(i = 0; i < clipwidth; i++)
-            {
-               if(source[i])
-                  *tdst = *(tdst+1) = CRYToRGB[palette8[source[i]]];
-               tdst += JAGOBJ_SCALEFACTOR_X;
-            }
-         }
-         source += width;
-         dest += CALICO_ORIG_SCREENWIDTH * JAGOBJ_SCALEFACTOR_Y;
-      }
-      */
+      m_titleres = GL_NewTextureResource("M_TITLE", data, width, height, RES_8BIT_PACKED, shift);
    }
 
-   /*
-   pwidth = backgroundpic->width/16;
-
-   *work_p++ = 
-      ((int)backgroundpic->data<<8)		// data pointer
-
-   *work_p++ =
-      + (backgroundpic->height<<14)		* height
-      + ((BASEORGY-8)<<4)					* ypos 
-
-   *work_p++ =
-      + (40<<(38-32))					* color index 
-      + ((pwidth)>>4);					* iwidth 
-
-   *work_p++ =
-      ((pwidth)<<28)						* iwidth 
-      + ((pwidth)<<18)					* dwidth 
-   */
+   GL_AddDrawCommand(m_titleres, -32, 0, width*2, height*2);
 }
 
 // CALICO_FIXME: Jag-specific

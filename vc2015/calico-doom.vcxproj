@@ -164,6 +164,7 @@
     <ClInclude Include="..\src\doomdata.h" />
     <ClInclude Include="..\src\doomdef.h" />
     <ClInclude Include="..\src\elib\atexit.h" />
+    <ClInclude Include="..\src\elib\bdlist.h" />
     <ClInclude Include="..\src\elib\compare.h" />
     <ClInclude Include="..\src\elib\configfile.h" />
     <ClInclude Include="..\src\elib\dllist.h" />

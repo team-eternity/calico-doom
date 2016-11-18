@@ -27,7 +27,10 @@
 */
 
 #include "../elib/elib.h"
+#include "../elib/bdlist.h"
+#include "../elib/zone.h"
 #include "../hal/hal_types.h"
+#include "../hal/hal_platform.h"
 #include "../hal/hal_video.h"
 #include "../rb/rb_common.h"
 #include "../rb/rb_draw.h"
@@ -90,19 +93,24 @@ static void GL_drawRectImmediate(vtx_t v[4])
 // Draw a rect from game coordinates (gx, gy) to translated framebuffer
 // coordinates with the provided information.
 //
-static void GL_drawGameRect(int gx, int gy, int gw, int gh, rbTexture *tx, vtx_t v[4])
+static void GL_drawGameRect(int gx, int gy, 
+                            unsigned int gw, unsigned int gh,
+                            rbTexture &tx, vtx_t v[4])
 {
    float sx, sy, sw, sh;
-
+   
+   RB_SetVertexColors(v, 4, 0xff, 0xff, 0xff, 0xff);
+   RB_DefTexCoords(v, &tx);
+   
    // bind texture
-   tx->bind();
+   tx.bind();
 
    // transform coordinates into screen space
    hal_video.transformGameCoord2f(gx, gy, &sx, &sy);
 
    // scale width and height into screen space
-   sw = float(hal_video.transformWidth(gw));
-   sh = float(hal_video.transformHeight(gh));
+   sw = float(hal_video.transformWidth(int(gw)));
+   sh = float(hal_video.transformHeight(int(gh)));
 
    GL_initVtxCoords(v, sx, sy, sw, sh);
 
@@ -141,8 +149,14 @@ public:
       m_tex.init(rbTexture::TCR_RGBA, m_width, m_height);
       m_tex.upload(m_data.get(), rbTexture::TC_CLAMP, rbTexture::TF_AUTO);
    }
+  
+   void update()
+   {
+      m_tex.update(m_data.get());
+   }
 
-   rbTexture &getTexture() { return m_tex; }
+   rbTexture &getTexture() { return m_tex;        }
+   uint32_t  *getPixels()  { return m_data.get(); }
 };
 
 //
@@ -162,7 +176,8 @@ extern "C" unsigned short *palette8;
 //
 // Convert 8-bit packed Jaguar graphic to 32-bit color
 //
-static uint32_t *GL_8bppPackedTo32bpp(void *data, unsigned int w, unsigned int h,
+static uint32_t *GL_8bppPackedTo32bpp(void *data, 
+                                      unsigned int w, unsigned int h,
                                       int palshift)
 {
    uint32_t *buffer = new (std::nothrow) uint32_t [w * h];
@@ -187,25 +202,28 @@ static uint32_t *GL_8bppPackedTo32bpp(void *data, unsigned int w, unsigned int h
 //
 // Call from game code to create a texture resource from a graphic
 //
-void *GL_NewTextureResource(const char *lumpname, void *data, 
+void *GL_NewTextureResource(const char *name, void *data, 
                             unsigned int width, unsigned int height,
                             glrestype_t restype, int palshift)
 {
    TextureResource *tr;
 
-   if(!(tr = graphics.findResourceType<TextureResource>(lumpname)))
+   if(!(tr = graphics.findResourceType<TextureResource>(name)))
    {
       uint32_t *pixels = nullptr;
 
       switch(restype)
       {
+      case RES_FRAMEBUFFER:
+         pixels = new (std::nothrow) uint32_t [width * height];
+         break;
       case RES_8BIT_PACKED:
          pixels = GL_8bppPackedTo32bpp(data, width, height, palshift);
          break;
       }
       if(pixels)
       {
-         tr = new (std::nothrow) TextureResource(lumpname, pixels, width, height);
+         tr = new (std::nothrow) TextureResource(name, pixels, width, height);
          if(tr)
          {
             tr->generate();
@@ -217,27 +235,99 @@ void *GL_NewTextureResource(const char *lumpname, void *data,
    return tr;
 }
 
+//
+// Call from game code to draw to backing store of a texture resource
+//
+void GL_UpdateTextureResource(void *resource)
+{
+   static_cast<TextureResource *>(resource)->update();
+}
+
+//
+// Call from game code to get the 32-bit backing store of a texture resource
+//
+unsigned int *GL_GetTextureResourceStore(void *resource)
+{
+   return static_cast<TextureResource *>(resource)->getPixels();
+}
+
+//=============================================================================
+//
+// Draw Command List
+//
+
+struct drawcommand_t
+{
+   BDListItem<drawcommand_t> links; // list links
+   TextureResource *res;            // source graphics
+   int x, y;                        // where to put it (in 640x480 coord space)
+   unsigned int w, h;               // size (in 640x480 coord space)
+};
+
+static BDList<drawcommand_t, &drawcommand_t::links> drawCommands;
+
+void GL_AddDrawCommand(void *res, int x, int y, unsigned int w, unsigned int h)
+{
+   if(!res)
+      return;
+   
+   auto dc = estructalloc(drawcommand_t, 1);
+
+   dc->res = static_cast<TextureResource *>(res);
+   dc->x   = x;
+   dc->y   = y;
+   dc->w   = w;
+   dc->h   = h;
+
+   drawCommands.insert(dc);
+}
+
+void GL_ClearDrawCommands(void)
+{
+   while(!drawCommands.empty())
+   {
+      drawcommand_t *cmd = drawCommands.first()->bdObject;
+      drawCommands.remove(cmd);
+      efree(cmd);
+   }
+}
+
+static void GL_executeDrawCommands(void)
+{
+   BDListItem<drawcommand_t> *item;
+   vtx_t v[4];
+
+   for(item = drawCommands.first(); item != &drawCommands.head; item = item->bdNext)
+   {
+      drawcommand_t *cmd = item->bdObject;
+      GL_drawGameRect(cmd->x, cmd->y, cmd->w, cmd->h, cmd->res->getTexture(), v);
+   }
+}
+
 //=============================================================================
 //
 // Software Framebuffer
 //
 
-static uint32_t framebuffer[CALICO_ORIG_SCREENWIDTH * CALICO_ORIG_SCREENHEIGHT];
-static rbTexture fbtex;
+static TextureResource *framebuffer;
 
 //
 // Create the GL texture handle for the framebuffer texture
 //
 void GL_InitFramebufferTexture(void)
 {
-   fbtex.init(rbTexture::TCR_RGBA, CALICO_ORIG_SCREENWIDTH, CALICO_ORIG_SCREENHEIGHT);
-   fbtex.upload(framebuffer, rbTexture::TC_CLAMP, rbTexture::TF_AUTO);
-}
-
-VALLOCATION(fbtex)
-{
-   fbtex.abandonTexture();
-   GL_InitFramebufferTexture();
+   framebuffer = static_cast<TextureResource *>(
+      GL_NewTextureResource(
+         "framebuffer",
+         nullptr,
+         CALICO_ORIG_SCREENWIDTH,
+         CALICO_ORIG_SCREENHEIGHT,
+         RES_FRAMEBUFFER,
+         0
+      )
+   );
+   if(!framebuffer)
+      hal_platform.fatalError("Could not create 640x480 framebuffer texture");
 }
 
 //
@@ -245,23 +335,29 @@ VALLOCATION(fbtex)
 //
 void *GL_GetFramebuffer(void)
 {
-   return framebuffer;
+   return framebuffer->getPixels();
 }
+
+void GL_UpdateFramebuffer(void)
+{
+   framebuffer->update();
+}
+
+//=============================================================================
+//
+// Refresh
+//
 
 void GL_RenderFrame(void)
 {
-   vtx_t v[4];
-   RB_SetVertexColors(v, 4, 0xff, 0xff, 0xff, 0xff);
-   RB_DefTexCoords(v, &fbtex);
-
-   fbtex.update(framebuffer);
-   GL_drawGameRect(0, 0, CALICO_ORIG_SCREENWIDTH, CALICO_ORIG_SCREENHEIGHT, &fbtex, v);
-
+   GL_AddDrawCommand(framebuffer, 0, 0, CALICO_ORIG_SCREENWIDTH, CALICO_ORIG_SCREENHEIGHT);
+   GL_executeDrawCommands();
+   GL_ClearDrawCommands();
    hal_video.endFrame();
 
    // CALICO_TODO: TEMP: clear framebuffer until everything is drawing
-   for(int i = 0; i < earrlen(framebuffer); i++)
-      framebuffer[i] = D_RGBA(0x80, 0x80, 0x80, 0xff);
+   //for(int i = 0; i < CALICO_ORIG_SCREENWIDTH*CALICO_ORIG_SCREENHEIGHT; i++)
+    //  framebuffer->getPixels()[i] = D_RGBA(0x60, 0x60, 0x60, 0xff);
 }
 
 // EOF

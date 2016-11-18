@@ -31,7 +31,8 @@
 
 typedef enum glrestype_e
 {
-   RES_8BIT_PACKED // 8-bit packed Jag resource
+   RES_FRAMEBUFFER, // a raw framebuffer of specified dimensions
+   RES_8BIT_PACKED  // 8-bit packed Jag resource
 } glrestype_t;
 
 #ifdef __cplusplus
@@ -40,11 +41,16 @@ extern "C" {
 
 void  GL_InitFramebufferTexture(void);
 void *GL_GetFramebuffer(void);
+void  GL_UpdateFramebuffer(void);
 void  GL_RenderFrame(void);
 
 void *GL_NewTextureResource(const char *lumpname, void *data,
                             unsigned int width, unsigned int height,
                             glrestype_t restype, int palshift);
+
+void          GL_UpdateTextureResource(void *resource);
+unsigned int *GL_GetTextureResourceStore(void *resource);
+void          GL_AddDrawCommand(void *res, int x, int y, unsigned int w, unsigned int h);
 
 #ifdef __cplusplus
 }

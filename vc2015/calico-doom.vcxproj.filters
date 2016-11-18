@@ -425,6 +425,9 @@
     <ClInclude Include="..\src\elib\dllist.h">
       <Filter>Header Files\elib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\elib\bdlist.h">
+      <Filter>Header Files\elib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="calico-doom.rc">
