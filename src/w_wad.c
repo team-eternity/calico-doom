@@ -265,9 +265,10 @@ void *W_CacheLumpNum(int lump, int tag)
       I_Error("W_CacheLumpNum: %i >= numlumps",lump);
 
    if(!lumpcache[lump])
-   {	// read the lump in
+   {
+      // read the lump in
       //printf ("cache miss on lump %i\n",lump);
-      Z_Malloc(W_LumpLength (lump), tag, &lumpcache[lump]);
+      Z_Malloc(W_LumpLength(lump), tag, &lumpcache[lump]);
       W_ReadLump(lump, lumpcache[lump]);
    }
    else

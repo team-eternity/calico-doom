@@ -9,6 +9,7 @@
 #include "hal/hal_platform.h"
 #include "hal/hal_video.h"
 #include "gl/gl_render.h"
+#include "rb/rb_common.h"
 #include "doomdef.h"
 #include "jagcry.h"
 #include "m_argv.h"
@@ -47,6 +48,8 @@ int            *screenshade;    // pixels for screen shifting
 byte *debugscreen;
 extern jagobj_t *sbar;
 extern byte     *sbartop;
+
+static void *sbarrez;
 
 int workpage; // which frame is not being displayed
 int worklist; // which listbuffer is not being used
@@ -106,8 +109,6 @@ extern int enddata;
 extern short video_height;
 extern short a_vdb, a_vde, a_hdb, a_hde;
 #endif
-
-unsigned int BASEORGY;
 
 // CALICO_FIXME: Jag-specific bits need emulation or replacement
 void Jag68k_main(int argc, const char *const *argv)
@@ -344,7 +345,7 @@ void I_Init(void)
    palette8 = W_CacheLumpName("CRYPAL", PU_STATIC);
    
    // CALICO: reverse CRY for endianness
-   for(i = 0; i < 256; i++)
+   for(i = 0; i < 14*256; i++)
    {
       palette8[i] = BIGSHORT(palette8[i]);
    }
@@ -352,7 +353,15 @@ void I_Init(void)
 
 void I_DrawSbar(void)
 {
-   // CALICO_FIXME: requires working video
+   unsigned int width, height;
+   sbar   = W_CacheLumpName("STBAR", PU_STATIC);
+   width  = (unsigned int)(BIGSHORT(sbar->width));
+   height = (unsigned int)(BIGSHORT(sbar->height));
+
+   if(!sbarrez)
+      sbarrez = GL_NewTextureResource("STBAR", sbar->data, width, height, RES_8BIT, 0);
+
+   // CALICO_TODO: network patch
 #if 0
    jagobj_t     *frag;
    int           x, y;
@@ -495,12 +504,12 @@ uint32_t *framebuffer_p;
 boolean   fbneedsupdate;
 
 //
-// CALICO: Get the framebuffer pointer from the low-level graphics code
+// CALICO: Get the framebuffer pointers from the low-level graphics code
 //
 static void I_GetFramebuffer(void)
 {
-   GL_InitFramebufferTexture();
-   framebuffer_p = GL_GetFramebuffer();
+   GL_InitFramebufferTextures();
+   framebuffer_p   = GL_GetFramebuffer();
 }
 
 // 
@@ -525,6 +534,10 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
 #endif
 
    fbneedsupdate = true;
+
+   // CALICO: offset vertically for border
+   dc_yl += BASEORGY;
+   dc_yh += BASEORGY;
 
    // CALICO: our destination framebuffer is 32-bit
    dest = framebuffer_p + dc_yl * (SCREENWIDTH << 2) + (dc_x << 2);
@@ -865,7 +878,12 @@ void I_Update(void)
    lastticcount = ticcount;
 #else
    if(fbneedsupdate)
+   {
       GL_UpdateFramebuffer();
+      fbneedsupdate = false;
+   }
+   GL_AddFramebuffer();
+   GL_AddDrawCommand(sbarrez, 0, BASEORGY + (SCREENHEIGHT*2) + 1, 640, 80);
    GL_RenderFrame();
 #endif
 }
@@ -905,6 +923,7 @@ void DoubleBufferSetup(void)
    while(!I_RefreshCompleted())
       ;
 
+   GL_ClearFramebuffer(D_RGBA(0, 0, 0, 0));
    // CALICO_FIXME: Jag-specific
 #if 0
    bufferpage  = (byte *)(workingscreen = screens[workpage]);
@@ -1026,6 +1045,7 @@ void DrawJagobj(jagobj_t *jo, int x, int y)
       x *= JAGOBJ_SCALEFACTOR_X;
       y *= JAGOBJ_SCALEFACTOR_Y;
 
+      // CALICO_FIXME: be able to draw to other buffers...
       dest = framebuffer_p + y * CALICO_ORIG_SCREENWIDTH + x;
       for(; height; height--)
       {
@@ -1051,7 +1071,9 @@ void DoubleBufferObjList(void);
 // CALICO_FIXME: Jag-specific
 void UpdateBuffer(void)
 {
-   I_Update();
+   DoubleBufferObjList();
+   GL_RenderFrame();
+
 #if 0
    /* copy entire page with blitter */
 
@@ -1107,6 +1129,13 @@ void DrawMTitle(void)
 // CALICO_FIXME: Jag-specific
 void DoubleBufferObjList(void)
 {
+   if(fbneedsupdate)
+   {
+      GL_UpdateFramebuffer();
+      fbneedsupdate = false;
+   }
+   DrawMTitle();
+   GL_AddFramebuffer();
 #if 0
    int		link;
    int		pwidth;
@@ -1455,7 +1484,7 @@ void Player0Setup(void)
 }
 
 void Player1Setup(void)
-{	
+{
    int val, oldval;
    
    // wait for two identical id bytes, then start game
@@ -1509,7 +1538,7 @@ void I_NetSetup(void)
    DoubleBufferSetup();
    UpdateBuffer();
 
-   pl = W_CacheLumpName("connect", PU_STATIC);	
+   pl = W_CacheLumpName("connect", PU_STATIC);
    DrawSinglePlaque(pl);
    Z_Free(pl);
 

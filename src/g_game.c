@@ -380,7 +380,7 @@ void G_RunGame(void)
 
       if(gameaction == ga_warped)
          continue; // skip intermission
-					
+
       // decide which level to go to next
       if(gameaction == ga_secretexit)
       {
@@ -409,7 +409,7 @@ void G_RunGame(void)
       // run the finale if needed
       if(gamemap == 23)
          MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer);
-			
+
       gamemap = nextmap;
    }
 }

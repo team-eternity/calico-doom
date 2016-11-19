@@ -359,18 +359,18 @@ void DrawSinglePlaque(jagobj_t *pl);
 
 int TIC_Abortable(void)
 {
-   jagobj_t	*pl;
+   jagobj_t *pl;
 
    if(ticon >= 8*15)
-      return 1; /* go on to next demo */
+      return 1; // go on to next demo
 
    if(ticbuttons[0] == (BT_OPTION|BT_STAR|BT_HASH))
    {
-      /* reset eeprom memory */
+      // reset eeprom memory
       void Jag68k_main(int argc, const char *const *argv);
 
       ClearEEProm();
-      pl = W_CacheLumpName("defaults", PU_STATIC);	
+      pl = W_CacheLumpName("defaults", PU_STATIC);
       DrawSinglePlaque(pl);
       Z_Free(pl);
       S_Clear();
@@ -411,7 +411,6 @@ void STOP_Title(void)
 
 void DRAW_Title(void)
 {
-   DrawMTitle();
    DrawJagobj(titlepic, 0, 0);
    UpdateBuffer();
 }
@@ -537,10 +536,9 @@ void D_DoomMain(void)
    while(1)
    {
       RunTitle();
-      // CALICO_FIXME: DEBUG
-      //RunDemo("DEMO1");
-      //RunCredits();
-      //RunDemo("DEMO2");
+      RunDemo("DEMO1");
+      RunCredits();
+      RunDemo("DEMO2");
    }
 } 
  

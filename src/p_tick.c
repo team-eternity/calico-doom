@@ -1,3 +1,6 @@
+
+#include "gl/gl_render.h"
+#include "rb/rb_common.h"
 #include "doomdef.h"
 #include "p_local.h"
 
@@ -461,6 +464,9 @@ void P_Start(void)
    players[1].automapflags = 0;
    ticremainder[0] = ticremainder[1] = 0;
    M_ClearRandom();
+
+   // CALICO
+   GL_ClearFramebuffer(D_RGBA(0, 0, 0, 0xff));
 }
 
 void P_Stop(void)

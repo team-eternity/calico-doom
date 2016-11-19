@@ -109,8 +109,8 @@ static void GL_drawGameRect(int gx, int gy,
    hal_video.transformGameCoord2f(gx, gy, &sx, &sy);
 
    // scale width and height into screen space
-   sw = float(hal_video.transformWidth(int(gw)));
-   sh = float(hal_video.transformHeight(int(gh)));
+   sw = float(hal_video.transformWidth(gw));
+   sh = float(hal_video.transformHeight(gh));
 
    GL_initVtxCoords(v, sx, sy, sw, sh);
 
@@ -174,6 +174,23 @@ VALLOCATION(graphics)
 extern "C" unsigned short *palette8;
 
 //
+// Convert 8-bit Jaguar graphic to 32-bit color
+//
+static uint32_t *GL_8bppTo32bpp(void *data, unsigned int w, unsigned int h)
+{
+   uint32_t *buffer = new (std::nothrow) uint32_t [w * h];
+
+   if(buffer)
+   {
+      byte *src = static_cast<byte *>(data);
+      for(unsigned int p = 0; p <  w * h; p++)
+         buffer[p] = src[p] ? CRYToRGB[palette8[src[p]]] : 0;
+   }
+
+   return buffer;
+}
+
+//
 // Convert 8-bit packed Jaguar graphic to 32-bit color
 //
 static uint32_t *GL_8bppPackedTo32bpp(void *data, 
@@ -216,6 +233,10 @@ void *GL_NewTextureResource(const char *name, void *data,
       {
       case RES_FRAMEBUFFER:
          pixels = new (std::nothrow) uint32_t [width * height];
+         std::memset(pixels, 0, width * height * sizeof(uint32_t));
+         break;
+      case RES_8BIT:
+         pixels = GL_8bppTo32bpp(data, width, height);
          break;
       case RES_8BIT_PACKED:
          pixels = GL_8bppPackedTo32bpp(data, width, height, palshift);
@@ -282,7 +303,7 @@ void GL_AddDrawCommand(void *res, int x, int y, unsigned int w, unsigned int h)
    drawCommands.insert(dc);
 }
 
-void GL_ClearDrawCommands(void)
+static void GL_clearDrawCommands(void)
 {
    while(!drawCommands.empty())
    {
@@ -306,7 +327,7 @@ static void GL_executeDrawCommands(void)
 
 //=============================================================================
 //
-// Software Framebuffer
+// Software Framebuffers
 //
 
 static TextureResource *framebuffer;
@@ -314,7 +335,7 @@ static TextureResource *framebuffer;
 //
 // Create the GL texture handle for the framebuffer texture
 //
-void GL_InitFramebufferTexture(void)
+void GL_InitFramebufferTextures(void)
 {
    framebuffer = static_cast<TextureResource *>(
       GL_NewTextureResource(
@@ -325,7 +346,7 @@ void GL_InitFramebufferTexture(void)
          RES_FRAMEBUFFER,
          0
       )
-   );
+      );
    if(!framebuffer)
       hal_platform.fatalError("Could not create 640x480 framebuffer texture");
 }
@@ -343,6 +364,18 @@ void GL_UpdateFramebuffer(void)
    framebuffer->update();
 }
 
+void GL_ClearFramebuffer(unsigned int clearColor)
+{
+   uint32_t *buffer = framebuffer->getPixels();
+   for(int i = 0; i < CALICO_ORIG_SCREENWIDTH*CALICO_ORIG_SCREENHEIGHT; i++)
+      buffer[i] = clearColor;
+}
+
+void GL_AddFramebuffer(void)
+{
+   GL_AddDrawCommand(framebuffer, 0, 0, CALICO_ORIG_SCREENWIDTH, CALICO_ORIG_SCREENHEIGHT);
+}
+
 //=============================================================================
 //
 // Refresh
@@ -350,14 +383,9 @@ void GL_UpdateFramebuffer(void)
 
 void GL_RenderFrame(void)
 {
-   GL_AddDrawCommand(framebuffer, 0, 0, CALICO_ORIG_SCREENWIDTH, CALICO_ORIG_SCREENHEIGHT);
    GL_executeDrawCommands();
-   GL_ClearDrawCommands();
+   GL_clearDrawCommands();
    hal_video.endFrame();
-
-   // CALICO_TODO: TEMP: clear framebuffer until everything is drawing
-   //for(int i = 0; i < CALICO_ORIG_SCREENWIDTH*CALICO_ORIG_SCREENHEIGHT; i++)
-    //  framebuffer->getPixels()[i] = D_RGBA(0x60, 0x60, 0x60, 0xff);
 }
 
 // EOF

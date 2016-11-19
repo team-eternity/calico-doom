@@ -29,9 +29,12 @@
 #ifndef GL_RENDER_H__
 #define GL_RENDER_H__
 
+#define NUMFRAMEBUFFERS 2
+
 typedef enum glrestype_e
 {
    RES_FRAMEBUFFER, // a raw framebuffer of specified dimensions
+   RES_8BIT,        // 8-bit Jag resource
    RES_8BIT_PACKED  // 8-bit packed Jag resource
 } glrestype_t;
 
@@ -39,9 +42,11 @@ typedef enum glrestype_e
 extern "C" {
 #endif
 
-void  GL_InitFramebufferTexture(void);
+void  GL_InitFramebufferTextures(void);
 void *GL_GetFramebuffer(void);
 void  GL_UpdateFramebuffer(void);
+void  GL_ClearFramebuffer(unsigned int clearColor);
+void  GL_AddFramebuffer(void);
 void  GL_RenderFrame(void);
 
 void *GL_NewTextureResource(const char *lumpname, void *data,

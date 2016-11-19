@@ -790,8 +790,8 @@ void C_Init(void);
 void NumToStr(int num, char *str);
 void PrintNumber(int x, int y, int num);
 
-#define	BASEORGX (7)
-extern unsigned BASEORGY;
+#define BASEORGX 7
+#define BASEORGY 24
 
 //=================
 
@@ -815,7 +815,6 @@ typedef struct
 #endif
 
 void DoubleBufferSetup(void);
-void DrawMTitle(void);        // CALICO
 void EraseBlock(int x, int y, int width, int height);
 void DrawJagobj(jagobj_t *jo, int x, int y);
 void UpdateBuffer(void);

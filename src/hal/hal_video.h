@@ -43,8 +43,8 @@ typedef struct hal_video_s
    void          (*transformFBCoord)(int x, int y, int *tx, int *ty);
    void          (*transformGameCoord2i)(int x, int y, int *tx, int *ty);
    void          (*transformGameCoord2f)(int x, int y, float *tx, float *ty);
-   int           (*transformWidth)(int w);
-   int           (*transformHeight)(int h);
+   unsigned int  (*transformWidth)(unsigned int w);
+   unsigned int  (*transformHeight)(unsigned int h);
    int           (*toggleGLSwap)(hal_bool swap);
    void          (*endFrame)(void);
    int           (*isFullScreen)(void);

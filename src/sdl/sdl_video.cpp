@@ -318,17 +318,17 @@ void SDL2_TransformGameCoord2f(int x, int y, float *tx, float *ty)
 //
 // Scale up a width value
 //
-int SDL2_TransformWidth(int w)
+unsigned int SDL2_TransformWidth(unsigned int w)
 {
-   return int(w * screenxscale);
+   return static_cast<unsigned int>(w * screenxscale);
 }
 
 //
 // Scale up a height value
 //
-int SDL2_TransformHeight(int h)
+unsigned int SDL2_TransformHeight(unsigned int h)
 {
-   return int(h * screenyscale);
+   return static_cast<unsigned int>(h * screenyscale);
 }
 
 //=============================================================================

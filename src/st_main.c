@@ -228,7 +228,8 @@ void ST_Drawer(void)
    int       ind;
    player_t *p;
 
-   bufferpage = sbartop; // draw into status bar overlay
+   // CALICO: Jag-specific
+   //bufferpage = sbartop; // draw into status bar overlay
 
    p = &players[consoleplayer];
 
