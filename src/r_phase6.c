@@ -83,12 +83,12 @@ static void R_DrawTexture(drawtex_t *tex)
    int top, bottom, colnum, frac;
    pixel_t *src;
 
-   top = CENTERY - ((scale * tex->topheight) >> (HEIGHTBITS + SCALEBITS));
+   top = CENTERY - ((scale * tex->topheight) / (1 << (HEIGHTBITS + SCALEBITS)));
 
    if(top <= ceilingclipx)
       top = ceilingclipx + 1;
 
-   bottom = CENTERY - 1 - ((scale * tex->bottomheight) >> (HEIGHTBITS + SCALEBITS));
+   bottom = CENTERY - 1 - ((scale * tex->bottomheight) / (1 << (HEIGHTBITS + SCALEBITS)));
 
    if(bottom >= floorclipx)
       bottom = floorclipx - 1;
@@ -183,7 +183,7 @@ static void R_SegLoop(viswall_t *segl)
       {
          int top, bottom;
          
-         top = CENTERY - ((scale * segl->floorheight) >> (HEIGHTBITS + SCALEBITS));
+         top = CENTERY - ((scale * segl->floorheight) / (1 << (HEIGHTBITS + SCALEBITS)));
          if(top <= ceilingclipx)
             top = ceilingclipx + 1;
          
@@ -209,7 +209,7 @@ static void R_SegLoop(viswall_t *segl)
 
          top = ceilingclipx + 1;
 
-         bottom = CENTERY - 1 - ((scale * segl->ceilingheight) >> (HEIGHTBITS + SCALEBITS));
+         bottom = CENTERY - 1 - ((scale * segl->ceilingheight) / (1 << (HEIGHTBITS + SCALEBITS)));
          if(bottom >= floorclipx)
             bottom = floorclipx - 1;
          
@@ -227,13 +227,13 @@ static void R_SegLoop(viswall_t *segl)
       //
       // calc high and low
       //
-      low = CENTERY - ((scale * segl->floornewheight) >> (HEIGHTBITS + SCALEBITS));
+      low = CENTERY - ((scale * segl->floornewheight) / (1 << (HEIGHTBITS + SCALEBITS)));
       if(low < 0)
          low = 0;
       if(low > floorclipx)
          low = floorclipx;
 
-      high = CENTERY - 1 - ((scale * segl->ceilingnewheight) >> (HEIGHTBITS + SCALEBITS));
+      high = CENTERY - 1 - ((scale * segl->ceilingnewheight) / (1 << (HEIGHTBITS + SCALEBITS)));
       if(high > SCREENHEIGHT - 1)
          high = SCREENHEIGHT - 1;
       if(high < ceilingclipx)
@@ -251,7 +251,7 @@ static void R_SegLoop(viswall_t *segl)
       if(segl->actionbits & AC_ADDSKY)
       {
          top = ceilingclipx + 1;
-         bottom = (CENTERY - ((scale * segl->ceilingheight) >> (HEIGHTBITS + SCALEBITS))) - 1;
+         bottom = (CENTERY - ((scale * segl->ceilingheight) / (1 << (HEIGHTBITS + SCALEBITS)))) - 1;
          if(bottom >= floorclipx)
             bottom = floorclipx - 1;
          if(top <= bottom)

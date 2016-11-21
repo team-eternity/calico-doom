@@ -2,7 +2,6 @@
   CALICO
 
   Renderer phase 1 - BSP traversal
-
 */
 
 #include "doomdef.h"

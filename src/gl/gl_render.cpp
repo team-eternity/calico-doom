@@ -413,6 +413,9 @@ void GL_RenderFrame(void)
    GL_executeDrawCommands();
    GL_clearDrawCommands();
    hal_video.endFrame();
+
+   // TEMP/DEBUG
+   GL_ClearFramebuffer(0xff505050);
 }
 
 // EOF

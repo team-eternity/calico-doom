@@ -70,7 +70,7 @@ void R_WallPrep(void)
           f_lightlevel    != b_lightlevel                 || // light level changes across line?
           b_ceilingheight == b_floorheight))                 // backsector is closed?
       {
-         segl->floorheight = segl->floornewheight = f_floorheight >> FIXEDTOHEIGHT;
+         segl->floorheight = segl->floornewheight = f_floorheight / (1 << FIXEDTOHEIGHT);
          actionbits |= (AC_ADDFLOOR|AC_NEWFLOOR);
       }
 
@@ -81,14 +81,14 @@ void R_WallPrep(void)
           f_lightlevel    != b_lightlevel                 || // light level changes across line?
           b_ceilingheight == b_floorheight))                 // backsector is closed?
       {
-         segl->ceilingheight = segl->ceilingnewheight = f_ceilingheight >> FIXEDTOHEIGHT;
+         segl->ceilingheight = segl->ceilingnewheight = f_ceilingheight / (1 << FIXEDTOHEIGHT);
          if(f_ceilingpic == -1)
             actionbits |= (AC_ADDSKY|AC_NEWCEILING);
          else
             actionbits |= (AC_ADDCEILING|AC_NEWCEILING);
       }
 
-      segl->t_topheight = f_ceilingheight >> FIXEDTOHEIGHT; // top of texturemap
+      segl->t_topheight = f_ceilingheight / (1 << FIXEDTOHEIGHT); // top of texturemap
 
       if(back_sector == &emptysector)
       {
@@ -101,9 +101,9 @@ void R_WallPrep(void)
          else
             t_texturemid = f_ceilingheight;
 
-         t_texturemid += si->rowoffset;                         // add in sidedef texture offset
-         segl->t_bottomheight = f_floorheight >> FIXEDTOHEIGHT; // set bottom height
-         actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);             // solid line; draw middle texture only
+         t_texturemid += si->rowoffset;                               // add in sidedef texture offset
+         segl->t_bottomheight = f_floorheight / (1 << FIXEDTOHEIGHT); // set bottom height
+         actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
       }
       else
       {
@@ -120,8 +120,8 @@ void R_WallPrep(void)
 
             b_texturemid += si->rowoffset; // add in sidedef texture offset
 
-            segl->b_topheight    = segl->floornewheight = b_floorheight >> FIXEDTOHEIGHT;
-            segl->b_bottomheight = f_floorheight >> FIXEDTOHEIGHT;
+            segl->b_topheight    = segl->floornewheight = b_floorheight / (1 << FIXEDTOHEIGHT);
+            segl->b_bottomheight = f_floorheight / (1 << FIXEDTOHEIGHT);
             actionbits |= (AC_BOTTOMTEXTURE|AC_NEWFLOOR); // generate bottom wall and floor
          }
 
@@ -136,7 +136,7 @@ void R_WallPrep(void)
 
             t_texturemid += si->rowoffset; // add in sidedef texture offset
 
-            segl->t_bottomheight = segl->ceilingnewheight = b_ceilingheight >> FIXEDTOHEIGHT;
+            segl->t_bottomheight = segl->ceilingnewheight = b_ceilingheight / (1 << FIXEDTOHEIGHT);
             actionbits |= (AC_NEWCEILING|AC_TOPTEXTURE); // draw top texture and ceiling
          }
 
