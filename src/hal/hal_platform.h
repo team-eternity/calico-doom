@@ -35,6 +35,7 @@ typedef struct hal_platform_s
    void        (*exitWithMsg)(const char *msg, ...);
    void        (*fatalError)(const char *msg, ...);
    const char *(*getWriteDirectory)(void);
+   void        (*setIcon)(void);
 } hal_platform_t;
 
 #ifdef __cplusplus

@@ -46,6 +46,7 @@ void  GL_InitFramebufferTextures(void);
 void *GL_GetFramebuffer(void);
 void  GL_UpdateFramebuffer(void);
 void  GL_ClearFramebuffer(unsigned int clearColor);
+void  GL_FramebufferSetUpdated(void);
 void  GL_AddFramebuffer(void);
 void  GL_RenderFrame(void);
 
@@ -54,6 +55,7 @@ void *GL_NewTextureResource(const char *lumpname, void *data,
                             glrestype_t restype, int palshift);
 
 void          GL_UpdateTextureResource(void *resource);
+void          GL_TextureResourceSetUpdated(void *resource);
 unsigned int *GL_GetTextureResourceStore(void *resource);
 void          GL_AddDrawCommand(void *res, int x, int y, unsigned int w, unsigned int h);
 

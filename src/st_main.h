@@ -24,6 +24,8 @@
 
 #define FACEX   144
 #define FACEY   5
+#define FACEW   32
+#define FACEH   32
 
 #define ARMORX  226
 #define ARMORY  HEALTHY

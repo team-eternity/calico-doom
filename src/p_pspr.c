@@ -499,17 +499,17 @@ WEAPON ATTACKS
 ================== 
 */ 
  
-void A_Punch (player_t *player, pspdef_t *psp) 
+void A_Punch(player_t *player, pspdef_t *psp) 
 {
    angle_t angle;
    int     damage;
 
    damage = ((P_Random()&7)+1)*3;
-   if(player->powers[pw_strength])	
+   if(player->powers[pw_strength])
       damage *= 10;
    angle = player->mo->angle;
    angle += P_SubRandom()<<18;
-   P_LineAttack (player->mo, angle, MELEERANGE, MAXINT, damage);
+   P_LineAttack(player->mo, angle, MELEERANGE, D_MAXINT, damage);
    /* turn to face target */
    if(linetarget)
       player->mo->angle = R_PointToAngle2(player->mo->x, player->mo->y, linetarget->x, linetarget->y);
@@ -533,7 +533,7 @@ void A_Saw (player_t *player, pspdef_t *psp)
    angle += P_SubRandom()<<18;
    
    /* use meleerange + 1 se the puff doesn't skip the flash */
-   P_LineAttack (player->mo, angle, MELEERANGE+1, MAXINT, damage);
+   P_LineAttack(player->mo, angle, MELEERANGE+1, D_MAXINT, damage);
    if(!linetarget)
    {
       S_StartSound (player->mo, sfx_sawful);
@@ -621,7 +621,7 @@ void P_GunShot (mobj_t *mo, boolean accurate)
    angle  = mo->angle;
    if(!accurate)
       angle += P_SubRandom()<<18;
-   P_LineAttack(mo, angle, MISSILERANGE, MAXINT, damage);
+   P_LineAttack(mo, angle, MISSILERANGE, D_MAXINT, damage);
 }
 
 /* 

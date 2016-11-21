@@ -396,6 +396,8 @@ void DrawPlaque(jagobj_t *pl)
  
 void DrawSinglePlaque(jagobj_t *pl)
 {
+   // CALICO_TODO: non-portable, requires working video
+#if 0
    int   x,y,w;
    byte *bdest, *source;
 
@@ -413,6 +415,7 @@ void DrawSinglePlaque(jagobj_t *pl)
          bdest[x] = *source++;
       bdest += 320;
    }
+#endif
 }
 
 /* 

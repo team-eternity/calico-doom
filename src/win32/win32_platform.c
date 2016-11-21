@@ -32,10 +32,12 @@
 #include <direct.h>
 #include <io.h>
 #include <Windows.h>
+#include "../../vc2015/resource.h"
 
 #include "../elib/misc.h"
 #include "../hal/hal_ml.h"
 #include "../hal/hal_platform.h"
+#include "../hal/hal_video.h"
 
 //
 // Display a debug message. For Windows, this will open a debug console
@@ -46,6 +48,7 @@ static void Win32_DebugMsg(const char *msg, ...)
 #ifdef _DEBUG
    va_list args;
    static BOOL debugInit = FALSE;
+   size_t len = strlen(msg);
 
    if(!debugInit)
    {
@@ -57,6 +60,9 @@ static void Win32_DebugMsg(const char *msg, ...)
    va_start(args, msg);
    vprintf(msg, args);
    va_end(args);
+
+   if(len >= 1 && msg[len - 1] != '\n')
+      printf("\n");
 #endif
 }
 
@@ -108,6 +114,24 @@ static const char *Win32_GetWriteDirectory(void)
 }
 
 //
+// Set the main application window icon. This implementation uses a native
+// Win32 icon resource.
+//
+static void Win32_SetIcon(void)
+{
+   HICON hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON1));
+   if(hIcon)
+   {
+      HWND hWnd = (HWND)(hal_video.getWindowHandle());
+      if(hWnd)
+      {
+         SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+         SendMessage(hWnd, WM_SETICON, ICON_BIG,   (LPARAM)hIcon);
+      }
+   }
+}
+
+//
 // Populate the HAL platform interface with Win32 implementation function pointers
 //
 void Win32_InitHAL(void)
@@ -116,6 +140,7 @@ void Win32_InitHAL(void)
    hal_platform.exitWithMsg       = Win32_ExitWithMsg;
    hal_platform.fatalError        = Win32_FatalError;
    hal_platform.getWriteDirectory = Win32_GetWriteDirectory;
+   hal_platform.setIcon           = Win32_SetIcon;
 }
 
 #endif

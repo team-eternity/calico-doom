@@ -39,22 +39,23 @@ extern "C" {
 
 extern SDL_Window *mainwindow;
 
-void         SDL2_GetWindowSize(int *width, int *height);
-void        *SDL2_GetGLProcAddress(const char *proc);
-void         SDL2_InitVideo(void);
-hal_bool     SDL2_SetNewVideoMode(int w, int h, int fs, int mnum);
-void         SDL2_TransformFBCoord(int x, int y, int *tx, int *ty);
-void         SDL2_TransformGameCoord2i(int x, int y, int *tx, int *ty);
-void         SDL2_TransformGameCoord2f(int x, int y, float *tx, float *ty);
-unsigned int SDL2_TransformWidth(unsigned int w);
-unsigned int SDL2_TransformHeight(unsigned int h);
-int          SDL2_ToggleGLSwap(hal_bool swap);
-int          SDL2_IsFullScreen(void);
-int          SDL2_GetCurrentDisplay(void);
-unsigned int SDL2_GetWindowFlags(void);
-void         SDL2_SetGrab(hal_bool grab);
-void         SDL2_WarpMouse(int x, int y);
-void         SDL2_EndFrame(void);
+void          SDL2_GetWindowSize(int *width, int *height);
+void         *SDL2_GetGLProcAddress(const char *proc);
+void          SDL2_InitVideo(void);
+hal_bool      SDL2_SetNewVideoMode(int w, int h, int fs, int mnum);
+void          SDL2_TransformFBCoord(int x, int y, int *tx, int *ty);
+void          SDL2_TransformGameCoord2i(int x, int y, int *tx, int *ty);
+void          SDL2_TransformGameCoord2f(int x, int y, float *tx, float *ty);
+unsigned int  SDL2_TransformWidth(unsigned int w);
+unsigned int  SDL2_TransformHeight(unsigned int h);
+int           SDL2_ToggleGLSwap(hal_bool swap);
+int           SDL2_IsFullScreen(void);
+int           SDL2_GetCurrentDisplay(void);
+unsigned int  SDL2_GetWindowFlags(void);
+void          SDL2_SetGrab(hal_bool grab);
+void          SDL2_WarpMouse(int x, int y);
+void          SDL2_EndFrame(void);
+void         *SDL2_GetWindowHandle(void);
 
 #ifdef __cplusplus
 }

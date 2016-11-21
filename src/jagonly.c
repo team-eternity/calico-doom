@@ -47,7 +47,7 @@ int            *screenshade;    // pixels for screen shifting
 
 byte *debugscreen;
 extern jagobj_t *sbar;
-extern byte     *sbartop;
+extern void     *sbartop;
 
 static void *sbarrez;
 
@@ -77,11 +77,9 @@ int joypad[32];
 int joystick1; 
 int ticcount; 
  
-unsigned branch1, branch2;
- 
+
 int junk; 
 int spincount;  
-int ZERO = 0, zero = 0, zero2 = 0; 
 
 pixel_t *framebuffer;
 
@@ -410,11 +408,15 @@ boolean I_RefreshLatched(void)
 //
 byte *I_WadBase(void)
 {
-   byte *wadbase;
+   static byte *wadbase;
 
-   // CALICO: load from disk
-   if(!(wadbase = W_LoadIWAD()))
-      I_Error("I_WadBase: could not load IWAD file");
+   // CALICO: once only
+   if(!wadbase)
+   {
+      // CALICO: load from disk
+      if(!(wadbase = W_LoadIWAD()))
+         hal_platform.fatalError("I_WadBase: could not load IWAD file");
+   }
 
    return wadbase;
 }
@@ -433,8 +435,18 @@ byte *I_WadBase(void)
 
 byte *I_ZoneBase(int *size)
 {
+   static byte *zonebase;
+   
    *size = ENDHEAP - STARTHEAP; // leave 64k for stack
-   return malloc(*size);        // CALICO: allocate from C heap
+   
+   // CALICO: allocate from C heap
+   if(!zonebase)
+   {
+      if(!(zonebase = malloc(*size)))
+         hal_platform.fatalError("I_ZoneBase: could not allocate %d bytes for zone", size);
+   }
+
+   return zonebase;
 }
 
 #define TICSCALE 2
@@ -490,7 +502,7 @@ fixed_t FixedMul(fixed_t a, fixed_t b)
 fixed_t FixedDiv(fixed_t a, fixed_t b) 
 { 
    // CALICO: rewritten to use PC version
-   return (D_abs(a) >> 14) >= D_abs(b) ? ((a ^ b) >> 31) ^ MAXINT :
+   return (D_abs(a) >> 14) >= D_abs(b) ? ((a ^ b) >> 31) ^ D_MAXINT :
       (fixed_t)(((int64_t)a << FRACBITS) / b);
 } 
  
@@ -501,7 +513,6 @@ fixed_t FixedDiv(fixed_t a, fixed_t b)
 //=============================================================================
 
 uint32_t *framebuffer_p;
-boolean   fbneedsupdate;
 
 //
 // CALICO: Get the framebuffer pointers from the low-level graphics code
@@ -509,7 +520,7 @@ boolean   fbneedsupdate;
 static void I_GetFramebuffer(void)
 {
    GL_InitFramebufferTextures();
-   framebuffer_p   = GL_GetFramebuffer();
+   framebuffer_p = GL_GetFramebuffer();
 }
 
 // 
@@ -533,7 +544,7 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
       I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
 
-   fbneedsupdate = true;
+   GL_FramebufferSetUpdated();
 
    // CALICO: offset vertically for border
    dc_yl += BASEORGY;
@@ -877,13 +888,10 @@ void I_Update(void)
    lasttics = ticcount - lastticcount;
    lastticcount = ticcount;
 #else
-   if(fbneedsupdate)
-   {
-      GL_UpdateFramebuffer();
-      fbneedsupdate = false;
-   }
+   GL_UpdateFramebuffer();
    GL_AddFramebuffer();
-   GL_AddDrawCommand(sbarrez, 0, BASEORGY + (SCREENHEIGHT*2) + 1, 640, 80);
+   GL_AddDrawCommand(sbarrez, 0, BASEORGY + (SCREENHEIGHT * 2) + 2, 640, 80);
+   GL_AddDrawCommand(sbartop, 0, BASEORGY + (SCREENHEIGHT * 2) + 2, 640, 80);
    GL_RenderFrame();
 #endif
 }
@@ -911,7 +919,6 @@ byte *I_TempBuffer(void)
 byte *bufferpage;  // draw here
 byte *displaypage; // copied to here when finished
 
-extern int ZERO, zero; 
 extern int cy;
 
 //
@@ -936,75 +943,72 @@ void DoubleBufferSetup(void)
    cy = 4;
 }
 
-void EraseBlock(int x, int y, int width, int height)
+#define JAGOBJ_SCALEFACTOR_X (CALICO_ORIG_SCREENWIDTH  / 320)
+#define JAGOBJ_SCALEFACTOR_Y (CALICO_ORIG_SCREENHEIGHT / 240)
+
+void EraseBlock(int x, int y, int width, int height, void *destResource)
 {
-   if (x<0)
+   uint32_t *base, *dest;
+
+   if(x < 0)
    {
       width += x;
       x = 0;
    }
-   if (y<0)
+   if(y < 0)
    {
       height += y;
       y = 0;
    }
-   if (x+width > 320)
-      width = 320-x;
-   if (y+height > 200)
-      height = 200-y;
+   if(x + width > 320)
+      width = 320 - x;
+   if(y + height > 200)
+      height = 200 - y;
 
-   if (width < 1 || height < 1)
+   if(width < 1 || height < 1)
       return;
 
-   // CALICO_FIXME: Jag-specific
-#ifdef JAGUAR
-		
-	*(int *)0xf02200 = (int)bufferpage;	/* a1 base pointer */
-		
-	*(int *)0xf02204 = (3<<3)		 	/* 8 bit pixels */
-					+ (33<<9)			/* 320 wide */
-					+ (1<<16)			/* add 1 x */
-					;					/* a1 flags */
-					
-	*(int *)0xf0220c = (y<<16)+x;		/* a1 pixel pointers */
-
-	*(int *)0xf02210 = (1<<16)+ ((-width)&0xffff);	/* a1 pixel step */
-
-	*(int *)0xf02240 = zero;
-	*(int *)0xf02244 = ZERO;	/* source data register */
-	
-	*(int *)0xf0223c = (height<<16) + width;	/* count */
-
-	*(int *)0xf02238 =
-				(1<<9)					/* add a1 step value in outer */
-				+ (12<<21)				/* copy source */
-				;
-#else
+   if(destResource)
    {
-      byte *dest;
-
-      dest = bufferpage + 320 * y + x;
-      for(; height; height--)
-      {
-         // CALICO_TODO: requires working drawing code
-#if 0
-         D_memset(dest, 0, width);
-#endif
-         dest += 320;
-      }
+      base = GL_GetTextureResourceStore(destResource);
+      GL_TextureResourceSetUpdated(destResource);
    }
-#endif
+   else
+   {
+      base = framebuffer_p;
+      GL_FramebufferSetUpdated();
+      y += 16;
+   }
 
+   // CALICO: scale up for 640x480
+   x *= JAGOBJ_SCALEFACTOR_X;
+   y *= JAGOBJ_SCALEFACTOR_Y;
+
+   dest = base + y * CALICO_ORIG_SCREENWIDTH + x;
+   for(; height; height--)
+   {
+      int r = 0;
+      for(; r < JAGOBJ_SCALEFACTOR_Y; r++)
+      {
+         uint32_t *tdst = dest + (CALICO_ORIG_SCREENWIDTH * r);
+         int i = 0;
+         for(; i < width; i++)
+         {
+            *tdst = *(tdst + 1) = 0;
+            tdst += JAGOBJ_SCALEFACTOR_X;
+         }
+      }
+      dest += CALICO_ORIG_SCREENWIDTH * JAGOBJ_SCALEFACTOR_Y;
+   }
 }
 
-#define JAGOBJ_SCALEFACTOR_X (CALICO_ORIG_SCREENWIDTH  / 320)
-#define JAGOBJ_SCALEFACTOR_Y (CALICO_ORIG_SCREENHEIGHT / 240)
-
-void DrawJagobj(jagobj_t *jo, int x, int y)
+void DrawJagobj(jagobj_t *jo, int x, int y, void *destResource)
 {
    int srcx, srcy;
    int width, height;
    int rowsize;
+   uint32_t *base, *dest;
+   byte *source;
 
    width = rowsize = BIGSHORT(jo->width);
    height = BIGSHORT(jo->height);
@@ -1023,46 +1027,49 @@ void DrawJagobj(jagobj_t *jo, int x, int y)
       height += y;
       y = 0;
    }
-   if(x+width > 320)
-      width = 320-x;
-   if(y+height > 200)
-      height = 200-y;
+   if(x + width > 320)
+      width = 320 - x;
+   if(y + height > 200)
+      height = 200 - y;
 
    if(width < 1 || height < 1)
       return;
 
-   fbneedsupdate = true;
-
+   if(destResource)
    {
-      uint32_t *dest;
-      byte     *source;
-
-      source = jo->data + srcx + srcy*rowsize;
-
+      base = GL_GetTextureResourceStore(destResource);
+      GL_TextureResourceSetUpdated(destResource);
+   }
+   else
+   {
+      base = framebuffer_p;
+      GL_FramebufferSetUpdated();
       y += 16;
+   }
 
-      // CALICO: scale up for 640x480
-      x *= JAGOBJ_SCALEFACTOR_X;
-      y *= JAGOBJ_SCALEFACTOR_Y;
+   source = jo->data + srcx + srcy*rowsize;
 
-      // CALICO_FIXME: be able to draw to other buffers...
-      dest = framebuffer_p + y * CALICO_ORIG_SCREENWIDTH + x;
-      for(; height; height--)
+   // CALICO: scale up for 640x480
+   x *= JAGOBJ_SCALEFACTOR_X;
+   y *= JAGOBJ_SCALEFACTOR_Y;
+
+   dest = base + y * CALICO_ORIG_SCREENWIDTH + x;
+   for(; height; height--)
+   {
+      int r = 0;
+      for(; r < JAGOBJ_SCALEFACTOR_Y; r++)
       {
-         int i, r = 0;
-         for(; r < JAGOBJ_SCALEFACTOR_Y; r++)
+         uint32_t *tdst = dest + (CALICO_ORIG_SCREENWIDTH * r);
+         int i = 0;
+         for(; i < width; i++)
          {
-            uint32_t *tdst = dest + (CALICO_ORIG_SCREENWIDTH * r);
-            for(i = 0; i < rowsize; i++)
-            {
-               if(source[i])
-                  *tdst = *(tdst+1) = CRYToRGB[palette8[source[i]]];
-               tdst += JAGOBJ_SCALEFACTOR_X;
-            }
+            if(source[i])
+               *tdst = *(tdst + 1) = CRYToRGB[palette8[source[i]]];
+            tdst += JAGOBJ_SCALEFACTOR_X;
          }
-         source += rowsize;
-         dest += CALICO_ORIG_SCREENWIDTH * JAGOBJ_SCALEFACTOR_Y;
       }
+      source += rowsize;
+      dest += CALICO_ORIG_SCREENWIDTH * JAGOBJ_SCALEFACTOR_Y;
    }
 }
 
@@ -1129,11 +1136,7 @@ void DrawMTitle(void)
 // CALICO_FIXME: Jag-specific
 void DoubleBufferObjList(void)
 {
-   if(fbneedsupdate)
-   {
-      GL_UpdateFramebuffer();
-      fbneedsupdate = false;
-   }
+   GL_UpdateFramebuffer();
    DrawMTitle();
    GL_AddFramebuffer();
 #if 0

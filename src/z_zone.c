@@ -63,10 +63,6 @@ void Z_Init(void)
 
    mem = I_ZoneBase(&size);
 
-   // CALICO: I_ZoneBase is no longer faultless
-   if(!mem)
-      I_Error("Z_Init: could not allocate %d bytes for zone", size);
-
    mainzone = Z_InitZone(mem, 0x80000);
    refzone  = Z_InitZone(mem + 0x80000, size - 0x80000);
 }

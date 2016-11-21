@@ -415,7 +415,7 @@ void P_LineAttack(mobj_t *t1, angle_t angle, fixed_t distance, fixed_t slope, in
    attackrange = distance;
    attackangle = angle;
 
-   if(slope == MAXINT)
+   if(slope == D_MAXINT)
    {
       aimtopslope    =  100*FRACUNIT/160; /* can't shoot outside view angles */
       aimbottomslope = -100*FRACUNIT/160;

@@ -66,6 +66,7 @@ void SDL2_InitHAL(void)
    hal_video.getWindowFlags       = SDL2_GetWindowFlags;
    hal_video.setGrab              = SDL2_SetGrab;
    hal_video.warpMouse            = SDL2_WarpMouse;
+   hal_video.getWindowHandle      = SDL2_GetWindowHandle;
 
    // App state maintenance
    hal_appstate.mouseShouldBeGrabbed = SDL2_MouseShouldBeGrabbed;

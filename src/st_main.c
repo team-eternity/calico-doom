@@ -1,5 +1,6 @@
 /* st_main.c -- status bar */
 
+#include "gl/gl_render.h"
 #include "doomdef.h"
 #include "st_main.h"
 
@@ -35,7 +36,7 @@ boolean    doSpclFace;
 spclface_e spclFaceType;
 
 jagobj_t *sbar;
-byte     *sbartop;
+void     *sbartop;              // CALICO: now a pointer to the texture resource
 jagobj_t *faces[NUMFACES];
 jagobj_t *sbobj[NUMSBOBJ];
 
@@ -65,6 +66,10 @@ void ST_Init(void)
    l = W_GetNumForName("MICRO_2");
    for(i = 0; i < NUMMICROS; i++)
       micronums[i] = W_CacheLumpNum(l+i, PU_STATIC);
+
+   // CALICO: create a texture resource for the status bar overlay
+   if(!sbartop)
+      sbartop = GL_NewTextureResource("sbartop", NULL, 640, 80, RES_FRAMEBUFFER, 0);
 }
 
 //==================================================
@@ -250,7 +255,8 @@ void ST_Drawer(void)
    if(stbar.ammo != i)
    {
       stbar.ammo = i;
-      EraseBlock(0, AMMOY, 14*3, 16);
+      // CALICO: Fixed EraseBlock call to have proper x coord and width
+      EraseBlock(AMMOX - 14*3 - 4, AMMOY, 14*3 + 4, 16, sbartop);
       ST_DrawValue(AMMOX, AMMOY, i);
    }
 
@@ -261,9 +267,10 @@ void ST_Drawer(void)
    if(stbar.health != i)
    {
       stbar.health = i;
-      EraseBlock(HEALTHX - 14*3 - 4, HEALTHY, 14*3, sbobj[0]->height);
-      DrawJagobj(sbobj[sb_percent], HEALTHX, HEALTHY);
-      ST_DrawValue(HEALTHX,HEALTHY,i);
+      // CALICO: Fixed EraseBlock call to have proper width
+      EraseBlock(HEALTHX - 14*3 - 4, HEALTHY, 14*3 + 4, BIGSHORT(sbobj[0]->height), sbartop);
+      DrawJagobj(sbobj[sb_percent], HEALTHX, HEALTHY, sbartop);
+      ST_DrawValue(HEALTHX, HEALTHY, i);
       stbar.face = -1;    // update face immediately
    }
 
@@ -274,8 +281,9 @@ void ST_Drawer(void)
    if(stbar.armor != i)
    {
       stbar.armor = i;
-      EraseBlock(ARMORX - 14*3 - 4, ARMORY, 14*3, sbobj[0]->height);
-      DrawJagobj(sbobj[sb_percent], ARMORX, ARMORY);
+      // CALICO: Fixed EraseBlock call to have proper width
+      EraseBlock(ARMORX - 14*3 - 4, ARMORY, 14*3 + 4, BIGSHORT(sbobj[0]->height), sbartop);
+      DrawJagobj(sbobj[sb_percent], ARMORX, ARMORY, sbartop);
       ST_DrawValue(ARMORX, ARMORY, i);
    }
 
@@ -288,9 +296,9 @@ void ST_Drawer(void)
       if(stbar.cards[ind] != i)
       {
          stbar.cards[ind] = i;
-         EraseBlock(KEYX,card_y[ind],KEYW,KEYH);
+         EraseBlock(KEYX, card_y[ind], KEYW, KEYH, sbartop);
          if(stbar.cards[ind])
-            DrawJagobj(sbobj[sb_card_b + ind],card_x[ind],card_y[ind]);
+            DrawJagobj(sbobj[sb_card_b + ind], card_x[ind], card_y[ind], sbartop);
       }
    }
 
@@ -307,8 +315,8 @@ void ST_Drawer(void)
          // CENTER THE LEVEL # IF < 10
          if(stbar.currentMap < 10)
             x -= 6;
-         EraseBlock(MAPX - 30,MAPY,30,16);
-         ST_DrawValue(x,MAPY,i);
+         EraseBlock(MAPX - 30, MAPY, 30, 16, sbartop);
+         ST_DrawValue(x, MAPY, i);
       }
 
       for(ind = 0; ind < NUMMICROS; ind++)
@@ -317,9 +325,9 @@ void ST_Drawer(void)
          {
             stbar.weaponowned[ind] = p->weaponowned[ind+1];
             if(stbar.weaponowned[ind])
-               DrawJagobj(micronums[ind], micronums_x[ind], micronums_y[ind]);
+               DrawJagobj(micronums[ind], micronums_x[ind], micronums_y[ind], sbartop);
             else
-               EraseBlock(micronums_x[ind], micronums_y[ind], 4, 6);
+               EraseBlock(micronums_x[ind], micronums_y[ind], 4, 6, sbartop);
          }
       }
    }
@@ -365,7 +373,7 @@ void ST_Drawer(void)
       if(yourFrags.doDraw)
          ST_DrawValue(yourFrags.x, yourFrags.y, stbar.yourFrags);
       else
-         EraseBlock(yourFrags.x - yourFrags.w, yourFrags.y, yourFrags.w, yourFrags.h);
+         EraseBlock(yourFrags.x - yourFrags.w, yourFrags.y, yourFrags.w, yourFrags.h, sbartop);
    }
 
    //
@@ -376,14 +384,14 @@ void ST_Drawer(void)
       if(hisFrags.doDraw)
          ST_DrawValue(hisFrags.x,hisFrags.y,stbar.hisFrags);
       else
-         EraseBlock(hisFrags.x - hisFrags.w, hisFrags.y, hisFrags.w, hisFrags.h);
+         EraseBlock(hisFrags.x - hisFrags.w, hisFrags.y, hisFrags.w, hisFrags.h, sbartop);
    }
 
    if(flashInitialDraw)
    {
       flashInitialDraw = false;
-      EraseBlock(yourFrags.x - yourFrags.w, yourFrags.y, yourFrags.w, yourFrags.h);
-      EraseBlock(hisFrags.x - hisFrags.w, hisFrags.y, hisFrags.w, hisFrags.h);
+      EraseBlock(yourFrags.x - yourFrags.w, yourFrags.y, yourFrags.w, yourFrags.h, sbartop);
+      EraseBlock(hisFrags.x - hisFrags.w, hisFrags.y, hisFrags.w, hisFrags.h, sbartop);
       ST_DrawValue(yourFrags.x, yourFrags.y, stbar.yourFrags);
       ST_DrawValue(hisFrags.x, hisFrags.y, stbar.hisFrags);
    }
@@ -396,9 +404,9 @@ void ST_Drawer(void)
       if(flashCards[ind].active)
       {
          if(flashCards[ind].doDraw)
-            DrawJagobj(sbobj[sb_card_b + ind], flashCards[ind].x,flashCards[ind].y);
+            DrawJagobj(sbobj[sb_card_b + ind], flashCards[ind].x, flashCards[ind].y, sbartop);
          else
-            EraseBlock(flashCards[ind].x,flashCards[ind].y, flashCards[ind].w,flashCards[ind].h);
+            EraseBlock(flashCards[ind].x, flashCards[ind].y, flashCards[ind].w, flashCards[ind].h, sbartop);
       }
    }
 
@@ -407,7 +415,7 @@ void ST_Drawer(void)
    //
    if(gibdraw && !--gibdelay)
    {
-      DrawJagobj(faces[FIRSTSPLAT + gibframe++], FACEX, FACEY);
+      DrawJagobj(faces[FIRSTSPLAT + gibframe++], FACEX, FACEY, sbartop);
       gibdelay = GIBTIME;
       if(gibframe > 6)
          gibdraw = false;
@@ -424,16 +432,26 @@ void ST_Drawer(void)
    // face change
    //
    if(stbar.godmode)
-      DrawJagobj(faces[GODFACE], FACEX, FACEY);
+   {
+      // CALICO: clear the area behind the face (not sure why I need to add this)
+      EraseBlock(FACEX, FACEY, FACEW, FACEH, sbartop);
+      DrawJagobj(faces[GODFACE], FACEX, FACEY, sbartop);
+   }
    else if(!stbar.health)
-      DrawJagobj(faces[DEADFACE], FACEX, FACEY);
+   {
+      // CALICO: clear the area behind the face
+      EraseBlock(FACEX, FACEY, FACEW, FACEH, sbartop);
+      DrawJagobj(faces[DEADFACE], FACEX, FACEY, sbartop);
+   }
    else if(doSpclFace)
    {
       int base = stbar.health / 20;
       base  = base > 4 ? 4 : base;
       base  = 4 - base;
       base *= 8;
-      DrawJagobj(faces[base + spclfaceSprite[spclFaceType]], FACEX, FACEY);
+      // CALICO: clear the area behind the face
+      EraseBlock(FACEX, FACEY, FACEW, FACEH, sbartop);
+      DrawJagobj(faces[base + spclfaceSprite[spclFaceType]], FACEX, FACEY, sbartop);
    }
    else if((stbar.face != newface) && !gibdraw)
    {
@@ -442,7 +460,9 @@ void ST_Drawer(void)
       base  = 4 - base;
       base *= 8;
       stbar.face = newface;
-      DrawJagobj(faces[base + newface], FACEX, FACEY);
+      // CALICO: clear the area behind the face
+      EraseBlock(FACEX, FACEY, FACEW, FACEH, sbartop);
+      DrawJagobj(faces[base + newface], FACEX, FACEY, sbartop);
    }
 }
 
@@ -497,8 +517,8 @@ void ST_DrawValue(int x, int y, int value)
    while(j >= 0)
    {
       index = sb_0 + (v[j--] - '0');
-      x -= sbobj[index]->width + 1;
-      DrawJagobj(sbobj[index], x, y);
+      x -= BIGSHORT(sbobj[index]->width) + 1;  // CALICO: endianness correction required
+      DrawJagobj(sbobj[index], x, y, sbartop);
    }
 }
 

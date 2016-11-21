@@ -29,6 +29,8 @@
 #ifdef USE_SDL2
 
 #include "SDL.h"
+#include "SDL_syswm.h"
+
 #include "sdl_video.h"
 #include "../elib/configfile.h"
 #include "../hal/hal_types.h"
@@ -209,10 +211,8 @@ hal_bool SDL2_SetVideoMode(int width, int height, int fs, int mnum)
       }
    }
 
-   // CALICO_TODO: window icon
-#if 0
+   // set window icon
    hal_platform.setIcon();
-#endif
 
    // create GL context
    if(!(glcontext = SDL_GL_CreateContext(mainwindow)))
@@ -416,6 +416,22 @@ void SDL2_EndFrame(void)
 {
    if(mainwindow)
       SDL_GL_SwapWindow(mainwindow);
+}
+
+//
+// Get platform-specific window handle
+//
+void *SDL2_GetWindowHandle(void)
+{
+#ifdef _WIN32
+   SDL_SysWMinfo info;
+   SDL_VERSION(&info.version);
+
+   if(mainwindow && SDL_GetWindowWMInfo(mainwindow, &info))
+      return info.info.win.window;
+#endif
+
+   return nullptr;
 }
 
 #endif

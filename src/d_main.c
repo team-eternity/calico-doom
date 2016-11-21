@@ -171,8 +171,8 @@ void M_ClearRandom(void)
 
 void M_ClearBox(fixed_t *box)
 {
-   box[BOXTOP] = box[BOXRIGHT] = MININT;
-   box[BOXBOTTOM] = box[BOXLEFT] = MAXINT;
+   box[BOXTOP] = box[BOXRIGHT] = D_MININT;
+   box[BOXBOTTOM] = box[BOXLEFT] = D_MAXINT;
 }
 
 void M_AddToBox(fixed_t *box, fixed_t x, fixed_t y)
@@ -411,7 +411,7 @@ void STOP_Title(void)
 
 void DRAW_Title(void)
 {
-   DrawJagobj(titlepic, 0, 0);
+   DrawJagobj(titlepic, 0, 0, NULL);
    UpdateBuffer();
 }
 
@@ -446,7 +446,7 @@ int TIC_Credits(void)
 
 void DRAW_Credits(void)
 {
-   DrawJagobj(titlepic, 0, 0);
+   DrawJagobj(titlepic, 0, 0, NULL);
    UpdateBuffer();
 }
 

@@ -52,6 +52,7 @@ typedef struct hal_video_s
    unsigned int  (*getWindowFlags)(void);
    void          (*setGrab)(hal_bool grab);
    void          (*warpMouse)(int x, int y);
+   void         *(*getWindowHandle)(void);
 } hal_video_t;
 
 #ifdef __cplusplus

@@ -100,24 +100,24 @@ void print(int x, int y, char *string)
    {
       c = string[i];
 
-      if (c >= 'A' && c <= 'Z')
+      if(c >= 'A' && c <= 'Z')
       {
-         DrawJagobj(uchar[c-'A'],x,y);
-         x+= uchar[c-'A']->width;
+         DrawJagobj(uchar[c-'A'], x, y, NULL);
+         x += uchar[c-'A']->width;
       }
-      else if (c >= 'a' && c <= 'z')
+      else if(c >= 'a' && c <= 'z')
       {
-         DrawJagobj(uchar[c-'a' + 26],x,y+4);
-         x+= uchar[c-'a' + 26]->width;
+         DrawJagobj(uchar[c-'a' + 26], x, y+4, NULL);
+         x += uchar[c-'a' + 26]->width;
       }
-      else if (c >= '0' && c <= '9')
+      else if(c >= '0' && c <= '9')
       {
-         DrawJagobj(snums[c-48],x,y);
-         x+= snums[c-48]->width + 1;
+         DrawJagobj(snums[c-48], x, y, NULL);
+         x += snums[c-48]->width + 1;
       }
       else
       {
-         x+=6;
+         x += 6;
          continue;
       }
    }
@@ -138,7 +138,7 @@ void IN_DrawValue(int x,int y,int value)
    {
       index = (v[j--] - '0');
       x -= snums[index]->width+2;
-      DrawJagobj(snums[index], x, y);
+      DrawJagobj(snums[index], x, y, NULL);
    }
 }
 
@@ -174,34 +174,34 @@ void IN_NetgameDrawer(void)
          print(28, 50, "Player");
          print(KVALX - 18, 50, "1");
          print(KVALX + 66, 50, "2");
-         DrawJagobj(i_kills, 57, 80);				
-         DrawJagobj(i_items, 51, 110);				
-         DrawJagobj(i_secret, 13, 140);		
+         DrawJagobj(i_kills,  57,  80, NULL);
+         DrawJagobj(i_items,  51, 110, NULL);
+         DrawJagobj(i_secret, 13, 140, NULL);
       }
    }			
 	
    if(netgame == gt_deathmatch)
    {
-      EraseBlock(30 + (mystrlen("Your Frags") * 15), FVALY,  80, 80);
-      IN_DrawValue(FVALX, FVALY, fragvalue[consoleplayer]);
+      EraseBlock(30 + (mystrlen("Your Frags") * 15), FVALY,  80, 80, NULL);
+      IN_DrawValue(FVALX, FVALY,      fragvalue[ consoleplayer]);
       IN_DrawValue(FVALX, FVALY + 40, fragvalue[!consoleplayer]);
    }
    else
    {
-      EraseBlock(57 + (mystrlen("Kills") * 15), KVALY, 100, 100);
-      IN_DrawValue(KVALX, KVALY, killvalue[consoleplayer]);
-      IN_DrawValue(KVALX + 80, KVALY, killvalue[!consoleplayer]);
-      IN_DrawValue(IVALX, IVALY, itemvalue[consoleplayer]);
-      IN_DrawValue(IVALX + 80, IVALY, itemvalue[!consoleplayer]);
-      IN_DrawValue(SVALX, SVALY, secretvalue[consoleplayer]);
+      EraseBlock(57 + (mystrlen("Kills") * 15), KVALY, 100, 100, NULL);
+      IN_DrawValue(KVALX,      KVALY,   killvalue[ consoleplayer]);
+      IN_DrawValue(KVALX + 80, KVALY,   killvalue[!consoleplayer]);
+      IN_DrawValue(IVALX,      IVALY,   itemvalue[ consoleplayer]);
+      IN_DrawValue(IVALX + 80, IVALY,   itemvalue[!consoleplayer]);
+      IN_DrawValue(SVALX,      SVALY, secretvalue[ consoleplayer]);
       IN_DrawValue(SVALX + 80, SVALY, secretvalue[!consoleplayer]);
-      DrawJagobj(i_percent, KVALX, KVALY);
-      DrawJagobj(i_percent, KVALX + 80, KVALY);
-      DrawJagobj(i_percent, IVALX, IVALY);
-      DrawJagobj(i_percent, IVALX + 80, IVALY);
-      DrawJagobj(i_percent, SVALX, SVALY);
-      DrawJagobj(i_percent, SVALX + 80, SVALY);
-   }	
+      DrawJagobj(i_percent, KVALX,      KVALY, NULL);
+      DrawJagobj(i_percent, KVALX + 80, KVALY, NULL);
+      DrawJagobj(i_percent, IVALX,      IVALY, NULL);
+      DrawJagobj(i_percent, IVALX + 80, IVALY, NULL);
+      DrawJagobj(i_percent, SVALX,      SVALY, NULL);
+      DrawJagobj(i_percent, SVALX + 80, SVALY, NULL);
+   }
 }
 
 /* */
@@ -218,7 +218,7 @@ void IN_SingleDrawer(void)
       secretvalue[0] = pstats[0].secretpercent;
    }
 
-   EraseBlock(71 + (mystrlen("Secrets") * 15), 70, 55, 80);
+   EraseBlock(71 + (mystrlen("Secrets") * 15), 70, 55, 80, NULL);
 
    if(statsdrawn == false)
    {
@@ -235,17 +235,17 @@ void IN_SingleDrawer(void)
          print( (320 - (length*14)) >> 1, 182, mapnames[nextmap - 1]);
       }
 
-      DrawJagobj(i_kills, 71, 70);				
-      DrawJagobj(i_items, 65, 100);				
-      DrawJagobj(i_secret, 27, 130);		
+      DrawJagobj(i_kills,  71,  70, NULL);
+      DrawJagobj(i_items,  65, 100, NULL);
+      DrawJagobj(i_secret, 27, 130, NULL);
    }
 	
    IN_DrawValue(KVALX + 60, KVALY - 10, killvalue[0]);
-   DrawJagobj(i_percent, KVALX + 60, KVALY - 10);
-   IN_DrawValue(IVALX + 60, IVALY - 10, itemvalue[0]);		
-   DrawJagobj(i_percent, IVALX + 60, IVALY - 10);
+   DrawJagobj  (i_percent,  KVALX + 60, KVALY - 10, NULL);
+   IN_DrawValue(IVALX + 60, IVALY - 10, itemvalue[0]);
+   DrawJagobj  (i_percent,  IVALX + 60, IVALY - 10, NULL);
    IN_DrawValue(SVALX + 60, SVALY - 10, secretvalue[0]);
-   DrawJagobj(i_percent, SVALX + 60, SVALY - 10);	
+   DrawJagobj  (i_percent,  SVALX + 60, SVALY - 10, NULL);
 }
 
 void IN_Start(void)

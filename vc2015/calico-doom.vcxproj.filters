@@ -428,6 +428,9 @@
     <ClInclude Include="..\src\elib\bdlist.h">
       <Filter>Header Files\elib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\jagpad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="calico-doom.rc">

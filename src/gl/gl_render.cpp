@@ -136,11 +136,13 @@ protected:
    rbTexture    m_tex;
    unsigned int m_width;
    unsigned int m_height;
+   bool         m_needUpdate;
    std::unique_ptr<uint32_t []> m_data;
 
 public:
    TextureResource(const char *tag, uint32_t *pixels, unsigned int w, unsigned int h)
-      : Resource(tag), m_tex(), m_data(pixels), m_width(w), m_height(h)
+      : Resource(tag), m_tex(), m_width(w), m_height(h), m_needUpdate(false), 
+        m_data(pixels)
    {
    }
 
@@ -153,10 +155,13 @@ public:
    void update()
    {
       m_tex.update(m_data.get());
+      m_needUpdate = false;
    }
 
-   rbTexture &getTexture() { return m_tex;        }
-   uint32_t  *getPixels()  { return m_data.get(); }
+   rbTexture  &getTexture() { return m_tex;        }
+   uint32_t   *getPixels()  { return m_data.get(); }
+   bool needsUpdate() const { return m_needUpdate; }
+   void setUpdated()        { m_needUpdate = true; }
 };
 
 //
@@ -261,7 +266,10 @@ void *GL_NewTextureResource(const char *name, void *data,
 //
 void GL_UpdateTextureResource(void *resource)
 {
-   static_cast<TextureResource *>(resource)->update();
+   auto tr = static_cast<TextureResource *>(resource);
+   
+   if(tr->needsUpdate())
+      tr->update();
 }
 
 //
@@ -270,6 +278,11 @@ void GL_UpdateTextureResource(void *resource)
 unsigned int *GL_GetTextureResourceStore(void *resource)
 {
    return static_cast<TextureResource *>(resource)->getPixels();
+}
+
+void GL_TextureResourceSetUpdated(void *resource)
+{
+   static_cast<TextureResource *>(resource)->setUpdated();
 }
 
 //=============================================================================
@@ -287,6 +300,10 @@ struct drawcommand_t
 
 static BDList<drawcommand_t, &drawcommand_t::links> drawCommands;
 
+//
+// Add a texture resource to the draw command list. If the resource needs its
+// GL texture updated, it will be done now.
+//
 void GL_AddDrawCommand(void *res, int x, int y, unsigned int w, unsigned int h)
 {
    if(!res)
@@ -301,6 +318,9 @@ void GL_AddDrawCommand(void *res, int x, int y, unsigned int w, unsigned int h)
    dc->h   = h;
 
    drawCommands.insert(dc);
+
+   if(dc->res->needsUpdate())
+      dc->res->update();
 }
 
 static void GL_clearDrawCommands(void)
@@ -346,7 +366,7 @@ void GL_InitFramebufferTextures(void)
          RES_FRAMEBUFFER,
          0
       )
-      );
+   );
    if(!framebuffer)
       hal_platform.fatalError("Could not create 640x480 framebuffer texture");
 }
@@ -361,7 +381,8 @@ void *GL_GetFramebuffer(void)
 
 void GL_UpdateFramebuffer(void)
 {
-   framebuffer->update();
+   if(framebuffer->needsUpdate())
+      framebuffer->update();
 }
 
 void GL_ClearFramebuffer(unsigned int clearColor)
@@ -369,6 +390,12 @@ void GL_ClearFramebuffer(unsigned int clearColor)
    uint32_t *buffer = framebuffer->getPixels();
    for(int i = 0; i < CALICO_ORIG_SCREENWIDTH*CALICO_ORIG_SCREENHEIGHT; i++)
       buffer[i] = clearColor;
+   framebuffer->setUpdated();
+}
+
+void GL_FramebufferSetUpdated(void)
+{
+   framebuffer->setUpdated();
 }
 
 void GL_AddFramebuffer(void)

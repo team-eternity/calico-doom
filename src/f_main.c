@@ -207,7 +207,7 @@ void F_PrintString(char *string)
 
       if(val < NUMENDOBJ)
       {
-         DrawJagobj(endobj[val],text_x,text_y);
+         DrawJagobj(endobj[val], text_x, text_y, NULL);
          text_x += endobj[val]->width;
          if(text_x > 316)
          {
@@ -475,9 +475,9 @@ void F_Drawer(void)
          textdelay = TEXTTIME;
          textindex++;
       }
-      break;		
+      break;
    case fin_charcast:
-      EraseBlock(0, 0, 320, 200);
+      EraseBlock(0, 0, 320, 200, NULL);
       F_CastPrint(castorder[castnum].name);
 
       BufferedDrawSprite(caststate->sprite, caststate->frame&FF_FRAMEMASK, 0);

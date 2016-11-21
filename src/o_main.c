@@ -96,7 +96,7 @@ void O_SetButtonsFromControltype(void)
 /* */
 void O_DrawControl(void)
 {
-   EraseBlock(menuitem[controls].x + 40, menuitem[controls].y + 20, 90, 80);
+   EraseBlock(menuitem[controls].x + 40, menuitem[controls].y + 20, 90, 80, NULL);
    print(menuitem[controls].x + 40, menuitem[controls].y + 20, buttona[controltype]);
    print(menuitem[controls].x + 40, menuitem[controls].y + 40, buttonb[controltype]);
    print(menuitem[controls].x + 40, menuitem[controls].y + 60, buttonc[controltype]);
@@ -268,30 +268,30 @@ void O_Drawer(void)
    int i;
    int offset;
 
-   /* Erase old and Draw new cursor frame */
-   EraseBlock(56, 40, o_cursor1->width, 200);
+   // Erase old and Draw new cursor frame
+   EraseBlock(56, 40, o_cursor1->width, 200, NULL);
    if(cursorframe)
-      DrawJagobj(o_cursor1, 60, menuitem[cursorpos].y - 2);
+      DrawJagobj(o_cursor1, 60, menuitem[cursorpos].y - 2, NULL);
    else
-      DrawJagobj(o_cursor2, 60, menuitem[cursorpos].y - 2);
+      DrawJagobj(o_cursor2, 60, menuitem[cursorpos].y - 2, NULL);
 
-   /* Draw menu */
+   // Draw menu
 
    print(104, 10, "Options");
 
    for(i = 0; i < NUMMENUITEMS; i++)
    {
-      print(menuitem[i].x, menuitem[i].y, menuitem[i].name);		
+      print(menuitem[i].x, menuitem[i].y, menuitem[i].name);
 
       if(menuitem[i].hasslider == true)
       {
-         DrawJagobj(o_slidertrack , menuitem[i].x + 2, menuitem[i].y + 20);
+         DrawJagobj(o_slidertrack , menuitem[i].x + 2, menuitem[i].y + 20, NULL);
          offset = (slider[i].curval * SLIDEWIDTH) / slider[i].maxval;
-         DrawJagobj(o_slider, menuitem[i].x + 7 + offset, menuitem[i].y + 20);
-      }			 
-   }	
-	
-   /* Draw control info */
+         DrawJagobj(o_slider, menuitem[i].x + 7 + offset, menuitem[i].y + 20, NULL);
+      }
+   }
+
+   // Draw control info
 
    print(menuitem[controls].x + 10, menuitem[controls].y + 20, "A");
    print(menuitem[controls].x + 10, menuitem[controls].y + 40, "B");

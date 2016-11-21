@@ -184,6 +184,7 @@
     <ClInclude Include="..\src\hal\hal_video.h" />
     <ClInclude Include="..\src\info.h" />
     <ClInclude Include="..\src\jagcry.h" />
+    <ClInclude Include="..\src\jagpad.h" />
     <ClInclude Include="..\src\keywords.h" />
     <ClInclude Include="..\src\music.h" />
     <ClInclude Include="..\src\m_argv.h" />

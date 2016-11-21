@@ -433,7 +433,7 @@ void R_Sprites(void)
    // draw mobj sprites
    while(i < count)
    {
-      fixed_t bestscale = MAXINT;
+      fixed_t bestscale = D_MAXINT;
       vissprite_t *ds = vissprites;
 
       while(ds != lastsprite_p)
@@ -452,7 +452,7 @@ void R_Sprites(void)
          R_DrawVisSprite(best);
       }
 
-      best->xscale = MAXINT;
+      best->xscale = D_MAXINT;
 
       ++i;
    }
