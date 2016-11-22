@@ -71,7 +71,7 @@ static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle)
    angleb = visangle - normalangle;
    sineb  = finesine[angleb >> ANGLETOFINESHIFT];
    
-   num = sineb * 22 * 8; // CALICO_TODO: This value makes no sense...
+   num = sineb * 22 * 8;
    den = FixedMul(rw_distance, sinea);
 
    return FixedDiv(num, den);
@@ -100,7 +100,7 @@ static void R_SetupCalc(viswall_t *wc)
       rw_offset = -rw_offset;
 
    wc->offset += rw_offset;
-   wc->centerangle = viewangle + ANG90 - normalangle;
+   wc->centerangle = ANG90 + viewangle - normalangle;
 }
 
 //

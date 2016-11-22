@@ -340,6 +340,10 @@ void R_AddLine(seg_t *line)
    fixed_t x1, x2;
    sector_t *backsector;
    
+   // DEBUG
+   if(line - segs == 429)
+      I_Print8(0, 0, "poo");
+
    curline = line;
 
    angle1 = R_PointToAngle(line->v1->x, line->v1->y);

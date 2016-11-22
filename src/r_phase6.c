@@ -155,7 +155,7 @@ static void R_SegLoop(viswall_t *segl)
 
          // other texture drawing info
          texturecol = (segl->offset - r) / FRACUNIT;
-         iscale     = 33554432 / scale;
+         iscale = 33554432 / scale;
 
          // calc light level
          texturelight = ((scale * lightcoef) / FRACUNIT) - lightsub;

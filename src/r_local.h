@@ -320,11 +320,15 @@ typedef struct
    byte         *topsil;
    byte         *bottomsil;
    unsigned int  scalefrac;
+   //fixed_t scalefrac;
    unsigned int  scale2;
+   //fixed_t scale2;
    int           scalestep;
    unsigned int  centerangle;
    unsigned int  offset;
+   //fixed_t       offset;
    unsigned int  distance;
+   //fixed_t       distance;
    unsigned int  seglightlevel;
    int           floorpicnum;   // floorpic #   - CALICO: avoid type ambiguity w/extra field
    int           ceilingpicnum; // ceilingpic # - CALICO: avoid type ambiguity w/extra field
