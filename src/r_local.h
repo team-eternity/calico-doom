@@ -5,36 +5,35 @@
 
 #include "doomdef.h"
 
-/* proper screen size would be 160*100, stretched to 224 is 2.2 scale */
-#define	STRETCH (22*FRACUNIT/10)
+// proper screen size would be 160*100, stretched to 224 is 2.2 scale
+#define STRETCH (22*FRACUNIT/10)
 
-#define	CENTERX     (SCREENWIDTH/2)
-#define	CENTERY     (SCREENHEIGHT/2)
-#define	CENTERXFRAC (SCREENWIDTH/2*FRACUNIT)
-#define	CENTERYFRAC (SCREENHEIGHT/2*FRACUNIT)
-#define	PROJECTION  CENTERXFRAC
+#define CENTERX     (SCREENWIDTH/2)
+#define CENTERY     (SCREENHEIGHT/2)
+#define CENTERXFRAC (SCREENWIDTH/2*FRACUNIT)
+#define CENTERYFRAC (SCREENHEIGHT/2*FRACUNIT)
+#define PROJECTION  CENTERXFRAC
 
-#define	PSPRITEXSCALE  FRACUNIT	
-#define	PSPRITEYSCALE  FRACUNIT
-#define	PSPRITEXISCALE FRACUNIT
-#define	PSPRITEYISCALE FRACUNIT
+#define PSPRITEXSCALE  FRACUNIT
+#define PSPRITEYSCALE  FRACUNIT
+#define PSPRITEXISCALE FRACUNIT
+#define PSPRITEYISCALE FRACUNIT
 
-#define	ANGLETOSKYSHIFT 22 /* sky map is 256*128*4 maps */
+#define ANGLETOSKYSHIFT 22 // sky map is 256*128*4 maps
 
-#define	BASEYCENTER 100
+#define BASEYCENTER 100
 
-#define	CENTERY      (SCREENHEIGHT/2)
-#define	WINDOWHEIGHT (SCREENHEIGHT-SBARHEIGHT)
+#define WINDOWHEIGHT (SCREENHEIGHT-SBARHEIGHT)
 
-#define	MINZ (FRACUNIT*4)
+#define MINZ (FRACUNIT*4)
 
-#define	FIELDOFVIEW 2048 /* fineangles in the SCREENWIDTH wide window */
+#define FIELDOFVIEW 2048 // fineangles in the SCREENWIDTH wide window
 
-/* */
-/* lighting constants */
-/* */
-#define	LIGHTLEVELS     256 /* number of diminishing */
-#define	INVERSECOLORMAP 255
+//
+// lighting constants
+//
+#define LIGHTLEVELS     256 // number of diminishing
+#define INVERSECOLORMAP 255
 
 /*
 ==============================================================================
@@ -44,7 +43,7 @@ INTERNAL MAP TYPES
 ==============================================================================
 */
 
-/*================ used by play and refresh */
+//================ used by play and refresh
 
 typedef struct
 {
@@ -53,7 +52,7 @@ typedef struct
 
 struct line_s;
 
-typedef	struct
+typedef struct
 {
    fixed_t floorheight, ceilingheight;
    VINT    floorpic, ceilingpic;        // if ceilingpic == -1,draw sky
@@ -75,17 +74,17 @@ typedef	struct
 
 typedef struct
 {
-   fixed_t   textureoffset; /* add this to the calculated texture col */
-   fixed_t   rowoffset;     /* add this to the calculated texture top */
+   fixed_t   textureoffset; // add this to the calculated texture col
+   fixed_t   rowoffset;     // add this to the calculated texture top
    VINT      toptexture, bottomtexture, midtexture;
    sector_t *sector;
 } side_t;
 
 typedef enum 
 {
-   ST_HORIZONTAL, 
-   ST_VERTICAL, 
-   ST_POSITIVE, 
+   ST_HORIZONTAL,
+   ST_VERTICAL,
+   ST_POSITIVE,
    ST_NEGATIVE
 } slopetype_t;
 
@@ -186,22 +185,22 @@ extern vertex_t     *vertexes;
 extern int           numsegs;
 extern seg_t        *segs;
 
-extern	int          numsectors;
-extern	sector_t    *sectors;
+extern int          numsectors;
+extern sector_t    *sectors;
 
-extern	int          numsubsectors;
-extern	subsector_t *subsectors;
+extern int          numsubsectors;
+extern subsector_t *subsectors;
 
-extern	int          numnodes;
-extern	node_t      *nodes;
+extern int          numnodes;
+extern node_t      *nodes;
 
-extern	int          numlines;
-extern	line_t      *lines;
+extern int          numlines;
+extern line_t      *lines;
 
-extern	int          numsides;
-extern	side_t      *sides;
+extern int          numsides;
+extern side_t      *sides;
 
-/*============================================================================= */
+//=============================================================================
 
 int  R_PointOnSide(int x, int y, node_t *node);
 int  SlopeDiv(unsigned int num, unsigned int den);
@@ -209,25 +208,25 @@ void R_RenderBSPNode(int bspnum);
 void R_InitData(void);
 void R_InitSpriteDefs(char **namelist);
 
-/* to get a global angle from cartesian coordinates, the coordinates are */
-/* flipped until they are in the first octant of the coordinate system, then */
-/* the y (<=x) is scaled and divided by x to get a tangent (slope) value */
-/* which is looked up in the tantoangle[] table.  The +1 size is to handle */
-/* the case when x==y without additional checking. */
-#define	SLOPERANGE 2048
-#define	SLOPEBITS  11
-#define	DBITS      (FRACBITS-SLOPEBITS)
+// to get a global angle from cartesian coordinates, the coordinates are
+// flipped until they are in the first octant of the coordinate system, then
+// the y (<=x) is scaled and divided by x to get a tangent (slope) value
+// which is looked up in the tantoangle[] table.  The +1 size is to handle
+// the case when x==y without additional checking.
+#define SLOPERANGE 2048
+#define SLOPEBITS  11
+#define DBITS      (FRACBITS-SLOPEBITS)
 
 extern int tantoangle[SLOPERANGE+1];
 
-extern unsigned short yslope[SCREENHEIGHT];   /* 6.10 frac */
-extern unsigned short distscale[SCREENWIDTH]; /* 1.15 frac */
+extern unsigned short yslope[SCREENHEIGHT];   // 6.10 frac
+extern unsigned short distscale[SCREENWIDTH]; // 1.15 frac
 
-#define	HEIGHTBITS 6
-#define	SCALEBITS  9
-	
-#define	FIXEDTOSCALE  (FRACBITS-SCALEBITS)
-#define	FIXEDTOHEIGHT (FRACBITS-HEIGHTBITS)
+#define HEIGHTBITS 6
+#define SCALEBITS  9
+
+#define FIXEDTOSCALE  (FRACBITS-SCALEBITS)
+#define FIXEDTOHEIGHT (FRACBITS-HEIGHTBITS)
 
 
 extern fixed_t viewx, viewy, viewz;
@@ -240,13 +239,13 @@ extern int       extralight;
 
 extern angle_t clipangle, doubleclipangle;
 
-/* The viewangletox[viewangle + FINEANGLES/4] lookup maps the visible view */
-/* angles  to screen X coordinates, flattening the arc to a flat projection  */
-/* plane.  There will be many angles mapped to the same X.  */
+// The viewangletox[viewangle + FINEANGLES/4] lookup maps the visible view
+// angles  to screen X coordinates, flattening the arc to a flat projection
+// plane.  There will be many angles mapped to the same X.
 extern int viewangletox[FINEANGLES/2];
 
-/* The xtoviewangleangle[] table maps a screen pixel to the lowest viewangle */
-/* that maps back to x ranges from clipangle to -clipangle */
+// The xtoviewangleangle[] table maps a screen pixel to the lowest viewangle
+// that maps back to x ranges from clipangle to -clipangle
 extern angle_t xtoviewangle[SCREENWIDTH+1];
 
 extern fixed_t finetangent[FINEANGLES/2];
@@ -256,18 +255,18 @@ extern int framecount;
 
 extern int phasetime[9];
 
-/* */
-/* R_data.c */
-/* */
-#define	MAXTEXTURES 128
+//
+// R_data.c
+//
+#define MAXTEXTURES 128
 
 extern texture_t *skytexturep;
 
 extern int       numtextures;
 extern texture_t textures[MAXTEXTURES];
 
-extern int *flattranslation;    /* for global animation */
-extern int *texturetranslation; /* for global animation */
+extern int *flattranslation;    // for global animation
+extern int *texturetranslation; // for global animation
 
 extern int firstflat, numflats;
 
@@ -279,17 +278,17 @@ COMMAND QUE STRUCTURES
 ==============================================================================
 */
 
-#define	AC_ADDFLOOR      1
-#define	AC_ADDCEILING    2
-#define	AC_TOPTEXTURE    4
-#define	AC_BOTTOMTEXTURE 8
-#define	AC_NEWCEILING    16
-#define	AC_NEWFLOOR      32
-#define	AC_ADDSKY        64
-#define	AC_CALCTEXTURE   128
-#define	AC_TOPSIL        256
-#define	AC_BOTTOMSIL     512
-#define	AC_SOLIDSIL      1024
+#define AC_ADDFLOOR      1
+#define AC_ADDCEILING    2
+#define AC_TOPTEXTURE    4
+#define AC_BOTTOMTEXTURE 8
+#define AC_NEWCEILING    16
+#define AC_NEWFLOOR      32
+#define AC_ADDSKY        64
+#define AC_CALCTEXTURE   128
+#define AC_TOPSIL        256
+#define AC_BOTTOMSIL     512
+#define AC_SOLIDSIL      1024
 
 typedef struct
 {
@@ -334,29 +333,29 @@ typedef struct
    int           ceilingpicnum; // ceilingpic # - CALICO: avoid type ambiguity w/extra field
 } viswall_t;
 
-#define	MAXWALLCMDS 128
+#define MAXWALLCMDS 128
 extern  viswall_t viswalls[MAXWALLCMDS], *lastwallcmd;
 
-/* A vissprite_t is a thing that will be drawn during a refresh */
+// A vissprite_t is a thing that will be drawn during a refresh
 typedef struct vissprite_s
 {
-   int     x1, x2;       /* clipped to screen edges column range */
-   fixed_t startfrac;    /* horizontal position of x1 */
+   int     x1, x2;       // clipped to screen edges column range
+   fixed_t startfrac;    // horizontal position of x1
    fixed_t xscale;
-   fixed_t xiscale;      /* negative if flipped */
+   fixed_t xiscale;      // negative if flipped
    fixed_t yscale;
    fixed_t yiscale;
    fixed_t texturemid;
    patch_t *patch;
-   int     colormap;     /* -1 = shadow draw */
-   fixed_t gx,gy,gz,gzt; /* global coordinates */
-   pixel_t *pixels;      /* data patch header references */
+   int     colormap;     // -1 = shadow draw
+   fixed_t gx,gy,gz,gzt; // global coordinates
+   pixel_t *pixels;      // data patch header references
 
    // CALICO: avoid type punning for patch
    int      patchnum;
 } vissprite_t;
 
-#define	MAXVISSPRITES 128
+#define MAXVISSPRITES 128
 extern vissprite_t vissprites[MAXVISSPRITES], *lastsprite_p, *vissprite_p;
 
 #define MAXOPENINGS SCREENWIDTH*64
@@ -371,15 +370,15 @@ typedef struct
    pixel_t       *picnum;
    int            lightlevel;
    int            minx, maxx;
-   int            pad1;              /* leave pads for [minx-1]/[maxx+1] */
-   unsigned short open[SCREENWIDTH]; /* top<<8 | bottom */
+   int            pad1;              // leave pads for [minx-1]/[maxx+1]
+   unsigned short open[SCREENWIDTH]; // top<<8 | bottom
    int            pad2;
 } visplane_t;
 
-#define	MAXVISPLANES 64
+#define MAXVISPLANES 64
 extern visplane_t visplanes[MAXVISPLANES], *lastvisplane;
 
-#endif		/* __R_LOCAL__ */
+#endif // __R_LOCAL__
 
 // EOF
 
