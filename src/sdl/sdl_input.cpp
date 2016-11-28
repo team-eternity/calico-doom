@@ -247,30 +247,6 @@ static CfgItem cfgKeyName7("kb_key_7",      &kbKeyNames[KBJK_7]);
 static CfgItem cfgKeyName8("kb_key_8",      &kbKeyNames[KBJK_8]);
 static CfgItem cfgKeyName9("kk_key_9",      &kbKeyNames[KBJK_9]);
 
-//#define IS_CTRL(code)  (code == SDLK_LCTRL  || code == SDLK_RCTRL )
-//#define IS_ALT(code)   (code == SDLK_LALT   || code == SDLK_RALT  )
-//#define IS_SHIFT(code) (code == SDLK_LSHIFT || code == SDLK_RSHIFT)
-
-/*
-static void SDL2_keyEvent(SDL_Keycode code, bool isDown)
-{
-   for(size_t i = 0; i < KBJK_MAX; i++)
-   {
-      if(kbKeyCodes[i] == code ||
-         (IS_CTRL(code)  && IS_CTRL(kbKeyCodes[i]))  ||
-         (IS_ALT(code)   && IS_ALT(kbKeyCodes[i]))   ||
-         (IS_SHIFT(code) && IS_SHIFT(kbKeyCodes[i])))
-      {
-         kbKeyDown[i] = isDown;
-      }
-   }
-}
-*/
-
-#define KEYISCTRL(code)  (code == SDLK_LCTRL  || code == SDLK_RCTRL )
-#define KEYISALT(code)   (code == SDLK_LALT   || code == SDLK_RALT  )
-#define KEYISSHIFT(code) (code == SDLK_LSHIFT || code == SDLK_RSHIFT)
-
 //
 // Handle key down events
 //
@@ -347,12 +323,6 @@ int SDL2_GetEvents(void)
    {
       switch(evt.type)
       {
-         /*
-      case SDL_KEYDOWN:
-      case SDL_KEYUP:
-         SDL2_keyEvent(evt.key.keysym.sym, evt.type == SDL_KEYDOWN);
-         break;
-         */
       case SDL_MOUSEMOTION:
          // CALICO_TODO: mouse motion
          break;
@@ -384,8 +354,10 @@ int SDL2_GetEvents(void)
       }
    }
 
+   // process keyboard state
    SDL2_processKeyboard();
 
+   // turn input into Jaguar gamepad buttons
    int buttons = 0;
 
    for(size_t i = 0; i < KBJK_MAX; i++)
