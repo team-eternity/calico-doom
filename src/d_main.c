@@ -1,6 +1,7 @@
 /* D_main.c  */
 
 #include "hal/hal_input.h"
+#include "hal/hal_timer.h"
 #include "doomdef.h" 
 #include "m_argv.h"
  
@@ -281,7 +282,21 @@ int MiniLoop(void (*start)(void), void (*stop)(void),
 
    do
    {
-      // run the tic immediately 
+      // CALICO: timing
+      static unsigned int oldentertic;
+      unsigned int entertic;
+
+      entertic = hal_timer.getTime();
+
+      if(!oldentertic)
+         oldentertic = entertic;
+
+      if(entertic <= oldentertic)
+         continue;
+      lasttics = entertic - oldentertic;
+      oldentertic = entertic;
+
+      // run the tic immediately
       gamevbls += vblsinframe;
       exit = ticker();
 
@@ -294,7 +309,7 @@ int MiniLoop(void (*start)(void), void (*stop)(void),
          if(vblsinframe > 8)
             vblsinframe = 8;
       }
-
+      
       // get buttons for next tic
       oldticbuttons[0] = ticbuttons[0];
       oldticbuttons[1] = ticbuttons[1];

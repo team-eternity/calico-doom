@@ -109,6 +109,10 @@ void R_WallPrep(void)
       {
          // two-sided line
          
+         // CALICO_FIXME / CALICO_TODO: DEBUG - draw 1S lines only
+         ++segl;
+         continue;
+
          // is bottom texture visible?
          if(b_floorheight > f_floorheight)
          {

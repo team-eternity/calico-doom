@@ -393,6 +393,10 @@ void R_AddLine(seg_t *line)
 
    backsector = line->backsector;
 
+   // CALICO_FIXME / CALICO_TODO: DEBUG - draw 1S lines only
+   if(backsector)
+      return;
+
    if(!backsector || 
       backsector->ceilingheight <= frontsector->floorheight ||
       backsector->floorheight   >= frontsector->ceilingheight)

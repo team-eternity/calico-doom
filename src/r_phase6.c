@@ -181,8 +181,6 @@ static void R_SegLoop(viswall_t *segl)
       //
       if(segl->actionbits & AC_ADDFLOOR)
       {
-         int top, bottom;
-         
          top = CENTERY - ((scale * segl->floorheight) / (1 << (HEIGHTBITS + SCALEBITS)));
          if(top <= ceilingclipx)
             top = ceilingclipx + 1;
@@ -205,8 +203,6 @@ static void R_SegLoop(viswall_t *segl)
       //
       if(segl->actionbits & AC_ADDCEILING)
       {
-         int top, bottom;
-
          top = ceilingclipx + 1;
 
          bottom = CENTERY - 1 - ((scale * segl->ceilingheight) / (1 << (HEIGHTBITS + SCALEBITS)));
@@ -256,85 +252,10 @@ static void R_SegLoop(viswall_t *segl)
             bottom = floorclipx - 1;
          if(top <= bottom)
          {
-            int colnum = ((xtoviewangle[x] + viewangle) >> ANGLETOSKYSHIFT) & 0xff;
-            // CALICO_TODO: draw sky column
-            /*
-              shlq  #21,sl_colnum                                 sl_colnum <<= 21;
-              
-              movei #18204,r1                                     r1 = 18204; // ????
-              imult sl_top,r1                                     r1 *= sl_top;
-              add   r1,sl_colnum                                  sl_colnum += r1;
-              
-              shlq  #2,sl_colnum                                  sl_colnum <<= 2;
-             
-              movei #36,r0                                        r0 = 36; // ????
-              add   FP,r0 ; &count                                r0 += FP; // &count ?
-              move  sl_bottom,r1 ;(bottom)                        r1 = sl_bottom;
-              sub   sl_top,r1 ;(top)                              r1 -= sl_top;
-              moveq #1,r2                                         r2 = 1;
-              add   r2,r1                                         r1 += r2;
-              shlq  #16,r1                                        r1 <<= FRACBITS;
-              add   r2,r1                                         r1 += r2;
-              store r1,(r0)                                       *r0 = r1;
-            
-              // JAG SPECIFIC
-            L196:
-            L197:
-              movei #15737400,r0                                  r0 = 15737400; // 0xf02238 ????
-              load  (r0),r0                                       r0 = *r0;
-              moveq #1,r1                                         r1 = 1;
-              and   r1,r0                                         r0 &= r1;
-              moveq #0,r1                                         r1 = 0;
-              cmp   r0,r1                                         if(r0 == r1)
-              movei #L196,scratch                                   goto L196;
-              jump  EQ,(scratch)
-              nop
-            
-              movei #15737344,r0                                  r0 = 15737344; // 0xf02200 ????
-              movei #_skytexturep,r1                              r1 = &skytexturep;
-              load  (r1),r1                                       r1 = *r1;
-              addq  #16,r1                                        r1 += 16; // &texture_t::data
-              load  (r1),r1                                       r1 = *r1;
-              store r1,(r0)                                       *r0 = r1;
-            
-              movei #15737356,r0                                  r0 = 15737356; // 0xf0220c ????
-              move  sl_colnum,r1 ;(colnum)                        r1 = sl_colnum;
-              shrq  #16,r1                                        r1 >>= FRACBITS;
-              store r1,(r0)                                       *r0 = r1;
-             
-              movei #15737368,r0                                  r0 = 15737368; // 0xf02218 ????
-              movei #65535,r1                                     r1 = 65536;
-              move  sl_colnum,r2 ;(colnum)                        r2 = sl_colnum;
-              and   r1,r2                                         r2 &= r1;
-              move  r2,r1                                         r1 = r2;
-              store r1,(r0)                                       *r0 = r1;
-            
-              movei #15737360,r0                                  r0 = 15737360; // 0xf02210 ????
-              moveq #1,r1                                         r1 = 1;
-              store r1,(r0)                                       *r0 = r1;
-              
-              movei #15737364,r0                                  r0 = 15737364; // 0xf02214 ????
-              movei #7281,r1                                      r1 = 7281; // ????
-              store r1,(r0)                                       *r0 = r1;
-              
-              movei #15737392,r0                                  r0 = 15737392; // 0xf02230 ????
-              move  sl_top,r1 ;(top)                              r1 = sl_top;
-              shlq  #16,r1                                        r1 <<= FRACBITS;
-              add   sl_x,r1 ;(x)                                  r1 += sl_x;
-              store r1,(r0)                                       *r0 = r1;
-            
-              movei #15737456,r0                                  r0 = 15737456; // 0xf02270 ????
-              moveq #0,r1                                         r1 = 0;
-              store r1,(r0)                                       *r0 = r1;
-              
-              movei #15737404,r0                                  r0 = 15737404; // 0xf0223c ????
-              load  (FP+9),r1 ; local count                       r1 = *(FP+9);  // count
-              store r1,(r0)                                       *r0 = r1;
-              
-              movei #15737400,r0                                  r0 = 15737400;   // 0xf02238 ????
-              movei #1098919681,r1                                r1 = 1098919681; // 0x41802F01 ????
-              store r1,(r0)                                       *r0 = r1;
-            */
+            // CALICO: draw sky column
+            int colnum = ((viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT) & 0xff;
+            pixel_t *data = skytexturep->data + colnum * skytexturep->height;
+            I_DrawColumn(x, top, bottom, 0, 0, FRACUNIT, data);
          }
       }
 
@@ -371,12 +292,12 @@ void R_SegCommands(void)
    // CALICO_TODO: JAG SPECIFIC (probably irrelevant to Calico)
    /*
    ; setup blitter
-   movei #15737348,r0   r0 = 15737348; // 0xf02204
-   movei #145440,r1     r1 = 145440;   // ????
+   movei #15737348,r0   r0 = 15737348; // 0xf02204 - A1_FLAGS
+   movei #145440,r1     r1 = 145440;   // X add ctrl = Add zero; Width = 128; Pixel size = 16
    store r1,(r0)        *r0 = r1;
                        
-   movei #15737384,r0   r0 = 15737384; // 0xf02228
-   movei #145952,r1     r1 = 145952;   // ????
+   movei #15737384,r0   r0 = 15737384; // 0xf02228 - A2_FLAGS
+   movei #145952,r1     r1 = 145952;   // X add ctrl = Add zero; Width = 160; Pixel size = 16
    store r1,(r0)        *r0 = r1;
    */
   
@@ -407,6 +328,10 @@ void R_SegCommands(void)
       if(segl->actionbits & AC_BOTTOMTEXTURE)
       {
          texture_t *tex = segl->b_texture;
+
+         // CALICO_FIXME / CALICO_TODO: DEBUG - draw 1S mid lines only
+         ++segl;
+         continue;
 
          bottomtex.topheight    = segl->b_topheight;
          bottomtex.bottomheight = segl->b_bottomheight;

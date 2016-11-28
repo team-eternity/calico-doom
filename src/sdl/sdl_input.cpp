@@ -247,13 +247,11 @@ static CfgItem cfgKeyName7("kb_key_7",      &kbKeyNames[KBJK_7]);
 static CfgItem cfgKeyName8("kb_key_8",      &kbKeyNames[KBJK_8]);
 static CfgItem cfgKeyName9("kk_key_9",      &kbKeyNames[KBJK_9]);
 
-#define IS_CTRL(code)  (code == SDLK_LCTRL  || code == SDLK_RCTRL )
-#define IS_ALT(code)   (code == SDLK_LALT   || code == SDLK_RALT  )
-#define IS_SHIFT(code) (code == SDLK_LSHIFT || code == SDLK_RSHIFT)
+//#define IS_CTRL(code)  (code == SDLK_LCTRL  || code == SDLK_RCTRL )
+//#define IS_ALT(code)   (code == SDLK_LALT   || code == SDLK_RALT  )
+//#define IS_SHIFT(code) (code == SDLK_LSHIFT || code == SDLK_RSHIFT)
 
-//
-// Handle key down events
-//
+/*
 static void SDL2_keyEvent(SDL_Keycode code, bool isDown)
 {
    for(size_t i = 0; i < KBJK_MAX; i++)
@@ -265,6 +263,47 @@ static void SDL2_keyEvent(SDL_Keycode code, bool isDown)
       {
          kbKeyDown[i] = isDown;
       }
+   }
+}
+*/
+
+#define KEYISCTRL(code)  (code == SDLK_LCTRL  || code == SDLK_RCTRL )
+#define KEYISALT(code)   (code == SDLK_LALT   || code == SDLK_RALT  )
+#define KEYISSHIFT(code) (code == SDLK_LSHIFT || code == SDLK_RSHIFT)
+
+//
+// Handle key down events
+//
+static void SDL2_processKeyboard()
+{
+   const Uint8 *state = SDL_GetKeyboardState(nullptr);
+   const Uint8 *state1, *state2;
+
+   for(size_t i = 0; i < KBJK_MAX; i++)
+   {
+      SDL_Scancode sc = SDL_GetScancodeFromKey(kbKeyCodes[i]);
+      if(sc == SDL_SCANCODE_LCTRL || sc == SDL_SCANCODE_RCTRL)
+      {
+         state1 = &state[SDL_SCANCODE_LCTRL];
+         state2 = &state[SDL_SCANCODE_RCTRL];
+      }
+      else if(sc == SDL_SCANCODE_LSHIFT || sc == SDL_SCANCODE_RSHIFT)
+      {
+         state1 = &state[SDL_SCANCODE_LSHIFT];
+         state2 = &state[SDL_SCANCODE_RSHIFT];
+      }
+      else if(sc == SDL_SCANCODE_LALT || sc == SDL_SCANCODE_RALT)
+      {
+         state1 = &state[SDL_SCANCODE_LALT];
+         state2 = &state[SDL_SCANCODE_RALT];
+      }
+      else
+      {
+         state1 = &state[sc];
+         state2 = nullptr;
+      }
+
+      kbKeyDown[i] = !!*state1 || (state2 ? !!*state2 : false);
    }
 }
 
@@ -308,10 +347,12 @@ int SDL2_GetEvents(void)
    {
       switch(evt.type)
       {
+         /*
       case SDL_KEYDOWN:
       case SDL_KEYUP:
          SDL2_keyEvent(evt.key.keysym.sym, evt.type == SDL_KEYDOWN);
          break;
+         */
       case SDL_MOUSEMOTION:
          // CALICO_TODO: mouse motion
          break;
@@ -342,6 +383,8 @@ int SDL2_GetEvents(void)
          break;
       }
    }
+
+   SDL2_processKeyboard();
 
    int buttons = 0;
 

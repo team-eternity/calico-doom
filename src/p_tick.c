@@ -180,7 +180,7 @@ void P_CheckCheats(void)
    int warpmap;
    int i;
    player_t *p;
-	
+
    for(i = 0; i < MAXPLAYERS; i++)
    {
       if(!playeringame[i])
@@ -194,20 +194,19 @@ void P_CheckCheats(void)
 
    if(netgame)
       return;
-		
+
    buttons    = ticbuttons[0];
    oldbuttons = oldticbuttons[0];
 
-   // CALICO_TODO: input mapping
    if((oldbuttons&JP_PAUSE) || !(buttons & JP_PAUSE ))
       return;
-		
+
    if(buttons&JP_NUM)
    {
-      /* free stuff */
+      // free stuff
       p = &players[0];
       for(i = 0; i < NUMCARDS; i++)
-         p->cards[i] = true;			
+         p->cards[i] = true;
       p->armorpoints = 200;
       p->armortype = 2;
       for(i = 0; i <NUMWEAPONS; i++)
@@ -233,7 +232,7 @@ void P_CheckCheats(void)
    if(buttons&JP_9) warpmap = 9;
    if(buttons&JP_A) warpmap += 10;
    else if(buttons&JP_B) warpmap += 20;
-	
+
    // CALICO_FIXME: limit incorrect for warp cheat
    if(warpmap > 0 && warpmap < 27)
    {
