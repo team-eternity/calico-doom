@@ -36,7 +36,7 @@ static void *R_CheckPixels(int lumpnum)
 //
 static fixed_t R_PointToDist(fixed_t x, fixed_t y)
 {
-   int     angle;
+   int angle;
    fixed_t dx, dy, temp;
    
    dx = D_abs(x - viewx);
@@ -147,7 +147,10 @@ static void R_FinishWallPrep(viswall_t *wc)
    // this is essentially R_StoreWallRange
    // calculate rw_distance for scale calculation
    normalangle = seg->angle + ANG90;
-   offsetangle = D_abs(normalangle - wc->angle1);
+   offsetangle = normalangle - wc->angle1;
+
+   if((int)offsetangle < 0)
+      offsetangle = 0 - offsetangle;
    
    if(offsetangle > ANG90)
       offsetangle = ANG90;
@@ -163,7 +166,7 @@ static void R_FinishWallPrep(viswall_t *wc)
    if(wc->stop > wc->start)
    {
       scale2 = R_ScaleFromGlobalAngle(rw_distance, viewangle + xtoviewangle[wc->stop]);
-      wc->scalestep = (scale2 - scalefrac) / (wc->stop - wc->start);
+      wc->scalestep = (int)(scale2 - scalefrac) / (int)(wc->stop - wc->start);
    }
 
    wc->scale2 = scale2;
