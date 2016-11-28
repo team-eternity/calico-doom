@@ -180,7 +180,7 @@ static boolean PIT_CheckLine(line_t *ld)
    {
       if(ld->flags & ML_BLOCKING)
          return false; // explicitly blocking everything
-      if(!tmthing->player && ld->flags & ML_BLOCKMONSTERS)
+      if(!tmthing->player && (ld->flags & ML_BLOCKMONSTERS))
          return false; // block monsters only
    }
 

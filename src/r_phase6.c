@@ -531,12 +531,12 @@ typedef struct mobj_s
 116: struct mobj_s *target;
 120: VINT           reactiontime;
 124: VINT           threshold;
-132: struct player_s *player;
-136: struct line_s *extradata;
-140: short spawnx;
-142: short spawny;
+128: struct player_s *player;
+132: struct line_s *extradata;
+136: short spawnx;
+140: short spawny;
 144: short spawntype;
-146: short spawnangle;
+148: short spawnangle;
 } mobj_t;
 
 typedef struct vissprite_s

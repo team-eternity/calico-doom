@@ -547,7 +547,8 @@ void P_RunMobjBase2()
       // clear any latecall from the previous frame
       currentmobj->latecall = NULL;
 
-      P_MobjThinker(currentmobj);
+      if(!currentmobj->player)
+         P_MobjThinker(currentmobj);
    }
 }
 
