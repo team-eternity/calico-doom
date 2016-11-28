@@ -185,7 +185,10 @@ static boolean PA_ShootLine(line_t *li, fixed_t interceptfrac)
          aimtopslope = slope;
    }
 
-   return (aimtopslope > aimbottomslope);
+   if(aimtopslope <= aimbottomslope)
+      return false;
+
+   return true;
 }
 
 //
@@ -425,7 +428,7 @@ void P_Shoot2(void)
    if(shootmobj)
       return;
 
-   if(shootline)
+   if(!shootline)
       return;
 
    // calculate the intercept point for the first line hit

@@ -26,7 +26,6 @@
   SOFTWARE.
 */
 
-
 #include "doomdef.h"
 #include "p_local.h"
 
@@ -188,6 +187,13 @@ static boolean PIT_CheckLine(line_t *ld)
    front = ld->frontsector;
    back  = ld->backsector;
 
+   if(front->ceilingheight == front->floorheight ||
+      back->ceilingheight == back->floorheight)
+   {
+      blockline = ld;
+      return false; // probably a closed door
+   }
+
    if(front->ceilingheight < back->ceilingheight)
       opentop = front->ceilingheight;
    else
@@ -310,7 +316,7 @@ static void PM_CheckPosition()
    {
       for(by = yl; by <= yh; by++)
       {
-         if(!P_BlockLinesIterator(by, by, PM_CrossCheck))
+         if(!P_BlockLinesIterator(bx, by, PM_CrossCheck))
          {
             trymove2 = false;
             return;
