@@ -7,6 +7,7 @@
 #include "hal/hal_init.h"
 #include "hal/hal_input.h"
 #include "hal/hal_platform.h"
+#include "hal/hal_timer.h"
 #include "hal/hal_video.h"
 #include "gl/gl_render.h"
 #include "rb/rb_common.h"
@@ -70,12 +71,10 @@ int *readylist_p = stopobj; /* list to display next frame */
 int *worklist_p, *work_p;   /* list currently being built */
 #endif
 
-#if 0
 int joypad[32]; 
-#endif
 
 int joystick1; 
-int ticcount; 
+//int ticcount; 
  
 
 int junk; 
@@ -136,6 +135,9 @@ void Jag68k_main(int argc, const char *const *argv)
    I_GetFramebuffer();
 
    hal_platform.debugMsg("Video initialized\n");
+
+   // CALICO: initialize input
+   hal_input.initInput();
 
    debugscreenactive = debugscreenstate;
 
@@ -454,9 +456,12 @@ byte *I_ZoneBase(int *size)
 // CALICO_FIXME: get SDL input
 int I_ReadControls(void) 
 { 
-#if 0
    static int oldticcount;
    int stoptic, i, cumulative;
+   int ticcount = I_GetTime();
+
+   // CALICO: run event loop
+   joypad[ticcount&31] = hal_input.getEvents();
 
    stoptic = ticcount;
    if(stoptic - oldticcount > 4)
@@ -472,19 +477,14 @@ int I_ReadControls(void)
    oldticcount = stoptic;
 
    return cumulative;
-#else 
-   // run event loop
-   hal_input.getEvents();
-
-   // CALICO_TODO: translate into Jaguar gamepad buttons
-   return 0;
-#endif
 } 
 
-// CALICO_FIXME: get time in tics
+//
+// CALICO: Get time in tics from HAL
+//
 int I_GetTime(void)
 {
-   return ticcount;
+   return (int)(hal_timer.getTime());
 }
 
 //
@@ -523,6 +523,9 @@ static void I_GetFramebuffer(void)
    framebuffer_p = GL_GetFramebuffer();
 }
 
+// Sign-extender for 24-bit CRY values
+struct extender_s { signed int ext:24; } s;
+
 // 
 // Source is the top of the column to scale 
 // 
@@ -558,7 +561,7 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
       // CALICO: calculate CRY lighting and lookup RGB
       cry = dc_source[(frac >> FRACBITS)&127];
       y = (cry & CRY_YMASK) << CRY_IINCSHIFT;
-      y += (0xFF000000 | light);
+      y += (s.ext = light);
       y >>= CRY_IINCSHIFT;
       if(y < 0)
          y = 0;
@@ -1410,11 +1413,11 @@ int WaitGetSerialChar(void)
    int val;
    int vblstop;
 
-   vblstop = ticcount + 120;
+   vblstop = I_GetTime() + 120;
 
    do
    {
-      if(ticcount >= vblstop)
+      if(I_GetTime() >= vblstop)
          return -1; // timeout
       val = GetSerialChar();
    }
@@ -1443,10 +1446,10 @@ void wait(int tics)
 {
    int start;
 
-   start = ticcount;
+   start = I_GetTime();
    do
    {
-      junk = ticcount;
+      junk = I_GetTime();
    } 
    while(junk < start + tics);
 }

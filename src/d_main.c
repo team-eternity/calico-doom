@@ -360,6 +360,7 @@ void DrawSinglePlaque(jagobj_t *pl);
 int TIC_Abortable(void)
 {
    jagobj_t *pl;
+   int count;
 
    if(ticon >= 8*15)
       return 1; // go on to next demo
@@ -374,8 +375,8 @@ int TIC_Abortable(void)
       DrawSinglePlaque(pl);
       Z_Free(pl);
       S_Clear();
-      ticcount = 0;
-      while((junk = ticcount) < 240)
+      count = I_GetTime();
+      while((junk = I_GetTime()) < count + 240)
          ;
       Jag68k_main(myargc, myargv);
    }

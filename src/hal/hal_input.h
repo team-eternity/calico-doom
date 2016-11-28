@@ -41,7 +41,9 @@ typedef struct hal_appstate_s
 
 typedef struct hal_input_s
 {
-   void (*getEvents)(void);
+   void (*initInput)(void);
+   int  (*getEvents)(void);
+   void (*resetInput)(void);
 } hal_input_t;
 
 #ifdef __cplusplus

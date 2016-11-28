@@ -719,7 +719,7 @@ void M_AddToBox(fixed_t *box, fixed_t x, fixed_t y);
 extern pixel_t *workingscreen;
 extern int      junk, spincount;
 
-extern int ticcount, joybuttons;
+extern int joybuttons;
 
 // CALICO: separated gamepad button defines into their own header
 #include "jagpad.h"

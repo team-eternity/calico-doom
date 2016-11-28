@@ -32,9 +32,11 @@
 #include "../hal/hal_types.h"
 #include "../hal/hal_input.h"
 #include "../hal/hal_ml.h"
+#include "../hal/hal_timer.h"
 #include "../hal/hal_video.h"
 #include "sdl_init.h"
 #include "sdl_input.h"
+#include "sdl_timer.h"
 #include "sdl_video.h"
 
 //
@@ -75,7 +77,14 @@ void SDL2_InitHAL(void)
    hal_appstate.setGrabState         = SDL2_SetGrabState;
 
    // Input
-   hal_input.getEvents = SDL2_GetEvents;
+   hal_input.initInput     = SDL2_InitInput;
+   hal_input.getEvents     = SDL2_GetEvents;
+   hal_input.resetInput    = SDL2_ResetInput;
+
+   // Timer
+   hal_timer.delay     = SDL2_Delay;
+   hal_timer.getTime   = SDL2_GetTime;
+   hal_timer.getTimeMS = SDL2_GetTimeMS;
 }
 
 #endif
