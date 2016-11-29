@@ -172,8 +172,11 @@ static void R_SegLoop(viswall_t *segl)
          //
          if(segl->actionbits & AC_TOPTEXTURE)
             R_DrawTexture(&toptex);
+         // CALICO_FIXME: DEBUG
+#if 0
          if(segl->actionbits & AC_BOTTOMTEXTURE)
             R_DrawTexture(&bottomtex);
+#endif
       }
 
       //
@@ -262,12 +265,15 @@ static void R_SegLoop(viswall_t *segl)
       if(segl->actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
       {
          // rewrite clipbounds
+         // CALICO_FIXME: DEBUG
+#if 0
          if(segl->actionbits & AC_NEWFLOOR)
             floorclipx = low;
          if(segl->actionbits & AC_NEWCEILING)
             ceilingclipx = high;
 
          clipbounds[x] = ((ceilingclipx + 1) << 8) + floorclipx;
+#endif
       }
    }
    while(++x <= segl->stop);
