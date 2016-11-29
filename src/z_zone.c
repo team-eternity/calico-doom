@@ -113,7 +113,7 @@ void *Z_Malloc2(memzone_t *mainzone, int size, int tag, void *user)
    //
    size += sizeof(memblock_t); // account for size of block header
    size = (size + 7) & ~7;     // phrase align everything
-	
+
    start = base = mainzone->rover;
 
    while(base->user || base->size < size)
@@ -122,10 +122,10 @@ void *Z_Malloc2(memzone_t *mainzone, int size, int tag, void *user)
          rover = base;
       else
          rover = base->next;
-			
+
       if(!rover)
          goto backtostart;
-		
+
       if(rover->user)
       {
          // hit an in use block, so move base past it
@@ -135,12 +135,12 @@ void *Z_Malloc2(memzone_t *mainzone, int size, int tag, void *user)
 backtostart:
             base = &mainzone->blocklist;
          }
-			
+
          if(base == start)	// scaned all the way around the list
             I_Error("Z_Malloc: failed on %i", size);
          continue;
       }
-		
+
       //
       // free the rover block (adding the size to base)
       //
@@ -156,7 +156,7 @@ backtostart:
             rover->next->prev = base;
       }
    }
-	
+
    //
    // found a block big enough
    //
@@ -175,7 +175,7 @@ backtostart:
       base->next = newblock;
       base->size = size;
    }
-	
+
    if(user)
    {
       base->user = user; // mark as an in use block
@@ -191,7 +191,7 @@ backtostart:
    base->tag = tag;
    base->id = ZONEID;
    base->lockframe = -1;
-		
+
    mainzone->rover = base->next; // next allocation will start looking here
    if(!mainzone->rover)
       mainzone->rover = &mainzone->blocklist;
@@ -241,7 +241,7 @@ void Z_CheckHeap(memzone_t *mainzone)
             I_Error("Z_CheckHeap: zone size changed\n");
          continue;
       }
-		
+
       if((byte *)checkblock + checkblock->size != (byte *)checkblock->next)
          I_Error("Z_CheckHeap: block size does not touch the next block\n");
       if(checkblock->next->prev != checkblock)
