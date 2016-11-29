@@ -529,8 +529,7 @@ void P_PlayerThink(player_t *player)
    P_CalcHeight (player);
    if(player->mo->subsector->sector->special)
       P_PlayerInSpecialSector(player);
-	
-   // CALICO_TODO: input mapping
+
    /* */
    /* check for weapon change */
    /* */

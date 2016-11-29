@@ -329,10 +329,6 @@ void R_SegCommands(void)
       {
          texture_t *tex = segl->b_texture;
 
-         // CALICO_FIXME / CALICO_TODO: DEBUG - draw 1S mid lines only
-         ++segl;
-         continue;
-
          bottomtex.topheight    = segl->b_topheight;
          bottomtex.bottomheight = segl->b_bottomheight;
          bottomtex.texturemid   = segl->b_texturemid;

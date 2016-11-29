@@ -339,10 +339,6 @@ void R_AddLine(seg_t *line)
    angle_t angle1, angle2, span, tspan;
    fixed_t x1, x2;
    sector_t *backsector;
-   
-   // DEBUG
-   if(line - segs == 429)
-      I_Print8(0, 0, "poo");
 
    curline = line;
 
@@ -392,10 +388,6 @@ void R_AddLine(seg_t *line)
    // decide which clip routine to use
 
    backsector = line->backsector;
-
-   // CALICO_FIXME / CALICO_TODO: DEBUG - draw 1S lines only
-   if(backsector)
-      return;
 
    if(!backsector || 
       backsector->ceilingheight <= frontsector->floorheight ||

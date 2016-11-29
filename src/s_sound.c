@@ -9,7 +9,7 @@ sfxchannel_t sfxchannels[SFXCHANNELS];
 boolean channelschanged; /* set by S_StartSound to signal update to remix speculative samples */
 
 int finalquad; /* the last quad mixed by update. */
-									
+
 int sfxvolume    = 128; /* range 0 - 255 */
 int musicvolume  = 128; /* range 0 - 255 */
 int oldsfxvolume = 128; /* to detect transition to sound off */
@@ -281,15 +281,15 @@ void S_StartSong(int music_id, int looping)
 
 void S_StopSong(void)
 {
+   Z_Free(music_memory);
+   music = 0; // prevent the DSP from running
+   
    // CALICO_TODO: non-portable
 #if 0
    int i;
    int *ptr;
 
-   Z_Free(music_memory);
-   music = 0; /* prevent the DSP from running */
-
-   ptr = soundbuffer+1; /* clear music output buffer */
+   ptr = soundbuffer+1; // clear music output buffer
    for(i = (EXTERNALQUADS*32) / 4; i; i-=8)
    {
       ptr[0] = 0;

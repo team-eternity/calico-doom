@@ -453,7 +453,9 @@ byte *I_ZoneBase(int *size)
 
 #define TICSCALE 2
  
-// CALICO_FIXME: get SDL input
+//
+// Read gamepad controls
+//
 int I_ReadControls(void) 
 { 
    static int oldticcount;
