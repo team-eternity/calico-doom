@@ -165,9 +165,7 @@ static void R_FinishWallPrep(viswall_t *wc)
 
    if(wc->stop > wc->start)
    {
-      // CALICO_FIXME: DEBUG
       scale2 = R_ScaleFromGlobalAngle(rw_distance, viewangle + xtoviewangle[wc->stop]);
-
       wc->scalestep = (int)(scale2 - scalefrac) / (int)(wc->stop - wc->start);
    }
 

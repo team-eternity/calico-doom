@@ -172,11 +172,8 @@ static void R_SegLoop(viswall_t *segl)
          //
          if(segl->actionbits & AC_TOPTEXTURE)
             R_DrawTexture(&toptex);
-         // CALICO_FIXME: DEBUG
-#if 0
          if(segl->actionbits & AC_BOTTOMTEXTURE)
             R_DrawTexture(&bottomtex);
-#endif
       }
 
       //
@@ -251,32 +248,28 @@ static void R_SegLoop(viswall_t *segl)
       {
          top = ceilingclipx + 1;
          bottom = (CENTERY - ((scale * segl->ceilingheight) / (1 << (HEIGHTBITS + SCALEBITS)))) - 1;
+         
          if(bottom >= floorclipx)
             bottom = floorclipx - 1;
+         
          if(top <= bottom)
          {
             // CALICO: draw sky column
-            // CALICO_FIXME: DEBUG
-#if 0
             int colnum = ((viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT) & 0xff;
             pixel_t *data = skytexturep->data + colnum * skytexturep->height;
-            I_DrawColumn(x, top, bottom, 0, 0, FRACUNIT, data);
-#endif
+            I_DrawColumn(x, top, bottom, 0, (top * 18204) << 2,  FRACUNIT + 7281, data);
          }
       }
 
       if(segl->actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
       {
          // rewrite clipbounds
-         // CALICO_FIXME: DEBUG
-#if 0
          if(segl->actionbits & AC_NEWFLOOR)
             floorclipx = low;
          if(segl->actionbits & AC_NEWCEILING)
             ceilingclipx = high;
 
          clipbounds[x] = ((ceilingclipx + 1) << 8) + floorclipx;
-#endif
       }
    }
    while(++x <= segl->stop);
