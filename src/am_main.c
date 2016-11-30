@@ -3,7 +3,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-#define	STEPVALUE   0x800000
+#define STEPVALUE   0x800000
 
 #define CRY_RED     0xd260
 #define CRY_BLUE    0x3080
@@ -19,15 +19,15 @@ int     pause;
 int     scale;
 int     scalex[MAXSCALES] = {18,19,20,21,22};
 int     scaley[MAXSCALES] = {17,18,19,20,21};
-#define NOSELENGTH 0x200000 /* PLAYER'S TRIANGLE */
+#define NOSELENGTH 0x200000 // PLAYER'S TRIANGLE
 #define MOBJLENGTH 0x100000
-		
-fixed_t	oldplayerx;
+
+fixed_t oldplayerx;
 fixed_t oldplayery;
 int     blockx;
 int     blocky;
 
-/* CHEATING STUFF */
+// CHEATING STUFF
 typedef enum
 {
    ch_allmap,
@@ -35,21 +35,21 @@ typedef enum
    ch_maxcheats
 } cheat_e;
 
-char cheatstrings[][11] =	/* order should mirror cheat_e */
+char cheatstrings[][11] = // order should mirror cheat_e
 {
-   "8002545465",		/* allmap cheat */
-   "8005778788"		/* show things cheat */
+   "8002545465", // allmap cheat
+   "8005778788"  // show things cheat
 };
 
 char currentcheat[11] = "0000000000";
-int  showAllThings; /* CHEAT VARS */
+int  showAllThings; // CHEAT VARS
 int  showAllLines;
 
-/*================================================================= */
-/* */
-/* Start up Automap */
-/* */
-/*================================================================= */
+//=================================================================
+//
+// Start up Automap
+//
+//=================================================================
 void AM_Start(void)
 {
    scale = 3;
@@ -57,19 +57,19 @@ void AM_Start(void)
    players[consoleplayer].automapflags &= ~AF_ACTIVE;
 }
 
-/*================================================================= */
-/* */
-/* Check for cheat codes for automap fun stuff! */
-/* */
-/*================================================================= */
+//=================================================================
+//
+// Check for cheat codes for automap fun stuff!
+//
+//=================================================================
 cheat_e AM_CheckCheat(int buttons,int oldbuttons)
 {
-   int	codes[9] = {BT_1,BT_2,BT_3,BT_4,BT_5,BT_6,BT_7,BT_8,BT_9};
-   char	chars[9] = "123456789";
-   char	c;
-   int		i;
-	
-   /* CONVERT BUTTON PRESS TO A CHARACTER */
+   int  codes[9] = { BT_1, BT_2, BT_3, BT_4, BT_5, BT_6 ,BT_7, BT_8, BT_9 };
+   char chars[9] = "123456789";
+   char c;
+   int  i;
+
+   // CONVERT BUTTON PRESS TO A CHARACTER
    c = 'z';
    for(i = 0; i < 9; i++)
    {
@@ -79,17 +79,17 @@ cheat_e AM_CheckCheat(int buttons,int oldbuttons)
          break;
       }
    }
-		
-   if(c == 'z') /* NO 1-9 BUTTON PRESSED */
+
+   if(c == 'z') // NO 1-9 BUTTON PRESSED
       return -1;
 
-   /* SHIFT STRING LEFT A CHARACTER */
+   // SHIFT STRING LEFT A CHARACTER
    for(i = 1; i < 10; i++)
       currentcheat[i-1] = currentcheat[i];
    currentcheat[9] = c;
    currentcheat[10] = 0;
 
-   /* SEE IF STRING MATCHES A CHEATSTRING */
+   // SEE IF STRING MATCHES A CHEATSTRING
    for(i = 0; i < ch_maxcheats; i++)
    {
       if(!D_strncasecmp(currentcheat, cheatstrings[i], 10))
@@ -208,8 +208,8 @@ void AM_Control(player_t *player)
    oldplayerx = player->automapx;
    oldplayery = player->automapy;
 
-   blink = (blink++)&7; /* BLINK PLAYER'S BOX */
-   pause++; /* PAUSE BETWEEN SCALINGS */
+   blink = (blink++)&7; // BLINK PLAYER'S BOX 
+   pause++;             // PAUSE BETWEEN SCALINGS
 
    step = STEPVALUE;
    if(buttons & BT_A)
@@ -227,7 +227,7 @@ void AM_Control(player_t *player)
       break;
    }
 
-   if(buttons & BT_C) /* IF 'C' IS HELD DOWN, MOVE AROUND */
+   if(buttons & BT_C) // IF 'C' IS HELD DOWN, MOVE AROUND
    {
       ticbuttons[playernum] &= ~BT_C;
       oldticbuttons[playernum] &= ~BT_C;
@@ -310,9 +310,6 @@ void AM_Control(player_t *player)
 ==================
 */
 
-extern int      workpage;
-extern pixel_t *screens[2]; /* [SCREENWIDTH*SCREENHEIGHT];  */
-
 void AM_Drawer(void)
 {
    int       i;
@@ -326,7 +323,7 @@ void AM_Drawer(void)
    int       color;
    int       xshift;
    int       yshift;
-   int       drawn; /* HOW MANY LINES DRAWN? */
+   int       drawn; // HOW MANY LINES DRAWN?
 
    // CALICO_FIXME: Jaguar-specific
 #ifdef JAGUAR
@@ -364,16 +361,16 @@ void AM_Drawer(void)
    drawn = 0;
    for(i = 0; i < numlines; i++, line++)
    {
-      if((!(line->flags & ML_MAPPED) || /* IF NOT MAPPED OR DON'T DRAW */
+      if((!(line->flags & ML_MAPPED) || // IF NOT MAPPED OR DON'T DRAW
          line->flags & ML_DONTDRAW) &&
          (!(p->powers[pw_allmap] + showAllLines)))
          continue;
-			
+
       x1 = line->v1->x;
       y1 = line->v1->y;
       x2 = line->v2->x;
       y2 = line->v2->y;
-		
+
       x1 -= ox;
       x2 -= ox;
       y1 -= oy;
@@ -382,45 +379,49 @@ void AM_Drawer(void)
       x2 >>= xshift;
       y1 >>= yshift;
       y2 >>= yshift;
+
       outcode = (y1 > 90) << 1;
-      outcode |= (y1 < -90) ;
+      outcode |= (y1 < -90);
       outcode2 = (y2 > 90) << 1;
-      outcode2 |= (y2 < -90) ;
-      if (outcode & outcode2) continue;
+      outcode2 |= (y2 < -90);
+      if(outcode & outcode2) 
+         continue;
+
       outcode = (x1 > 80) << 1;
-      outcode |= (x1 < -80) ;
+      outcode |= (x1 < -80);
       outcode2 = (x2 > 80) << 1;
-      outcode2 |= (x2 < -80) ;
-      if (outcode & outcode2) continue;
-				
-      /* */
-      /* Figure out color */
-      /* */
+      outcode2 |= (x2 < -80);
+      if(outcode & outcode2)
+         continue;
+
+      //
+      // Figure out color
+      //
       color = CRY_BROWN;
       if((p->powers[pw_allmap] +
-         showAllLines) &&			/* IF COMPMAP && !MAPPED YET */
+         showAllLines) && // IF COMPMAP && !MAPPED YET
          !(line->flags & ML_MAPPED))
          color = CRY_GREY;
-      else if (!(line->flags & ML_TWOSIDED))	/* ONE-SIDED LINE */
+      else if (!(line->flags & ML_TWOSIDED)) // ONE-SIDED LINE
          color = CRY_RED;
-      else if (line->special == 97 ||		/* TELEPORT LINE */
+      else if (line->special == 97 || // TELEPORT LINE
          line->special == 39)
          color = CRY_GREEN;
       else if (line->flags & ML_SECRET)
          color = CRY_RED;
       else if (line->special)
-         color = CRY_BLUE;			/* SPECIAL LINE */
+         color = CRY_BLUE; // SPECIAL LINE
       else if (line->frontsector->floorheight != line->backsector->floorheight)
          color = CRY_YELLOW;
       else if (line->frontsector->ceilingheight != line->backsector->ceilingheight)
-         color = CRY_BROWN;		
-		
-      DrawLine (color, 80+x1,90-y1,80+x2,90-y2);
+         color = CRY_BROWN;
+
+      DrawLine(color, 80 + x1, 90 - y1, 80 + x2, 90 - y2);
       drawn++;
    }
-	
-   /* IF <5 LINES DRAWN, MOVE TO LAST POSITION! */
-   if (drawn < 5)
+
+   // IF <5 LINES DRAWN, MOVE TO LAST POSITION!
+   if(drawn < 5)
    {
       p->automapx = oldplayerx;
       p->automapy = oldplayery;
@@ -441,14 +442,14 @@ void AM_Drawer(void)
       {
          if((i != consoleplayer) && (netgame != gt_coop))
             continue;
-			
+
          pl = &players[i];
          x1 = (pl->mo->x - players[consoleplayer].automapx);
          y1 = (pl->mo->y - players[consoleplayer].automapy);
          angle = pl->mo->angle;
          color = !i ? CRY_GREEN : CRY_YELLOW;
          c = finecosine[angle >> ANGLETOFINESHIFT];
-         s = finesine[angle >> ANGLETOFINESHIFT];		
+         s = finesine[angle >> ANGLETOFINESHIFT];
          nx1 = FixedMul(c,NOSELENGTH) + x1;
          ny1 = FixedMul(s,NOSELENGTH) + y1;
 
@@ -468,22 +469,22 @@ void AM_Drawer(void)
          ny2 >>= yshift;
          nx3 >>= xshift;
          ny3 >>= yshift;
-			
-         DrawLine(color,80+nx1,90-ny1,80+nx2,90-ny2);
-         DrawLine(color,80+nx2,90-ny2,80+nx3,90-ny3);
-         DrawLine(color,80+nx1,90-ny1,80+nx3,90-ny3);
+
+         DrawLine(color, 80 + nx1, 90 - ny1, 80 + nx2, 90 - ny2);
+         DrawLine(color, 80 + nx2, 90 - ny2, 80 + nx3, 90 - ny3);
+         DrawLine(color, 80 + nx1, 90 - ny1, 80 + nx3, 90 - ny3);
       }
    }
-	
-   /* SHOW ALL MAP THINGS (CHEAT) */
-   if (showAllThings)
+
+   // SHOW ALL MAP THINGS (CHEAT)
+   if(showAllThings)
    {
-      fixed_t x1,y1;
-      fixed_t	nx1,ny1;
-      fixed_t	nx2,ny2;
-      fixed_t nx3,ny3;
-      mobj_t	*mo;
-      mobj_t	*next;
+      fixed_t  x1,y1;
+      fixed_t  nx1,ny1;
+      fixed_t  nx2,ny2;
+      fixed_t  nx3,ny3;
+      mobj_t  *mo;
+      mobj_t  *next;
 
       for(mo = mobjhead.next; mo != &mobjhead; mo = next)
       {
@@ -502,9 +503,9 @@ void AM_Drawer(void)
          nx3 = (x1 + MOBJLENGTH) >> xshift;
          ny3 = ny2;
 
-         DrawLine(CRY_AQUA,80+nx1,90-ny1,80+nx2,90-ny2);
-         DrawLine(CRY_AQUA,80+nx2,90-ny2,80+nx3,90-ny3);
-         DrawLine(CRY_AQUA,80+nx1,90-ny1,80+nx3,90-ny3);
+         DrawLine(CRY_AQUA, 80 + nx1, 90 - ny1, 80 + nx2, 90 - ny2);
+         DrawLine(CRY_AQUA, 80 + nx2, 90 - ny2, 80 + nx3, 90 - ny3);
+         DrawLine(CRY_AQUA, 80 + nx1, 90 - ny1, 80 + nx3, 90 - ny3);
       }
    }
 }
