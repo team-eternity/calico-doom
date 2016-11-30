@@ -38,6 +38,7 @@
 #include "../hal/hal_ml.h"
 #include "../hal/hal_platform.h"
 #include "../hal/hal_video.h"
+#include "../elib/configfile.h"
 #include "rb_main.h"
 #include "rb_texture.h"
 #include "valloc.h"
@@ -47,10 +48,7 @@
 //
 bool rb_linear_filtering = false;
 
-// CALICO_TODO: config
-#if 0
 static CfgItem cfgLinearFiltering("linear_filtering", &rb_linear_filtering);
-#endif
 
 //
 // PBOs
