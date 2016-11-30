@@ -160,13 +160,12 @@ static void R_FinishWallPrep(viswall_t *wc)
    sineval = finesine[distangle >> ANGLETOFINESHIFT];
    wc->distance = rw_distance = FixedMul(hyp, sineval);
    
-   scalefrac = scale2 = wc->scalefrac = // FRACUNIT; // CALICO_FIXME: DEBUG
+   scalefrac = scale2 = wc->scalefrac =
       R_ScaleFromGlobalAngle(rw_distance, viewangle + xtoviewangle[wc->start]);
 
    if(wc->stop > wc->start)
    {
       // CALICO_FIXME: DEBUG
-      //scale2 = FRACUNIT;
       scale2 = R_ScaleFromGlobalAngle(rw_distance, viewangle + xtoviewangle[wc->stop]);
 
       wc->scalestep = (int)(scale2 - scalefrac) / (int)(wc->stop - wc->start);

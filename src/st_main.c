@@ -69,7 +69,7 @@ void ST_Init(void)
 
    // CALICO: create a texture resource for the status bar overlay
    if(!sbartop)
-      sbartop = GL_NewTextureResource("sbartop", NULL, 640, 80, RES_FRAMEBUFFER, 0);
+      sbartop = GL_NewTextureResource("sbartop", NULL, 320, 40, RES_FRAMEBUFFER, 0);
 }
 
 //==================================================

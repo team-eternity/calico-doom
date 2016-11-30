@@ -63,8 +63,8 @@ static int screenheight = CALICO_ORIG_SCREENHEIGHT;
 static int fullscreen   = 0;
 static int monitornum   = 0;
 
-static cfgrange_t<int> swRange = { 640, 32768 };
-static cfgrange_t<int> shRange = { 480, 32768 };
+static cfgrange_t<int> swRange = { 320, 32768 };
+static cfgrange_t<int> shRange = { 224, 32768 };
 static cfgrange_t<int> fsRange = { -1,  1     };
 
 static CfgItem cfgScreenWidth ("screenwidth",  &screenwidth,  &swRange);

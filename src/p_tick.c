@@ -468,7 +468,7 @@ void P_Start(void)
    M_ClearRandom();
 
    // CALICO
-   GL_ClearFramebuffer(D_RGBA(0, 0, 0, 0xff));
+   GL_ClearFramebuffer(FB_160, D_RGBA(0, 0, 0, 0xff));
 }
 
 void P_Stop(void)

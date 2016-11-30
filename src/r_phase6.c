@@ -256,9 +256,12 @@ static void R_SegLoop(viswall_t *segl)
          if(top <= bottom)
          {
             // CALICO: draw sky column
+            // CALICO_FIXME: DEBUG
+#if 0
             int colnum = ((viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT) & 0xff;
             pixel_t *data = skytexturep->data + colnum * skytexturep->height;
             I_DrawColumn(x, top, bottom, 0, 0, FRACUNIT, data);
+#endif
          }
       }
 

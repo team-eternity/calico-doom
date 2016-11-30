@@ -165,6 +165,12 @@ public:
 };
 
 //
+// Global framebuffer resources
+//
+static TextureResource *framebuffer160;
+static TextureResource *framebuffer320;
+
+//
 // Abandon old texture IDs and regenerate all textures in the resource hive 
 // if a resolution change occurs.
 //
@@ -280,9 +286,28 @@ unsigned int *GL_GetTextureResourceStore(void *resource)
    return static_cast<TextureResource *>(resource)->getPixels();
 }
 
+//
+// Set the indicated texture resource as needing its GL texture updated.
+//
 void GL_TextureResourceSetUpdated(void *resource)
 {
    static_cast<TextureResource *>(resource)->setUpdated();
+}
+
+//
+// Get a framebuffer as a GL resource
+//
+void *GL_TextureResourceGetFramebuffer(glfbwhich_t which)
+{
+   switch(which)
+   {
+   case FB_160:
+      return framebuffer160;
+   case FB_320:
+      return framebuffer320;
+   default:
+      return nullptr;
+   }
 }
 
 //=============================================================================
@@ -294,8 +319,8 @@ struct drawcommand_t
 {
    BDListItem<drawcommand_t> links; // list links
    TextureResource *res;            // source graphics
-   int x, y;                        // where to put it (in 640x480 coord space)
-   unsigned int w, h;               // size (in 640x480 coord space)
+   int x, y;                        // where to put it (in 320x224 coord space)
+   unsigned int w, h;               // size (in 320x224 coord space)
 };
 
 static BDList<drawcommand_t, &drawcommand_t::links> drawCommands;
@@ -350,16 +375,29 @@ static void GL_executeDrawCommands(void)
 // Software Framebuffers
 //
 
-static TextureResource *framebuffer;
-
 //
 // Create the GL texture handle for the framebuffer texture
 //
 void GL_InitFramebufferTextures(void)
 {
-   framebuffer = static_cast<TextureResource *>(
+   // create 160x180 playfield texture
+   framebuffer160 = static_cast<TextureResource *>(
       GL_NewTextureResource(
          "framebuffer",
+         nullptr,
+         CALICO_ORIG_GAMESCREENWIDTH,
+         CALICO_ORIG_GAMESCREENHEIGHT,
+         RES_FRAMEBUFFER,
+         0
+      )
+   );
+   if(!framebuffer160)
+      hal_platform.fatalError("Could not create 160x180 framebuffer texture");
+
+   // create 320x224 screen texture
+   framebuffer320 = static_cast<TextureResource *>(
+      GL_NewTextureResource(
+         "framebuffer320",
          nullptr,
          CALICO_ORIG_SCREENWIDTH,
          CALICO_ORIG_SCREENHEIGHT,
@@ -367,40 +405,101 @@ void GL_InitFramebufferTextures(void)
          0
       )
    );
-   if(!framebuffer)
-      hal_platform.fatalError("Could not create 640x480 framebuffer texture");
+   if(!framebuffer320)
+      hal_platform.fatalError("Could not create 320x224 framebuffer texture");
 }
 
 //
 // Return the pointer to the local 32-bit framebuffer
 //
-void *GL_GetFramebuffer(void)
+void *GL_GetFramebuffer(glfbwhich_t which)
 {
-   return framebuffer->getPixels();
+   switch(which)
+   {
+   case FB_160:
+      return framebuffer160->getPixels();
+   case FB_320:
+      return framebuffer320->getPixels();
+   }
+
+   return nullptr;
 }
 
-void GL_UpdateFramebuffer(void)
+void GL_UpdateFramebuffer(glfbwhich_t which)
 {
-   if(framebuffer->needsUpdate())
-      framebuffer->update();
+   TextureResource *fb;
+
+   switch(which)
+   {
+   case FB_160:
+      fb = framebuffer160;
+      break;
+   case FB_320:
+      fb = framebuffer320;
+      break;
+   default:
+      return;
+   }
+
+   if(fb->needsUpdate())
+      fb->update();
 }
 
-void GL_ClearFramebuffer(unsigned int clearColor)
+void GL_ClearFramebuffer(glfbwhich_t which, unsigned int clearColor)
 {
-   uint32_t *buffer = framebuffer->getPixels();
-   for(int i = 0; i < CALICO_ORIG_SCREENWIDTH*CALICO_ORIG_SCREENHEIGHT; i++)
+   TextureResource *fb;
+
+   switch(which)
+   {
+   case FB_160:
+      fb = framebuffer160;
+      break;
+   case FB_320:
+      fb = framebuffer320;
+      break;
+   default:
+      return;
+   }
+
+   uint32_t  *buffer = fb->getPixels();
+   rbTexture &tex    = fb->getTexture();
+   for(unsigned int i = 0; i < tex.getWidth() * tex.getHeight(); i++)
       buffer[i] = clearColor;
-   framebuffer->setUpdated();
+   fb->setUpdated();
 }
 
-void GL_FramebufferSetUpdated(void)
+void GL_FramebufferSetUpdated(glfbwhich_t which)
 {
-   framebuffer->setUpdated();
+   switch(which)
+   {
+   case FB_160:
+      framebuffer160->setUpdated();
+      break;
+   case FB_320:
+      framebuffer320->setUpdated();
+      break;
+   default:
+      break;
+   }
 }
 
-void GL_AddFramebuffer(void)
+void GL_AddFramebuffer(glfbwhich_t which)
 {
-   GL_AddDrawCommand(framebuffer, 0, 0, CALICO_ORIG_SCREENWIDTH, CALICO_ORIG_SCREENHEIGHT);
+   TextureResource *fb;
+
+   switch(which)
+   {
+   case FB_160:
+      fb = framebuffer160;
+      GL_AddDrawCommand(fb, 0, 2, CALICO_ORIG_SCREENWIDTH, CALICO_ORIG_GAMESCREENHEIGHT);
+      break;
+   case FB_320:
+      fb = framebuffer320;
+      GL_AddDrawCommand(fb, 0, 0, CALICO_ORIG_SCREENWIDTH, CALICO_ORIG_SCREENHEIGHT);
+      break;
+   default:
+      return;
+   }
 }
 
 //=============================================================================
@@ -410,12 +509,14 @@ void GL_AddFramebuffer(void)
 
 void GL_RenderFrame(void)
 {
+   glClear(GL_COLOR_BUFFER_BIT);
+
    GL_executeDrawCommands();
    GL_clearDrawCommands();
    hal_video.endFrame();
 
    // TEMP/DEBUG
-   GL_ClearFramebuffer(0xff505050);
+   GL_ClearFramebuffer(FB_160, 0xff505050);
 }
 
 // EOF

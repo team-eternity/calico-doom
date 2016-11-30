@@ -27,7 +27,7 @@ typedef enum
 
 jagobj_t *m_doom, *m_skull1, *m_skull2, *m_gamemode, *m_level, *m_difficulty,
          *m_single, *m_coop, *m_deathmatch;
-			
+
 jagobj_t *nums[10];
 jagobj_t *m_skill[5];
 jagobj_t *m_playmode[NUMMODES];
@@ -199,43 +199,44 @@ int M_Ticker(void)
 void M_Drawer (void)
 {
    int leveltens, levelones;
+   int m_doomheight = BIGSHORT(m_doom->height); // CALICO: needs endianness correction
 
    // Draw main menu 
    DrawJagobj(m_doom, 100, 2, NULL);
 
    // erase old skulls
-   EraseBlock(CURSORX, 0, m_skull1->width, 240, NULL);
+   EraseBlock(CURSORX, 0, BIGSHORT(m_skull1->width), 240, NULL);
 
    // draw new skull
    if(cursorframe)
-      DrawJagobj(m_skull2, CURSORX, CURSORY(cursorpos) + m_doom->height, NULL);
+      DrawJagobj(m_skull2, CURSORX, CURSORY(cursorpos) + m_doomheight, NULL);
    else
-      DrawJagobj(m_skull1, CURSORX, CURSORY(cursorpos) + m_doom->height, NULL);
+      DrawJagobj(m_skull1, CURSORX, CURSORY(cursorpos) + m_doomheight, NULL);
 
    // draw menu items
 
    // draw game mode information
-   DrawJagobj(m_gamemode, 74, m_doom->height+2, NULL); 
-   EraseBlock(90,m_doom->height + 22, 320-90, 240 - m_doom->height + 22, NULL);
-   DrawJagobj(m_playmode[currentplaymode], 90, m_doom->height + 22, NULL);
+   DrawJagobj(m_gamemode, 74, BIGSHORT(m_doom->height)+2, NULL);
+   EraseBlock(90, m_doomheight + 22, 320-90, 240 - m_doomheight + 22, NULL);
+   DrawJagobj(m_playmode[currentplaymode], 90, m_doomheight + 22, NULL);
 
    // draw start level information
-   DrawJagobj(m_level, 74 ,CURSORY(1) + m_doom->height+2, NULL); 
+   DrawJagobj(m_level, 74 ,CURSORY(1) + m_doomheight + 2, NULL); 
    leveltens = playermap / 10;
    levelones = playermap % 10;
-   EraseBlock(90, m_doom->height + 61, 320-90, 200 - m_doom->height + 62, NULL);
+   EraseBlock(90, m_doomheight + 61, 320-90, 200 - m_doomheight + 62, NULL);
    if(leveltens)
    {
-      DrawJagobj(nums[leveltens],  90, m_doom->height + 62, NULL);
-      DrawJagobj(nums[levelones], 104, m_doom->height + 62, NULL);
+      DrawJagobj(nums[leveltens],  90, m_doomheight + 62, NULL);
+      DrawJagobj(nums[levelones], 104, m_doomheight + 62, NULL);
    }
    else
-      DrawJagobj(nums[levelones], 90, m_doom->height + 62, NULL);
+      DrawJagobj(nums[levelones], 90, m_doomheight + 62, NULL);
 
    // draw difficulty information
-   DrawJagobj(m_difficulty, CURSORX + 24, CURSORY(2) + m_doom->height + 2, NULL); 
-   EraseBlock(92, m_doom->height + 102, 320-92, 240 - m_doom->height + 102, NULL);
-   DrawJagobj(m_skill[playerskill], 92, m_doom->height + 102, NULL);
+   DrawJagobj(m_difficulty, CURSORX + 24, CURSORY(2) + m_doomheight + 2, NULL); 
+   EraseBlock(92, m_doomheight + 102, 320-92, 240 - m_doomheight + 102, NULL);
+   DrawJagobj(m_skill[playerskill], 92, m_doomheight + 102, NULL);
 
    UpdateBuffer();
 }

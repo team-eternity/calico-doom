@@ -38,21 +38,28 @@ typedef enum glrestype_e
    RES_8BIT_PACKED  // 8-bit packed Jag resource
 } glrestype_t;
 
+typedef enum glfbwhich_e
+{
+   FB_160,
+   FB_320
+} glfbwhich_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 void  GL_InitFramebufferTextures(void);
-void *GL_GetFramebuffer(void);
-void  GL_UpdateFramebuffer(void);
-void  GL_ClearFramebuffer(unsigned int clearColor);
-void  GL_FramebufferSetUpdated(void);
-void  GL_AddFramebuffer(void);
+void *GL_GetFramebuffer(glfbwhich_t which);
+void  GL_UpdateFramebuffer(glfbwhich_t which);
+void  GL_ClearFramebuffer(glfbwhich_t which, unsigned int clearColor);
+void  GL_FramebufferSetUpdated(glfbwhich_t which);
+void  GL_AddFramebuffer(glfbwhich_t which);
 void  GL_RenderFrame(void);
 
 void *GL_NewTextureResource(const char *lumpname, void *data,
                             unsigned int width, unsigned int height,
                             glrestype_t restype, int palshift);
+void *GL_TextureResourceGetFramebuffer(glfbwhich_t which);
 
 void          GL_UpdateTextureResource(void *resource);
 void          GL_TextureResourceSetUpdated(void *resource);

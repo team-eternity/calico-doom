@@ -514,7 +514,7 @@ fixed_t FixedDiv(fixed_t a, fixed_t b)
 //
 //=============================================================================
 
-uint32_t *framebuffer_p;
+uint32_t *framebuffer160_p, *framebuffer320_p;
 
 //
 // CALICO: Get the framebuffer pointers from the low-level graphics code
@@ -522,7 +522,8 @@ uint32_t *framebuffer_p;
 static void I_GetFramebuffer(void)
 {
    GL_InitFramebufferTextures();
-   framebuffer_p = GL_GetFramebuffer();
+   framebuffer160_p = GL_GetFramebuffer(FB_160);
+   framebuffer320_p = GL_GetFramebuffer(FB_320);
 }
 
 // Sign-extender for 24-bit CRY values
@@ -549,14 +550,10 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
       I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
 
-   GL_FramebufferSetUpdated();
-
-   // CALICO: offset vertically for border
-   dc_yl += BASEORGY;
-   dc_yh += BASEORGY;
+   GL_FramebufferSetUpdated(FB_160);
 
    // CALICO: our destination framebuffer is 32-bit
-   dest = framebuffer_p + dc_yl * (SCREENWIDTH << 2) + (dc_x << 2);
+   dest = framebuffer160_p + dc_yl * SCREENWIDTH + dc_x;
 
    do
    {
@@ -570,11 +567,8 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
       cry = (cry & CRY_COLORMASK) | (y & 0xff);
       rgb = CRYToRGB[cry];
 
-      // CALICO: scale up to 640x480 destination buffer
-      *dest = *(dest+1) = *(dest+2) = *(dest+3) = rgb;
-      dest += (SCREENWIDTH << 2);
-      *dest = *(dest+1) = *(dest+2) = *(dest+3) = rgb;
-      dest += (SCREENWIDTH << 2);
+      *dest = rgb;
+      dest += SCREENWIDTH;
       frac += fracstep;
    }
    while(count--);
@@ -596,7 +590,7 @@ void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
    xfrac = ds_xfrac; 
    yfrac = ds_yfrac; 
 
-   dest = (pixel_t *)(framebuffer_p + ds_y*320 + ds_x1*2);
+   dest = (pixel_t *)(framebuffer160_p + ds_y*320 + ds_x1*2);
    count = ds_x2 - ds_x1; 
 
    do 
@@ -893,10 +887,10 @@ void I_Update(void)
    lasttics = ticcount - lastticcount;
    lastticcount = ticcount;
 #else
-   GL_UpdateFramebuffer();
-   GL_AddFramebuffer();
-   GL_AddDrawCommand(sbarrez, 0, BASEORGY + (SCREENHEIGHT * 2) + 2, 640, 80);
-   GL_AddDrawCommand(sbartop, 0, BASEORGY + (SCREENHEIGHT * 2) + 2, 640, 80);
+   GL_UpdateFramebuffer(FB_160);
+   GL_AddFramebuffer(FB_160);
+   GL_AddDrawCommand(sbarrez, 0, 2 + SCREENHEIGHT + 1, 320, 40);
+   GL_AddDrawCommand(sbartop, 0, 2 + SCREENHEIGHT + 1, 320, 40);
    GL_RenderFrame();
 #endif
 }
@@ -935,7 +929,7 @@ void DoubleBufferSetup(void)
    while(!I_RefreshCompleted())
       ;
 
-   GL_ClearFramebuffer(D_RGBA(0, 0, 0, 0));
+   GL_ClearFramebuffer(FB_320, D_RGBA(0, 0, 0, 0));
    // CALICO_FIXME: Jag-specific
 #if 0
    bufferpage  = (byte *)(workingscreen = screens[workpage]);
@@ -947,9 +941,6 @@ void DoubleBufferSetup(void)
 
    cy = 4;
 }
-
-#define JAGOBJ_SCALEFACTOR_X (CALICO_ORIG_SCREENWIDTH  / 320)
-#define JAGOBJ_SCALEFACTOR_Y (CALICO_ORIG_SCREENHEIGHT / 240)
 
 void EraseBlock(int x, int y, int width, int height, void *destResource)
 {
@@ -980,30 +971,23 @@ void EraseBlock(int x, int y, int width, int height, void *destResource)
    }
    else
    {
-      base = framebuffer_p;
-      GL_FramebufferSetUpdated();
+      base = framebuffer320_p;
+      GL_FramebufferSetUpdated(FB_320);
       y += 16;
    }
-
-   // CALICO: scale up for 640x480
-   x *= JAGOBJ_SCALEFACTOR_X;
-   y *= JAGOBJ_SCALEFACTOR_Y;
 
    dest = base + y * CALICO_ORIG_SCREENWIDTH + x;
    for(; height; height--)
    {
-      int r = 0;
-      for(; r < JAGOBJ_SCALEFACTOR_Y; r++)
+      uint32_t *tdst = dest;
+      int i = 0;
+      for(; i < width; i++)
       {
-         uint32_t *tdst = dest + (CALICO_ORIG_SCREENWIDTH * r);
-         int i = 0;
-         for(; i < width; i++)
-         {
-            *tdst = *(tdst + 1) = 0;
-            tdst += JAGOBJ_SCALEFACTOR_X;
-         }
+         *tdst = 0;
+         ++tdst;
       }
-      dest += CALICO_ORIG_SCREENWIDTH * JAGOBJ_SCALEFACTOR_Y;
+
+      dest += CALICO_ORIG_SCREENWIDTH;
    }
 }
 
@@ -1047,34 +1031,27 @@ void DrawJagobj(jagobj_t *jo, int x, int y, void *destResource)
    }
    else
    {
-      base = framebuffer_p;
-      GL_FramebufferSetUpdated();
+      base = framebuffer320_p;
+      GL_FramebufferSetUpdated(FB_320);
       y += 16;
    }
 
    source = jo->data + srcx + srcy*rowsize;
 
-   // CALICO: scale up for 640x480
-   x *= JAGOBJ_SCALEFACTOR_X;
-   y *= JAGOBJ_SCALEFACTOR_Y;
-
    dest = base + y * CALICO_ORIG_SCREENWIDTH + x;
    for(; height; height--)
    {
-      int r = 0;
-      for(; r < JAGOBJ_SCALEFACTOR_Y; r++)
+      uint32_t *tdst = dest;
+      int i = 0;
+      for(; i < width; i++)
       {
-         uint32_t *tdst = dest + (CALICO_ORIG_SCREENWIDTH * r);
-         int i = 0;
-         for(; i < width; i++)
-         {
-            if(source[i])
-               *tdst = *(tdst + 1) = CRYToRGB[palette8[source[i]]];
-            tdst += JAGOBJ_SCALEFACTOR_X;
-         }
+         if(source[i])
+            *tdst = CRYToRGB[palette8[source[i]]];
+         ++tdst;
       }
+
       source += rowsize;
-      dest += CALICO_ORIG_SCREENWIDTH * JAGOBJ_SCALEFACTOR_Y;
+      dest += CALICO_ORIG_SCREENWIDTH;
    }
 }
 
@@ -1135,15 +1112,15 @@ void DrawMTitle(void)
       m_titleres = GL_NewTextureResource("M_TITLE", data, width, height, RES_8BIT_PACKED, shift);
    }
 
-   GL_AddDrawCommand(m_titleres, -32, 0, width*2, height*2);
+   GL_AddDrawCommand(m_titleres, -16, 0, width, CALICO_ORIG_SCREENHEIGHT + 32);
 }
 
 // CALICO_FIXME: Jag-specific
 void DoubleBufferObjList(void)
 {
-   GL_UpdateFramebuffer();
    DrawMTitle();
-   GL_AddFramebuffer();
+   GL_UpdateFramebuffer(FB_320);
+   GL_AddFramebuffer(FB_320);
 #if 0
    int		link;
    int		pwidth;
