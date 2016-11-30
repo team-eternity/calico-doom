@@ -1,5 +1,8 @@
 /* am_main.c -- automap */
 
+#include "gl/gl_render.h"
+#include "rb/rb_common.h"
+#include "jagcry.h"
 #include "doomdef.h"
 #include "p_local.h"
 
@@ -17,8 +20,8 @@ int     blink;
 int     pause;
 #define MAXSCALES 5
 int     scale;
-int     scalex[MAXSCALES] = {18,19,20,21,22};
-int     scaley[MAXSCALES] = {17,18,19,20,21};
+int     scalex[MAXSCALES] = { 18, 19, 20, 21, 22 };
+int     scaley[MAXSCALES] = { 17, 18, 19, 20, 21 };
 #define NOSELENGTH 0x200000 // PLAYER'S TRIANGLE
 #define MOBJLENGTH 0x100000
 
@@ -45,6 +48,8 @@ char currentcheat[11] = "0000000000";
 int  showAllThings; // CHEAT VARS
 int  showAllLines;
 
+static uint32_t *framebuffer; // CALICO: framebuffer pointer
+
 //=================================================================
 //
 // Start up Automap
@@ -55,6 +60,9 @@ void AM_Start(void)
    scale = 3;
    showAllThings = showAllLines = 0;
    players[consoleplayer].automapflags &= ~AF_ACTIVE;
+   
+   // CALICO: get framebuffer pointer
+   framebuffer = GL_GetFramebuffer(FB_160);
 }
 
 //=================================================================
@@ -64,14 +72,15 @@ void AM_Start(void)
 //=================================================================
 cheat_e AM_CheckCheat(int buttons,int oldbuttons)
 {
-   int  codes[9] = { BT_1, BT_2, BT_3, BT_4, BT_5, BT_6 ,BT_7, BT_8, BT_9 };
-   char chars[9] = "123456789";
+   // CALICO: Fixed to actually work (was missing entry for BT_0)
+   int  codes[10] = { BT_0, BT_1, BT_2, BT_3, BT_4, BT_5, BT_6 ,BT_7, BT_8, BT_9 };
+   char chars[10] = "0123456789";
    char c;
    int  i;
 
    // CONVERT BUTTON PRESS TO A CHARACTER
    c = 'z';
-   for(i = 0; i < 9; i++)
+   for(i = 0; i < 10; i++)
    {
       if((buttons & codes[i]) && !(oldbuttons & codes[i]))
       {
@@ -99,80 +108,77 @@ cheat_e AM_CheckCheat(int buttons,int oldbuttons)
    return -1;
 }
 
-// CALICO_FIXME: Jag-specific
+//
+// Draw an automap line
+// CALICO: Rewritten for portability
+//
 void DrawLine(pixel_t color, int x1, int y1, int x2, int y2)
 {
-#ifdef JAGUAR
-	int		dx, dy;
-	int		adx, ady;
-	int		quadcolor;
-	int		xstep, ystep;
-	int		count = 1;
-		
-	*(int *)0xf02200 = (int)workingscreen;	/* a1 base register */
-	*(int *)0xf02204 = (4<<3) /* 16 bit pixels */
-					+ (29<<9) /* 160 width image */
-					+ (3<<16) /* add increment */
-					;							/* a1 flags */
+   int dx, dy;
+   int adx, ady;
+   uint32_t quadcolor;
+   fixed_t xstep, ystep;
+   int count = 1;
+   fixed_t fx, fy;
+   int x, y;
+   uint32_t *a1ptr;
 
-	*(int *)0xf02208 = (180<<16) + 160;		/* a1 clipping size */
-	
-	*(int *)0xf0220c = (y1<<16) + x1;	/* a1 pixel pointer */
-	*(int *)0xf02218 = zero;			/* a1 pixel pointer fraction */
+   quadcolor = CRYToRGB[color];
 
-	quadcolor = (color<<16) + color;
-	*(int *)0xf02240 = quadcolor;
-	*(int *)0xf02244 = quadcolor;	/* source data register */
+   dx  = x2 - x1;
+   adx = dx < 0 ? -dx : dx;
+   dy  = y2 - y1;
+   ady = dy < 0 ? -dy : dy;
 
+   if(!dx)
+   {
+      xstep = 0;
+      ystep = dy > 0 ? FRACUNIT : -FRACUNIT;
+      count = ady; // count
+   }
+   else if(!dy)
+   {
+      ystep = 0;
+      xstep = dx > 0 ? FRACUNIT : -FRACUNIT;
+      count = adx; // count
+   }
+   else if(adx > ady)
+   {
+      if(dx > 0)
+         xstep = FRACUNIT;
+      else
+         xstep = -FRACUNIT;
 
-	dx = x2 - x1;
-	adx = dx<0 ? -dx : dx;
-	dy = y2 - y1;
-	ady = dy<0 ? -dy : dy;
-	
-	if (!dx)
-	{
-		xstep = 0;
-		ystep = dy > 0 ? 0x10000 : -0x10000;
-		count = ady;			/* count */
-	}
-	else if (!dy)
-	{
-		ystep = 0;
-		xstep = dx > 0 ? 0x10000 : -0x10000;
-		count = adx;			/* count */
-	}
-	else if (adx > ady)
-	{
-		if (dx > 0)
-			xstep = 0x10000;
-		else
-			xstep = -0x10000;
-		
-		ystep = (dy<<16)/adx;
-		count = adx;			/* count */
-	}
-	else
-	{
-		if (dy > 0)
-			ystep = 0x10000;
-		else
-			ystep = -0x10000;
-		
-		xstep = (dx<<16)/ady;
-		count = ady;			/* count */
-	}
+      ystep = (dy << FRACBITS) / adx;
+      count = adx; // count 
+   }
+   else
+   {
+      if(dy > 0)
+         ystep = FRACUNIT;
+      else
+         ystep = -FRACUNIT;
 
-	*(int *)0xf0223c = (1<<16) + count;			/* count */
-	
-	*(int *)0xf0221c = (ystep&0xffff0000) + (((unsigned)xstep)>>16); /* a1 icrement */
-	*(int *)0xf02220 = (ystep<<16) + (xstep&0xffff);	 /* a1 icrement frac */
+      xstep = (dx << FRACBITS) / ady;
+      count = ady; // count
+   }
 
-	*(int *)0xf02238 = (1<<6)				/* enable clipping */
-					+ (12<<21);				/* copy source */
-#endif
+   fx = x1 << FRACBITS;
+   fy = y1 << FRACBITS;
+   do
+   {
+      x = fx / FRACUNIT;
+      y = fy / FRACUNIT;
+      if(x >= 0 && x < SCREENWIDTH && y >= 0 && y < SCREENHEIGHT)
+      {
+         a1ptr = framebuffer + y * SCREENWIDTH + x;
+         *a1ptr = quadcolor;
+      }
+      fx += xstep;
+      fy += ystep;
+   }
+   while(count--);
 }
-
 
 /*
 ==================
@@ -325,30 +331,8 @@ void AM_Drawer(void)
    int       yshift;
    int       drawn; // HOW MANY LINES DRAWN?
 
-   // CALICO_FIXME: Jaguar-specific
-#ifdef JAGUAR
-	workingscreen = screens[workpage];
-	
-/*	D_memset (workingscreen, 0, 160*180*2); */
-		
-	*(int *)0xf0220c = zero;		/* a1 pixel pointers */
-
-	*(int *)0xf02200 = (int)workingscreen;	/* a1 base register */
-		
-	*(int *)0xf02204 = (4<<3)		 	/* 16 bit pixels */
-					+ (29<<9)			/* 160 wide */
-					+ (0<<16)			/* add phrase */
-					;					/* a1 flags */
-					
-
-	*(int *)0xf02240 = zero2;
-	*(int *)0xf02244 = ZERO;		/* source data register */
-	
-	*(int *)0xf0223c = 0x10000 + 160*180;	/* count */
-
-	*(int *)0xf02238 = (12<<21);	/* copy source */
-
-#endif
+   // CALICO: Clear playfield framebuffer
+   GL_ClearFramebuffer(FB_160, D_RGBA(0, 0, 0, 0xff));
 
    p = &players[consoleplayer];
    ox = p->automapx;
