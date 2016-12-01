@@ -1,7 +1,9 @@
 /* f_main.c -- finale */
 
 #include "hal/hal_input.h"
+#include "gl/gl_render.h"
 #include "doomdef.h"
+#include "jagcry.h"
 #include "r_local.h"
 
 extern int mystrlen(const char *string);
@@ -20,7 +22,9 @@ void BufferedDrawSprite(int sprite, int frame, int rotation)
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
    patch_t       *patch;
-   byte          *pixels, *src, *dest, pix;
+   patch_t        tpatch;    // CALICO
+   uint32_t      *fb, *dest; // CALICO
+   byte          *pixels, *src, pix;
    int            count;
    int            x, sprleft, sprtop;
    column_t      *column;
@@ -40,48 +44,58 @@ void BufferedDrawSprite(int sprite, int frame, int rotation)
    flip = (boolean)sprframe->flip[rotation];
 
    patch = (patch_t *)W_POINTLUMPNUM(lump);
-   pixels = Z_Malloc(lumpinfo[lump+1].size, PU_STATIC, NULL);
-   W_ReadLump(lump+1,pixels);
+   pixels = Z_Malloc(BIGLONG(lumpinfo[lump+1].size), PU_STATIC, NULL); // CALICO: endianness
+   W_ReadLump(lump + 1, pixels);
 
    S_UpdateSounds();
 
    //
    // coordinates are in a 160*112 screen (doubled pixels)
    //
-   sprtop = 90;
+   sprtop  = 90;
    sprleft = 80;
 
-   sprtop -= patch->topoffset;
-   sprleft -= patch->leftoffset;
+   // CALICO: copy properties out of patch to correct for endianness
+   tpatch.topoffset  = BIGSHORT(patch->topoffset);
+   tpatch.leftoffset = BIGSHORT(patch->leftoffset);
+   tpatch.width      = BIGSHORT(patch->width);
+   tpatch.height     = BIGSHORT(patch->height);
+
+   sprtop  -= tpatch.topoffset;
+   sprleft -= tpatch.leftoffset;
+
+   // CALICO: get framebuffer dest
+   fb = GL_GetFramebuffer(FB_320);
+   GL_FramebufferSetUpdated(FB_320);
 
    //
    // draw it by hand
    //
-   for(x = 0; x < patch->width; x++)
+   for(x = 0; x < tpatch.width; x++)
    {
       if(flip)
-         texturecolumn = patch->width-1-x;
+         texturecolumn = tpatch.width - 1 - x;
       else
          texturecolumn = x;
 
-      column = (column_t *) ((byte *)patch + BIGSHORT(patch->columnofs[texturecolumn]));
+      column = (column_t *)((byte *)patch + BIGSHORT(patch->columnofs[texturecolumn]));
 
       //
       // draw a masked column
       //
-      for(; column->topdelta != 0xff; column++) 
+      for(; column->topdelta != 0xff; column++)
       {
          // calculate unclipped screen coordinates for post
-         // CALICO_FIXME: draw to framebuffer
-         dest = bufferpage + (short)(sprtop+column->topdelta)*(short)640+(sprleft + x)*2;
+         // CALICO: draw to framebuffer
+         dest  = fb + (sprtop + column->topdelta) * 640 + (sprleft + x) * 2;
          count = column->length;
-         src = pixels + column->dataofs;
+         src   = pixels + BIGSHORT(column->dataofs); // CALICO: endianness
          while(count--)
          {
             pix = *src++;
-            if (!pix)
+            if(!pix)
                pix = 8;
-            dest[0] = dest[1] = dest[320] = dest[321] = pix;
+            dest[0] = dest[1] = dest[320] = dest[321] = CRYToRGB[palette8[pix]];
             dest += 640;
          }
       }
@@ -127,7 +141,7 @@ typedef enum
    fin_charcast
 } final_e;
 
-final_e	status;
+final_e status;
 #define TEXTTIME 4
 #define STARTX   8
 #define STARTY   8
@@ -209,11 +223,11 @@ void F_PrintString(const char *string)
       if(val < NUMENDOBJ)
       {
          DrawJagobj(endobj[val], text_x, text_y, NULL);
-         text_x += endobj[val]->width;
+         text_x += BIGSHORT(endobj[val]->width);
          if(text_x > 316)
          {
             text_x = STARTX;
-            text_y += endobj[val]->height + 4;
+            text_y += BIGSHORT(endobj[val]->height) + 4;
          }
       }
       index++;
@@ -329,7 +343,7 @@ int F_Ticker(void)
       return 0;
    }
 
-   if (!castdeath)
+   if(!castdeath)
    {
       if(((buttons & BT_A) && !(oldbuttons & BT_A)) || 
          ((buttons & BT_B) && !(oldbuttons & BT_B)) || 
