@@ -1,5 +1,6 @@
 /* o_main.c -- options menu */
 
+#include "hal/hal_input.h"
 #include "doomdef.h"
 #include "p_local.h"
 #include "st_main.h"
@@ -9,14 +10,14 @@
 #define SLIDEWIDTH 90
 
 extern int cx, cy;
-extern int sfxvolume;   /* range from 0 to 255 */
-extern int controltype; /* 0 to 5 */
+extern int sfxvolume;   // range from 0 to 255
+extern int controltype; // 0 to 5
 
 extern void print(int x, int y, char *string);
 extern void IN_DrawValue(int x, int y, int value);
 
-/* action buttons can be set to BT_A, BT_B, or BT_C */
-/* strafe and use should be set to the same thing */
+// action buttons can be set to BT_A, BT_B, or BT_C
+// strafe and use should be set to the same thing
 
 extern unsigned int BT_ATTACK;
 extern unsigned int BT_USE;
@@ -69,31 +70,31 @@ jagobj_t *uchar[52];
 jagobj_t *o_cursor1, *o_cursor2;
 jagobj_t *o_slider, *o_slidertrack;
 
-char buttona[NUMCONTROLOPTIONS][8] = {"Speed","Speed","Fire","Fire","Use","Use"};
-char buttonb[NUMCONTROLOPTIONS][8] = {"Fire","Use ","Speed","Use","Speed","Fire"};
-char buttonc[NUMCONTROLOPTIONS][8] = {"Use","Fire","Use","Speed","Fire","Speed"};
+char buttona[NUMCONTROLOPTIONS][8] = { "Speed", "Speed", "Fire",  "Fire",  "Use",   "Use"   };
+char buttonb[NUMCONTROLOPTIONS][8] = { "Fire",  "Use",   "Speed", "Use",   "Speed", "Fire"  };
+char buttonc[NUMCONTROLOPTIONS][8] = { "Use",   "Fire",  "Use",   "Speed", "Fire",  "Speed" };
 
 unsigned int configuration[NUMCONTROLOPTIONS][3] =
 {
-   {BT_A, BT_B, BT_C},
-   {BT_A, BT_C, BT_B},
-   {BT_B, BT_A, BT_C},
-   {BT_C, BT_A, BT_B},
-   {BT_B, BT_C, BT_A},
-   {BT_C, BT_B, BT_A} 
+   { BT_A, BT_B, BT_C },
+   { BT_A, BT_C, BT_B },
+   { BT_B, BT_A, BT_C },
+   { BT_C, BT_A, BT_B },
+   { BT_B, BT_C, BT_A },
+   { BT_C, BT_B, BT_A } 
 };
 
 void O_SetButtonsFromControltype(void)
 {
    BT_SPEED  = configuration[controltype][0];
    BT_ATTACK = configuration[controltype][1];
-   BT_USE    = configuration[controltype][2];	
-   BT_STRAFE = configuration[controltype][2];	
+   BT_USE    = configuration[controltype][2];
+   BT_STRAFE = configuration[controltype][2];
 }
 
-/* */
-/* Draw control value */
-/* */
+//
+// Draw control value
+//
 void O_DrawControl(void)
 {
    EraseBlock(menuitem[controls].x + 40, menuitem[controls].y + 20, 90, 80, NULL);
@@ -114,28 +115,28 @@ void O_DrawControl(void)
 
 void O_Init(void)
 {
-   int 	i, l;
+   int i, l;
 
-   /* the eeprom has set controltype, so set buttons from that */
+   // the eeprom has set controltype, so set buttons from that
    O_SetButtonsFromControltype();
 
-   /* cache all needed graphics */
-   o_cursor1 = W_CacheLumpName("M_SKULL1",PU_STATIC);
-   o_cursor2 = W_CacheLumpName("M_SKULL2",PU_STATIC);
-   o_slider  = W_CacheLumpName("O_SLIDER", PU_STATIC);
+   // cache all needed graphics
+   o_cursor1     = W_CacheLumpName("M_SKULL1", PU_STATIC);
+   o_cursor2     = W_CacheLumpName("M_SKULL2", PU_STATIC);
+   o_slider      = W_CacheLumpName("O_SLIDER", PU_STATIC);
    o_slidertrack = W_CacheLumpName("O_STRACK", PU_STATIC);
 
    l = W_GetNumForName("CHAR_065");
    for(i = 0; i < 52; i++)
       uchar[i] = W_CacheLumpNum(l+i, PU_STATIC);
 
-   /* initialize variables */
+   // initialize variables
 
    cursorcount = 0;
    cursorframe = 0;
-   cursorpos = 0;	
+   cursorpos   = 0;
 
-   D_strncpy(menuitem[0].name, "  Volume", 8); /* Fixed CEF */
+   D_strncpy(menuitem[0].name, "  Volume", 8); // Fixed CEF
    menuitem[0].x = 95;
    menuitem[0].y = 50;
    menuitem[0].hasslider = true;
@@ -143,7 +144,7 @@ void O_Init(void)
    slider[0].maxval = 16;
    slider[0].curval = 16*sfxvolume/255;
 
-   D_strncpy(menuitem[1].name, "Controls", 8); /* Fixed CEF */
+   D_strncpy(menuitem[1].name, "Controls", 8); // Fixed CEF
    menuitem[1].x = 95;
    menuitem[1].y = 110;
    menuitem[1].hasslider = false;
@@ -170,29 +171,35 @@ void O_Control(player_t *player)
       cursorpos = 0;
       player->automapflags ^= AF_OPTIONSACTIVE;
       if(player->automapflags & AF_OPTIONSACTIVE)
+      {
+         hal_appstate.setGrabState(HAL_FALSE); // CALICO: don't grab input
          DoubleBufferSetup();
+      }
       else
-         WriteEEProm(); /* save new settings */
+      {
+         hal_appstate.setGrabState(HAL_TRUE); // CALICO: grab input
+         WriteEEProm(); // save new settings
+      }
    }
    if(!(player->automapflags & AF_OPTIONSACTIVE))
       return;
 
-   /* clear buttons so game player isn't moving aroung */
-   ticbuttons[playernum] &= BT_OPTION;	/* leave option status alone */
+   // clear buttons so game player isn't moving aroung
+   ticbuttons[playernum] &= BT_OPTION; // leave option status alone
 
    if (playernum != consoleplayer)
       return;
 
-   /* animate skull */
+   // animate skull
    if(++cursorcount == 4)
    {
       cursorframe ^= 1;
       cursorcount = 0;
    }
 
-   /* check for movement */
+   // check for movement
    if(!(buttons & (JP_UP|JP_DOWN|JP_LEFT|JP_RIGHT)))
-      movecount = 0; /* move immediately on next press */
+      movecount = 0; // move immediately on next press
    else
    {
       if(buttons & JP_RIGHT)
@@ -205,7 +212,7 @@ void O_Control(player_t *player)
             if(cursorpos == 0)
             {
                sfxvolume = 255*slider[0].curval / slider[0].maxval;
-               S_StartSound (NULL, sfx_pistol);
+               S_StartSound(NULL, sfx_pistol);
             }
          }
       }
@@ -219,13 +226,13 @@ void O_Control(player_t *player)
             if(cursorpos == 0)
             {
                sfxvolume = 255*slider[0].curval / slider[0].maxval;
-               S_StartSound (NULL, sfx_pistol);
+               S_StartSound(NULL, sfx_pistol);
             }
          }
       }
 
       if(movecount == MOVEWAIT)
-         movecount = 0; /* repeat move */
+         movecount = 0; // repeat move
       if(++movecount == 1)
       {
          if(buttons & JP_DOWN)
@@ -248,7 +255,7 @@ void O_Control(player_t *player)
                controltype++;
                if(controltype == NUMCONTROLOPTIONS)
                   controltype = (NUMCONTROLOPTIONS - 1); 
-            }			
+            }
          }
          if(buttons & JP_LEFT)
          {

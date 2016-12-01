@@ -4,19 +4,19 @@
 #include "doomdef.h"
 #include "st_main.h"
 
-#define	KVALX 172
-#define	KVALY 80
-#define	IVALX 172
-#define	IVALY 110	
-#define	SVALX 172
-#define	SVALY 140
-#define	FVALX 230
-#define	FVALY 74
+#define KVALX 172
+#define KVALY 80
+#define IVALX 172
+#define IVALY 110
+#define SVALX 172
+#define SVALY 140
+#define FVALX 230
+#define FVALY 74
 
-#define	PLAYERONEFACEX 137
-#define	PLAYERONEFACEY 30
-#define	PLAYERTWOFACEX 217
-#define	PLAYERTWOFACEY 30
+#define PLAYERONEFACEX 137
+#define PLAYERONEFACEY 30
+#define PLAYERTWOFACEX 217
+#define PLAYERTWOFACEY 30
 
 extern int nextmap;
 
@@ -89,31 +89,32 @@ jagobj_t *snums[10];
 jagobj_t *infaces[10];
 jagobj_t *uchar[52];
 
-/* */
-/* Lame-o print routine */
-/* */
+//
+// Lame-o print routine
+//
 void print(int x, int y, char *string)
 {
-   int i,c;
+   int i, c;
+   int len = mystrlen(string);
 
-   for(i = 0; i < mystrlen(string); i++)
+   for(i = 0; i < len; i++)
    {
       c = string[i];
 
       if(c >= 'A' && c <= 'Z')
       {
          DrawJagobj(uchar[c-'A'], x, y, NULL);
-         x += uchar[c-'A']->width;
+         x += BIGSHORT(uchar[c-'A']->width); // CALICO: endianness
       }
       else if(c >= 'a' && c <= 'z')
       {
-         DrawJagobj(uchar[c-'a' + 26], x, y+4, NULL);
-         x += uchar[c-'a' + 26]->width;
+         DrawJagobj(uchar[c-'a' + 26], x, y + 4, NULL);
+         x += BIGSHORT(uchar[c-'a' + 26]->width);
       }
       else if(c >= '0' && c <= '9')
       {
          DrawJagobj(snums[c-48], x, y, NULL);
-         x += snums[c-48]->width + 1;
+         x += BIGSHORT(snums[c-48]->width) + 1;
       }
       else
       {
@@ -123,30 +124,30 @@ void print(int x, int y, char *string)
    }
 }
 
-/* */
-/* Draws 'value' at x, y  */
-/* */
-void IN_DrawValue(int x,int y,int value)
+//
+// Draws 'value' at x, y
+//
+void IN_DrawValue(int x, int y, int value)
 {
-   char	v[4];
-   int j;
-   int index;
+   char v[4];
+   int  j;
+   int  index;
 
    valtostr(v,value);
    j = mystrlen(v) - 1;
    while(j >= 0)
    {
       index = (v[j--] - '0');
-      x -= snums[index]->width+2;
+      x -= BIGSHORT(snums[index]->width) + 2; // CALICO: endianness
       DrawJagobj(snums[index], x, y, NULL);
    }
 }
 
-/* */
-/* Network intermission */
-/* */
+//
+// Network intermission
+//
 void IN_NetgameDrawer(void)
-{	
+{
    int i;
 
    if(earlyexit == true)
@@ -178,8 +179,8 @@ void IN_NetgameDrawer(void)
          DrawJagobj(i_items,  51, 110, NULL);
          DrawJagobj(i_secret, 13, 140, NULL);
       }
-   }			
-	
+   }
+
    if(netgame == gt_deathmatch)
    {
       EraseBlock(30 + (mystrlen("Your Frags") * 15), FVALY,  80, 80, NULL);
@@ -204,17 +205,17 @@ void IN_NetgameDrawer(void)
    }
 }
 
-/* */
-/* Single intermision */
-/* */
+//
+// Single intermision
+//
 void IN_SingleDrawer(void)
 {
    int length;
 
    if(earlyexit == true)
    {
-      killvalue[0] = pstats[0].killpercent;
-      itemvalue[0] = pstats[0].itempercent;
+      killvalue[0]   = pstats[0].killpercent;
+      itemvalue[0]   = pstats[0].itempercent;
       secretvalue[0] = pstats[0].secretpercent;
    }
 
@@ -230,16 +231,16 @@ void IN_SingleDrawer(void)
       if(nextmap != 23)
       {
          length = mystrlen("Entering");
-         print( (320 - (length * 14)) >> 1, 162, "Entering");	
+         print((320 - (length * 14)) >> 1, 162, "Entering");
          length = mystrlen(mapnames[nextmap - 1]);
-         print( (320 - (length*14)) >> 1, 182, mapnames[nextmap - 1]);
+         print((320 - (length*14)) >> 1, 182, mapnames[nextmap - 1]);
       }
 
       DrawJagobj(i_kills,  71,  70, NULL);
       DrawJagobj(i_items,  65, 100, NULL);
       DrawJagobj(i_secret, 27, 130, NULL);
    }
-	
+
    IN_DrawValue(KVALX + 60, KVALY - 10, killvalue[0]);
    DrawJagobj  (i_percent,  KVALX + 60, KVALY - 10, NULL);
    IN_DrawValue(IVALX + 60, IVALY - 10, itemvalue[0]);
@@ -249,7 +250,7 @@ void IN_SingleDrawer(void)
 }
 
 void IN_Start(void)
-{	
+{
    int i, l;
 
    hal_appstate.setGrabState(HAL_FALSE); // CALICO: don't grab input
@@ -279,9 +280,9 @@ void IN_Start(void)
 
       if(netgame)
          pstats[i].fragcount = players[i].frags;
-   }	
+   }
 
-   /* cache all needed graphics */
+   // cache all needed graphics
    backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 
    i_secret   = W_CacheLumpName("I_SECRET", PU_STATIC);
@@ -304,19 +305,19 @@ void IN_Start(void)
 
    l = W_GetNumForName("NUM_0");
    for(i = 0; i < 10; i++)
-      snums[i] = W_CacheLumpNum(l+i, PU_STATIC);
+      snums[i] = W_CacheLumpNum(l + i, PU_STATIC);
 
-   l = W_GetNumForName ("CHAR_065");
+   l = W_GetNumForName("CHAR_065");
    for(i = 0; i < 52; i++)
-      uchar[i] = W_CacheLumpNum(l+i, PU_STATIC);
+      uchar[i] = W_CacheLumpNum(l + i, PU_STATIC);
 
    DoubleBufferSetup();
 
-   S_StartSong((gamemap%10)+1, 1);
+   S_StartSong((gamemap % 10) + 1, 1);
 }
 
 void IN_Stop(void)
-{	
+{
    statsdrawn = false;
    valsdrawn = false;
 
@@ -326,32 +327,32 @@ void IN_Stop(void)
 int IN_Ticker(void)
 {
    int buttons;
-   int oldbuttons;		
+   int oldbuttons;
    int i;
 
    if(ticon < 5)
-      return 0; /* don't exit immediately */
+      return 0; // don't exit immediately
 
    for(i = 0; i <= (netgame > gt_single); i++)
    {
       buttons = ticbuttons[i];
       oldbuttons = oldticbuttons[i];
 
-      /* exit menu if button press */
+      // exit menu if button press
       if((buttons & JP_A) && !(oldbuttons & JP_A))
       {
          earlyexit = true;
-         return 1; /* done with intermission */
+         return 1; // done with intermission
       }
       if((buttons & JP_B) && !(oldbuttons & JP_B))
       {
          earlyexit = true;
-         return 1; /* done with intermission */
+         return 1; // done with intermission
       }
       if((buttons & JP_C) && !(oldbuttons & JP_C))
       {
          earlyexit = true;
-         return 1; /* done with intermission */
+         return 1; // done with intermission
       }
    }
 
@@ -360,22 +361,22 @@ int IN_Ticker(void)
       if(valsdrawn == true)
       {
          if(killvalue[i] < pstats[i].killpercent)
-            killvalue[i]+=2;
+            killvalue[i] += 2;
          if(killvalue[i] > pstats[i].killpercent)
             killvalue[i] = pstats[i].killpercent;
 
          if(itemvalue[i] < pstats[i].itempercent)
-            itemvalue[i]+=2;
+            itemvalue[i] += 2;
          if(itemvalue[i] > pstats[i].itempercent)
             itemvalue[i] = pstats[i].itempercent;
 
          if(secretvalue[i] < pstats[i].secretpercent)
-            secretvalue[i]+=2;
+            secretvalue[i] += 2;
          if(secretvalue[i] > pstats[i].secretpercent)
             secretvalue[i] = pstats[i].secretpercent;
 
          if(fragvalue[i] < pstats[i].fragcount)
-            fragvalue[i]+=2;
+            fragvalue[i] += 2;
          if(fragvalue[i] > pstats[i].fragcount)
             fragvalue[i] = pstats[i].fragcount;
       }
@@ -385,9 +386,9 @@ int IN_Ticker(void)
 }
 
 void IN_Drawer(void)
-{	
+{
    if(netgame != gt_single)
-      IN_NetgameDrawer();	
+      IN_NetgameDrawer();
    else
       IN_SingleDrawer();
 

@@ -29,8 +29,6 @@
 #ifndef GL_RENDER_H__
 #define GL_RENDER_H__
 
-#define NUMFRAMEBUFFERS 2
-
 typedef enum glrestype_e
 {
    RES_FRAMEBUFFER, // a raw framebuffer of specified dimensions
@@ -64,6 +62,7 @@ void *GL_TextureResourceGetFramebuffer(glfbwhich_t which);
 void          GL_UpdateTextureResource(void *resource);
 void          GL_TextureResourceSetUpdated(void *resource);
 unsigned int *GL_GetTextureResourceStore(void *resource);
+void          GL_ClearTextureResource(void *resource, unsigned int clearColor);
 void          GL_AddDrawCommand(void *res, int x, int y, unsigned int w, unsigned int h);
 
 #ifdef __cplusplus

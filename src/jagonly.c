@@ -38,7 +38,7 @@ pixel_t *workingscreen; will point to the undisplayed screens[workpage]
 
 */
 
-boolean debugscreenstate = false;
+static boolean debugscreenstate = false;
 
 boolean debugscreenactive;
 
@@ -46,7 +46,8 @@ pixel_t        *screens[2];     // [SCREENWIDTH*SCREENHEIGHT];
 unsigned short *palette8;       // [256] for translating 8 bit source to 16 bit
 int            *screenshade;    // pixels for screen shifting
 
-byte *debugscreen;
+void *debugscreenrez; // CALICO
+uint32_t *debugscreen;
 extern jagobj_t *sbar;
 extern void     *sbartop;
 
@@ -55,28 +56,11 @@ static void *sbarrez;
 int workpage; // which frame is not being displayed
 int worklist; // which listbuffer is not being used
 
-int isrvmode = 0xC1 + (7<<9); // vmode value set by ISR each screen
-
-// CALICO_FIXME: Jag-specific
-#if 0
-extern int listbuffer[256];
-extern int listbuffer1[256];
-extern int listbuffer2[256];
-extern int stopobj[2];
-
-int *listbuffers[2] = {listbuffer1,listbuffer2};
-
-int *displaylist_p;         /* list currently being displayed */
-int *readylist_p = stopobj; /* list to display next frame */
-int *worklist_p, *work_p;   /* list currently being built */
-#endif
-
 int joypad[32]; 
 
 int joystick1; 
 //int ticcount; 
  
-
 int junk; 
 int spincount;  
 
@@ -98,22 +82,12 @@ static void I_GetFramebuffer(void);
 ================ 
 */ 
 
-#if 0
-extern int gpubase, gpubase_init;
-extern int dspbase, dspbase_init;
-extern int enddata;
-
-extern short video_height;
-extern short a_vdb, a_vde, a_hdb, a_hde;
-#endif
-
+//
+// Main routine.
 // CALICO_FIXME: Jag-specific bits need emulation or replacement
+//
 void Jag68k_main(int argc, const char *const *argv)
 {
-#if 0
-   int i;
-#endif
-
    // CALICO: initialize global command line state
    myargc = argc;
    myargv = argv;
@@ -139,15 +113,15 @@ void Jag68k_main(int argc, const char *const *argv)
    // CALICO: initialize input
    hal_input.initInput();
 
+   if(M_FindArgument("-devparm")) // CALICO: turn on debugging features
+      debugscreenstate = true;
+
    debugscreenactive = debugscreenstate;
+   debugscreenrez = GL_NewTextureResource("debugscreen", NULL, 256, 224, RES_FRAMEBUFFER, 0);
+   debugscreen    = GL_GetTextureResourceStore(debugscreenrez);
 
    // CALICO_FIXME: Jag-specific
 #if 0
-   // clear screen
-   readylist_p = stopobj;
-   *(int *)0xf1a114 = ZERO; /* make sure it's stopped  */
-   *(int *)0xf02114 = ZERO; /* make sure it's stopped  */
-
    /* clear bss and screens */
    D_memset(&enddata, 0, 0x1fc000 - (int)&enddata);
 
@@ -164,51 +138,11 @@ void Jag68k_main(int argc, const char *const *argv)
 
    // CALICO_FIXME: Jag-specific
 #if 0
-   // copy dsp programs
-   *(int *)0xf1a10c = 0x00050005;       /* operate in correct endian mode  */
-   *(int *)0xf1a114 = ZERO;             /* make sure it's stopped  */
-   *(int *)0xf1a100 =  (31<<9)+(1<<17); /* clear interrupt latches  */
-   for(i = 0; i < 128; i++) 
-      ((int *)0xf1b000)[i] = ((int *)&dspbase)[i]; 
-   for( ; i< 2048; i++) 
-      ((int *)0xf1b000)[i] = ZERO; 
-   *(int *)0xf1a110 = (int)&dspbase_init; /* set it up at init code  */
-   *(int *)0xf1a114 = 1; /* start it  */
-
-   // init NTSC/PAL stuff
-   if(video_height >= 256) 
-   {
-      BASEORGY = 48; // PAL
-   }
-   else
-   {
-      BASEORGY = 24; // NTSC
-   }
-
-   branch1 = 0x8003 + (a_vde<<3);
-   branch2 = 0x4003 + (a_vdb<<3);
-
    // init sound hardware
    *(int *)0xf14000 = 0x100; /* JOYSTICK (unmute sound) */
 
    *(int *)0xf1a150 = 19;   /* SCLK (SSI Clock frequency) */
    *(int *)0xf1a154 = 0x15; /* SMODE (SSI Control) */
-
-   // copy gpu programs
-   *(int *)0xf02114 = ZERO;    /* make sure it's stopped  */
-   *(int *)0xf02100 = (31<<9); /* clear interrupt latches  */
-   *(int *)0xf0211c = ZERO;    /* clear divide control   */
-   for(i = 0; i < 64; i++) 
-      ((int *)0xf03000)[i] = ((int *)&gpubase)[i]; 
-   for( ; i < 1024; i++) 
-      ((int *)0xf03000)[i] = 0; 
-   *(int *)0xf02110 = (int)&gpubase_init; /* set it up at init code  */
-   *(int *)0xf02114 = 1;                  /* start it  */
-
-   // set a two color palette
-   ((pixel_t *)0xf00400)[0] = ZERO;
-   for(i = 1; i < 256; i++)
-      ((pixel_t *)0xf00400)[i] = (pixel_t)0xffff;
 #endif
 
    I_Update();
@@ -278,42 +212,55 @@ byte font8[] =
    118,220,0,0,0,0,0,0,252,252,252,252,252,252,252,0
 };
 
+//
+// Print a debug message.
+// CALICO: Rewritten to expand 1-bit graphics
+//
 void I_Print8(int x, int y, char *string)
 {
+   int c;
+   byte *source;
+   uint32_t *dest;
+
    // CALICO: also output as a debug message
    hal_platform.debugMsg(string);
-
-   // CALICO_FIXME / CALICO_TODO: Jag-specific
-#if 0
-   int c;
-   byte *source,*dest;
-
-   dest = debugscreen + (y<<8) + x;
-
+   
+   GL_TextureResourceSetUpdated(debugscreenrez);
    if(y > 224/8)
       return;
 
-   while((c=*string++) && x<32)
+   dest = debugscreen + (y << 8) + x;
+
+   while((c = *string++) && x < 32)
    {
-      if(c < 32 || c>= 128)
+      int i, b;
+      uint32_t *d;
+
+      if(c < 32 || c >= 128)
          continue;
-      source = font8 + ((c-32)<<3);
 
-      dest[0]    = *source++;
-      dest[32]   = *source++;
-      dest[32*2] = *source++;
-      dest[32*3] = *source++;
-      dest[32*4] = *source++;
-      dest[32*5] = *source++;
-      dest[32*6] = *source;
+      source = font8 + ((c - 32) << 3);
 
-      dest++;
-      x++;
+      d = dest;
+      for(i = 0; i < 7; i++)
+      {
+         byte s = *source++;
+         for(b = 0; b < 8; b++)
+         {
+            if(s & (1 << (7 - b)))
+               *(d + b) = D_RGBA(0xff, 0xff, 0xff, 0xff);
+            else
+               *(d + b) = D_RGBA(0, 0, 0, 0);
+         }
+         d += 256;
+      }
+
+      dest += 8;
+      ++x;
    }
-#endif
 }
 
-char errormessage[80];
+static char errormessage[80];
 
 void I_Error(const char *error, ...) 
 {
@@ -331,7 +278,7 @@ void I_Error(const char *error, ...)
       // CALICO: run event loop
       hal_input.getEvents();
 
-      // CALICO_TODO: keep screen refreshing also
+      // CALICO_TODO: keep screen refreshing also?
    }
 } 
 
@@ -351,6 +298,9 @@ void I_Init(void)
    }
 } 
 
+//
+// Draw the status bar background into its backing buffer.
+//
 void I_DrawSbar(void)
 {
    unsigned int width, height;
@@ -514,7 +464,7 @@ fixed_t FixedDiv(fixed_t a, fixed_t b)
 //
 //=============================================================================
 
-uint32_t *framebuffer160_p, *framebuffer320_p;
+static uint32_t *framebuffer160_p, *framebuffer320_p;
 
 //
 // CALICO: Get the framebuffer pointers from the low-level graphics code
@@ -530,7 +480,8 @@ static void I_GetFramebuffer(void)
 struct extender_s { signed int ext:24; } s;
 
 // 
-// Source is the top of the column to scale 
+// Draw a vertical column of pixels from a projected wall texture.
+// Source is the top of the column to scale.
 // 
 void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, 
                   fixed_t fracstep, inpixel_t *dc_source) 
@@ -632,68 +583,6 @@ void I_Update(void)
    int delta;
 
    /* */
-   /* set up new list */
-   /* */
-   workingscreen = screens[workpage];
-   worklist_p = listbuffers[worklist];
-   workpage ^= 1;
-   worklist ^= 1;
-
-   /* make working visible now */
-   delta = (byte *)worklist_p - (byte *)listbuffer;
-	
-   /* */
-   /* stupid branch objects */
-   /* */
-   link = (int)stopobj>>3;
-   worklist_p[0] = link>>8;
-   worklist_p[1] = (link<<24) + 0x00008fdb;	/* first branch object */
-
-   worklist_p[2] = link>>8;
-   worklist_p[3] = (link<<24) + 0x000040cb;	/* second branch object */
-
-   /* */
-   /* branch < gpuline */
-   /* */
-   link = (int)( (byte *)&worklist_p[12] - delta)>>3;
-   worklist_p[4] = (link>>8); /* link */
-		
-   worklist_p[5] =
-      (link<<24)							/* link */
-      + (1<<14)							/* branch ypos > VC */
-      + (224<<14)							/* height */
-      + (GPULINE<<4)						/* ypos */
-      + 3;								/* branch type */
-
-   /* */
-   /* branch > gpuline */
-   /* */
-   worklist_p[6] = 
-      (link>>8);							/* link */
-
-   worklist_p[7] =
-      (link<<24)							/* link */
-      + (2<<14)							/* branch ypos < VC */
-      + (224<<14)							/* height */
-      + (GPULINE<<4)						/* ypos */
-      + 3;								/* branch type */
-
-   /* */
-   /* gpu object */
-   /* */
-   worklist_p[8] = 0;		
-   worklist_p[9] =
-      ((GPULINE)<<4)						/* ypos */
-      + 2;								/* gpu type */
-
-   /* */
-   /* nop branch */
-   /* */
-   link = (int)stopobj>>3;
-   worklist_p[10] =	link>>8;
-   worklist_p[11] =	(link<<24) + 0x00008fdb;	/* first branch object */
-
-   /* */
    /* background object */
    /* */
 
@@ -746,7 +635,7 @@ void I_Update(void)
       + (180<<14)							/* height */
       + ((BASEORGY)<<4)					/* ypos */
       + 0;								/* bitmap type */
-		
+
    worklist_p[18] =
       (0<<(49-32))						/* firstpix */
       + (0<<(48-32))						/* release */
@@ -763,107 +652,8 @@ void I_Update(void)
       + (4<<12)							/* depth */
       + BASEORGX;							/* xpos */
 
-   /* */
-   /* status bar background */
-   /* */
-   link = (int)( (byte *)&worklist_p[24] - delta)>>3;
-   pwidth = 320/8;
-
-   worklist_p[20] = 
-      ((int)sbar->data<<8)				/* data pointer */
-      + (link>>8);						/* link */
-
-   worklist_p[21] =
-      (link<<24)							/* link */
-      + (sbar->height<<14)				/* height */
-      + ((BASEORGY+SCREENHEIGHT+1)<<4)	/* ypos */
-      + 0;								/* bitmap type */
-
-   worklist_p[22] =
-      (0<<(49-32))						/* firstpix */
-      + (0<<(48-32))						/* release */
-      + (0<<(47-32))						/* transparent */
-      + (0<<(46-32))						/* add to buffer */
-      + (0<<(45-32))						/* reflect */
-      + (0<<(38-32))						/* color index */
-      + ((pwidth)>>4);					/* iwidth */
-
-   worklist_p[23] =
-      ((pwidth)<<28)						/* iwidth */
-      + ((pwidth)<<18)					/* dwidth */
-      + (1<<15)							/* pitch */
-      + (3<<12)							/* depth */
-      + BASEORGX*2;						/* xpos */
-
-   /* */
-   /* status bar foreground */
-   /* */
-
-   /* skip debug screen if not active */
-   if (debugscreenactive)
-      link = (int)( (byte *)&worklist_p[28] - delta)>>3;
-   else
-      link = (int)stopobj>>3;
-
-   worklist_p[24] = 
-      ((int)sbartop<<8)					/* data pointer */
-      + (link>>8);						/* link */
-
-   worklist_p[25] =
-      (link<<24)							/* link */
-      + (sbar->height<<14)				/* height */
-      + ((BASEORGY+SCREENHEIGHT+1)<<4)	/* ypos */
-      + 0;								/* bitmap type */
-
-   worklist_p[26] =
-      (0<<(49-32))						/* firstpix */
-      + (0<<(48-32))						/* release */
-      + (1<<(47-32))						/* transparent */
-      + (0<<(46-32))						/* add to buffer */
-      + (0<<(45-32))						/* reflect */
-      + (0<<(38-32))						/* color index */
-      + ((pwidth)>>4);					/* iwidth */
-
-   worklist_p[27] =
-      ((pwidth)<<28)						/* iwidth */
-      + ((pwidth)<<18)					/* dwidth */
-      + (1<<15)							/* pitch */
-      + (3<<12)							/* depth */
-      + BASEORGX*2;						/* xpos */
-
-   /* */
-   /* debug screen object */
-   /* */
-
-   link = (int)stopobj>>3;
-   pwidth = 256/64;
-
-   worklist_p[28] = 
-      ((int)debugscreen<<8)				/* data pointer */
-      + (link>>8);						/* link */
-
-   worklist_p[29] =
-      (link<<24)							/* link */
-      + (216<<14)							/* height */
-      + ((BASEORGY)<<4)					/* ypos */
-      + 0;								/* bitmap type */
-
-   worklist_p[30] =
-      (0<<(49-32))						/* firstpix */
-      + (0<<(48-32))						/* release */
-      + (1<<(47-32))						/* transparent */
-      + (0<<(46-32))						/* add to buffer */
-      + (0<<(45-32))						/* reflect */
-      + (0x70<<(38-32))					/* color index */
-      + (pwidth>>4);						/* iwidth */
-
-   worklist_p[31] =
-      (pwidth<<28)						/* iwidth */
-      + (pwidth<<18)						/* dwidth */
-      + (1<<15)							/* pitch */
-      + (0<<12)							/* depth */
-      + BASEORGX;							/* xpos */
-
+   // CALICO: stat bar was here
+   // CALICO: debug screen was here
 
    /* */
    /* wait until on the third tic after last display */
@@ -889,8 +679,11 @@ void I_Update(void)
 #else
    GL_UpdateFramebuffer(FB_160);
    GL_AddFramebuffer(FB_160);
+   // CALICO_TODO: "color add" object for "palette" flashes here
    GL_AddDrawCommand(sbarrez, 0, 2 + SCREENHEIGHT + 1, 320, 40);
    GL_AddDrawCommand(sbartop, 0, 2 + SCREENHEIGHT + 1, 320, 40);
+   if(debugscreenactive)
+      GL_AddDrawCommand(debugscreenrez, 0, 0, 256, 224);
    GL_RenderFrame();
 #endif
 }
@@ -930,18 +723,17 @@ void DoubleBufferSetup(void)
       ;
 
    GL_ClearFramebuffer(FB_320, D_RGBA(0, 0, 0, 0));
-   // CALICO_FIXME: Jag-specific
-#if 0
-   bufferpage  = (byte *)(workingscreen = screens[workpage]);
-   displaypage = (byte *)(screens[!workpage]);
-
-   D_memset(bufferpage,  0, 320*200);
-   D_memset(debugscreen, 0,  32*224);
-#endif
+   GL_ClearTextureResource(debugscreenrez, D_RGBA(0, 0, 0, 0));
 
    cy = 4;
 }
 
+//
+// Erase a block of pixels.
+// CALICO: if destResource is non-null, the area will be cleared inside that
+// TextureResource's backing buffer. Otherwise the 320x224 framebuffer is
+// targeted.
+//
 void EraseBlock(int x, int y, int width, int height, void *destResource)
 {
    uint32_t *base, *dest;
@@ -973,7 +765,7 @@ void EraseBlock(int x, int y, int width, int height, void *destResource)
    {
       base = framebuffer320_p;
       GL_FramebufferSetUpdated(FB_320);
-      y += 16;
+      y += 8;
    }
 
    dest = base + y * CALICO_ORIG_SCREENWIDTH + x;
@@ -991,6 +783,9 @@ void EraseBlock(int x, int y, int width, int height, void *destResource)
    }
 }
 
+//
+// Draw a jagobj_t graphic
+//
 void DrawJagobj(jagobj_t *jo, int x, int y, void *destResource)
 {
    int srcx, srcy;
@@ -1033,7 +828,7 @@ void DrawJagobj(jagobj_t *jo, int x, int y, void *destResource)
    {
       base = framebuffer320_p;
       GL_FramebufferSetUpdated(FB_320);
-      y += 16;
+      y += 8;
    }
 
    source = jo->data + srcx + srcy*rowsize;
@@ -1057,38 +852,18 @@ void DrawJagobj(jagobj_t *jo, int x, int y, void *destResource)
 
 void DoubleBufferObjList(void);
 
-// CALICO_FIXME: Jag-specific
+//
+// Update the screen when drawing double-buffered 320x224 graphics
+// CALICO: Rewritten for portability
+//
 void UpdateBuffer(void)
 {
    DoubleBufferObjList();
    GL_RenderFrame();
-
-#if 0
-   /* copy entire page with blitter */
-
-   *(int *)0xf02200 = (int)displaypage;/* a1 base pointer */
-   *(int *)0xf02204 = (5<<3)		 	/* 24 bit pixels, phrase mode */
-      ;					/* a1 flags */
-   *(int *)0xf0220c = ZERO;			/* a1 pixel pointers */
-
-   *(int *)0xf02224 = (int)bufferpage;	/* a2 base pointer */
-   *(int *)0xf02228 = (5<<3)		 	/* 24 bit pixels, phrase mode */
-      ;					/* a2 flags */
-   *(int *)0xf02230 = zero;			/* a2 pixel pointers */
-
-
-   *(int *)0xf0223c = 0x10000 + (320*200/4);	/* 32000 words */
-
-
-   DoubleBufferObjList ();
-
-   *(int *)0xf02238 = (1<<0)			/* read source */
-      + (12<<21)				/* copy source */
-      ;				
-#endif
 }
 
 //
+// Draw the title screen background
 // CALICO: Separated out of DoubleBufferObjList
 //
 void DrawMTitle(void)
@@ -1096,6 +871,7 @@ void DrawMTitle(void)
    static void *m_titleres;
    jagobj_t *backgroundpic;
    unsigned int width, height;
+   int sx, sy, sw, sh;
 
    backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
    width  = (unsigned int)(BIGSHORT(backgroundpic->width));
@@ -1112,7 +888,20 @@ void DrawMTitle(void)
       m_titleres = GL_NewTextureResource("M_TITLE", data, width, height, RES_8BIT_PACKED, shift);
    }
 
-   GL_AddDrawCommand(m_titleres, -16, 0, width, CALICO_ORIG_SCREENHEIGHT + 32);
+   // setup to center the full picture
+   hal_video.getWindowSize(&sw, &sh);
+   sx = (sw - (int)(hal_video.transformWidth(width))) / 2;
+   sy = (sh - (int)(hal_video.transformHeight(height))) / 2;
+   hal_video.transformFBCoord(sx, sy, &sx, &sy);
+
+   if(hal_video.getAspectRatioType() == HAL_ASPECT_NOMINAL)
+   {
+      // use precise alignment observed in screenshots
+      sx -= 5;
+      sy += 10;
+   }
+
+   GL_AddDrawCommand(m_titleres, sx, sy, width, height);
 }
 
 // CALICO_FIXME: Jag-specific
@@ -1121,51 +910,10 @@ void DoubleBufferObjList(void)
    DrawMTitle();
    GL_UpdateFramebuffer(FB_320);
    GL_AddFramebuffer(FB_320);
+   if(debugscreenactive)
+      GL_AddDrawCommand(debugscreenrez, 0, 0, 256, 224);
+
 #if 0
-   int		link;
-   int		pwidth;
-   int		delta;
-   jagobj_t	*backgroundpic;
-
-   worklist_p = listbuffers[worklist];
-
-   /* */
-   /* background object */
-   /* */
-   backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
-
-   work_p = worklist_p + 4;
-   delta = (byte *)worklist_p - (byte *)listbuffer;
-
-   link = (int)(16+(byte *)work_p -  delta)>>3;
-   pwidth = backgroundpic->width/16;
-
-   *work_p++ = 
-      ((int)backgroundpic->data<<8)		/* data pointer */
-      + (link>>8);						/* link */
-
-   *work_p++ =
-      (link<<24)							/* link */
-      + (backgroundpic->height<<14)		/* height */
-      + ((BASEORGY-8)<<4)					/* ypos */
-      + 0;								/* bitmap type */
-
-   *work_p++ =
-      (0<<(49-32))						/* firstpix */
-      + (0<<(48-32))						/* release */
-      + (0<<(47-32))						/* transparent */
-      + (0<<(46-32))						/* add to buffer */
-      + (0<<(45-32))						/* reflect */
-      + (40<<(38-32))						/* color index */
-      + ((pwidth)>>4);					/* iwidth */
-
-   *work_p++ =
-      ((pwidth)<<28)						/* iwidth */
-      + ((pwidth)<<18)					/* dwidth */
-      + (1<<15)							/* pitch */
-      + (2<<12)							/* depth */
-      + (0);								/* xpos */
-
    /* */
    /* transparent foreground object */
    /* */
@@ -1200,58 +948,6 @@ void DoubleBufferObjList(void)
       + (1<<15)							/* pitch */
       + (3<<12)							/* depth */
       + 15;								/* xpos */
-
-   /* */
-   /* debug screen object */
-   /* */
-   link = (int)(stopobj)>>3;
-   pwidth = 256/64;
-
-   *work_p++ =
-      ((int)debugscreen<<8)				/* data pointer */
-      + (link>>8);						/* link */
-
-   *work_p++ =
-      (link<<24)							/* link */
-      + (216<<14)							/* height */
-      + ((BASEORGY)<<4)					/* ypos */
-      + 0;								/* bitmap type */
-
-   *work_p++ =
-      (0<<(49-32))						/* firstpix */
-      + (0<<(48-32))						/* release */
-      + (1<<(47-32))						/* transparent */
-      + (0<<(46-32))						/* add to buffer */
-      + (0<<(45-32))						/* reflect */
-      + (0x70<<(38-32))					/* color index */
-      + (pwidth>>4);						/* iwidth */
-
-   *work_p++ =
-      (pwidth<<28)						/* iwidth */
-      + (pwidth<<18)						/* dwidth */
-      + (1<<15)							/* pitch */
-      + (0<<12)							/* depth */
-      + BASEORGX;							/* xpos */
-
-   /* */
-   /* stupid branch objects */
-   /* */
-
-   worklist_p[0] =	link>>8;
-   worklist_p[1] =	(link<<24) + branch1;	/* first branch object */
-
-   worklist_p[2] =	link>>8;
-   worklist_p[3] =	(link<<24) + branch2;	/* second branch object */
-
-   /* */
-   /* start using the list */
-   /* */
-   isrvmode = 0xc1 + (3<<9);		/* 320 * 224, 16 bit color */
-   readylist_p = worklist_p;
-   while (displaylist_p != readylist_p)
-      ;
-
-   worklist ^= 1;
 #endif
 }
 

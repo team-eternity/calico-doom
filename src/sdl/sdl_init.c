@@ -32,6 +32,7 @@
 #include "SDL.h"
 #include "../elib/atexit.h"
 #include "../hal/hal_ml.h"
+#include "../hal/hal_video.h"
 #include "../sdl/sdl_video.h"
 
 static hal_bool isExiting;

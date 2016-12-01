@@ -58,10 +58,11 @@ SDL_GLContext  glcontext;
 // Configuration options
 //
 
-static int screenwidth  = CALICO_ORIG_SCREENWIDTH;
-static int screenheight = CALICO_ORIG_SCREENHEIGHT;
-static int fullscreen   = 0;
-static int monitornum   = 0;
+static int screenwidth     = CALICO_ORIG_SCREENWIDTH;
+static int screenheight    = CALICO_ORIG_SCREENHEIGHT;
+static int fullscreen      = 0;
+static int monitornum      = 0;
+static hal_aspect_t aspect = HAL_ASPECT_NOMINAL;
 
 static cfgrange_t<int> swRange = { 320, 32768 };
 static cfgrange_t<int> shRange = { 224, 32768 };
@@ -122,32 +123,35 @@ static void SDL2_setOrthoMode(int w, int h)
 }
 
 //
-// Calculate the 4:3 subrect on the framebuffer
+// Calculate the 10:7 subrect on the framebuffer
 //
 static void SDL2_calcSubRect()
 {
    rbfixed aspectRatio = curscreenwidth * RBFRACUNIT / curscreenheight;
 
-   if(aspectRatio == 4 * RBFRACUNIT / 3) // nominal
+   if(aspectRatio == 10 * RBFRACUNIT / 7) // nominal
    {
       subscreen.width  = curscreenwidth;
       subscreen.height = curscreenheight;
       subscreen.x      = 0;
       subscreen.y      = 0;
+      aspect           = HAL_ASPECT_NOMINAL;
    }
-   else if(aspectRatio > 4 * RBFRACUNIT / 3) // widescreen
+   else if(aspectRatio > 10 * RBFRACUNIT / 7) // widescreen
    {
-      subscreen.width  = curscreenheight * 4 / 3;
+      subscreen.width  = curscreenheight * 10 / 7;
       subscreen.height = curscreenheight;
       subscreen.x      = (curscreenwidth - subscreen.width) / 2;
       subscreen.y      = 0;
+      aspect           = HAL_ASPECT_WIDE;
    }
    else // narrow
    {
       subscreen.width  = curscreenwidth;
-      subscreen.height = curscreenwidth * 3 / 4;
+      subscreen.height = curscreenwidth * 7 / 10;
       subscreen.x      = 0;
       subscreen.y      = (curscreenheight - subscreen.height) / 2;
+      aspect           = HAL_ASPECT_NARROW;
    }
 
    screenxscale  = float(subscreen.width ) / CALICO_ORIG_SCREENWIDTH;
@@ -432,6 +436,29 @@ void *SDL2_GetWindowHandle(void)
 #endif
 
    return nullptr;
+}
+
+//
+// Get aspect ratio type
+//
+hal_aspect_t SDL2_GetAspectRatioType(void)
+{
+   return aspect;
+}
+
+//
+// Get location and size of subscreen.
+//
+void SDL2_GetSubscreenExtents(int *x, int *y, int *w, int *h)
+{
+   if(x)
+      *x = subscreen.x;
+   if(y)
+      *y = subscreen.y;
+   if(w)
+      *w = subscreen.width;
+   if(h)
+      *h = subscreen.height;
 }
 
 #endif

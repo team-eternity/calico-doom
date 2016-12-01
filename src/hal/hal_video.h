@@ -37,6 +37,13 @@
 #define CALICO_ORIG_GAMESCREENWIDTH  160
 #define CALICO_ORIG_GAMESCREENHEIGHT 180
 
+typedef enum hal_aspect_e
+{
+   HAL_ASPECT_NOMINAL,
+   HAL_ASPECT_WIDE,
+   HAL_ASPECT_NARROW
+} hal_aspect_t;
+
 typedef struct hal_video_s
 {
    void          (*initVideo)(void);
@@ -56,6 +63,8 @@ typedef struct hal_video_s
    void          (*setGrab)(hal_bool grab);
    void          (*warpMouse)(int x, int y);
    void         *(*getWindowHandle)(void);
+   hal_aspect_t  (*getAspectRatioType)(void);
+   void          (*getSubscreenExtents)(int *x, int *y, int *w, int *h);
 } hal_video_t;
 
 #ifdef __cplusplus

@@ -245,7 +245,7 @@ static CfgItem cfgKeyName5("kb_key_5",      &kbKeyNames[KBJK_5]);
 static CfgItem cfgKeyName6("kb_key_6",      &kbKeyNames[KBJK_6]);
 static CfgItem cfgKeyName7("kb_key_7",      &kbKeyNames[KBJK_7]);
 static CfgItem cfgKeyName8("kb_key_8",      &kbKeyNames[KBJK_8]);
-static CfgItem cfgKeyName9("kk_key_9",      &kbKeyNames[KBJK_9]);
+static CfgItem cfgKeyName9("kb_key_9",      &kbKeyNames[KBJK_9]);
 
 //
 // Handle key down events

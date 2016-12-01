@@ -73,7 +73,7 @@ public:
       copy(cstr);
    }
 
-   qstring(qstring &&other);
+   qstring(qstring &&other) noexcept;
 
    ~qstring() { freeBuffer(); }
 

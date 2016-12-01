@@ -310,6 +310,22 @@ void *GL_TextureResourceGetFramebuffer(glfbwhich_t which)
    }
 }
 
+//
+// Clear the backing store of a texture resource.
+//
+void GL_ClearTextureResource(void *resource, unsigned int clearColor)
+{
+   auto rez = static_cast<TextureResource *>(resource);
+   if(rez)
+   {
+      uint32_t  *buffer = rez->getPixels();
+      rbTexture &tex = rez->getTexture();
+      for(unsigned int i = 0; i < tex.getWidth() * tex.getHeight(); i++)
+         buffer[i] = clearColor;
+      rez->setUpdated();
+   }
+}
+
 //=============================================================================
 //
 // Draw Command List
@@ -461,11 +477,7 @@ void GL_ClearFramebuffer(glfbwhich_t which, unsigned int clearColor)
       return;
    }
 
-   uint32_t  *buffer = fb->getPixels();
-   rbTexture &tex    = fb->getTexture();
-   for(unsigned int i = 0; i < tex.getWidth() * tex.getHeight(); i++)
-      buffer[i] = clearColor;
-   fb->setUpdated();
+   GL_ClearTextureResource(fb, clearColor);
 }
 
 void GL_FramebufferSetUpdated(glfbwhich_t which)

@@ -28,12 +28,12 @@
 
 #include "elib.h"
 #include <map>
-#include <string>
 
 #include "../hal/hal_platform.h"
 #include "atexit.h"
 #include "configfile.h"
 #include "parser.h"
+#include "qstring.h"
 
 //=============================================================================
 //
@@ -329,13 +329,13 @@ void Cfg_LoadFile(void)
 
 struct cfgwritedata_t
 {
-   std::map<std::string, CfgItem *> *itemMap;
+   std::map<qstring, CfgItem *> *itemMap;
 };
 
 static void AddItemToMap(CfgItem *item, void *data)
 {
    auto cwd = static_cast<cfgwritedata_t *>(data);
-   (*cwd->itemMap)[item->getName()] = item;
+   cwd->itemMap->emplace(qstring(item->getName()), item);
 }
 
 static bool WriteCfgItem(CfgItem *item, FILE *f)
@@ -352,7 +352,7 @@ void Cfg_WriteFile(void)
    cfgwritedata_t cwd;
    FILE *f     = nullptr;
    bool  error = false;
-   std::map<std::string, CfgItem *> items;
+   std::map<qstring, CfgItem *> items;
    qstring tmpName(hal_platform.getWriteDirectory());
    qstring dstName(hal_platform.getWriteDirectory());
 

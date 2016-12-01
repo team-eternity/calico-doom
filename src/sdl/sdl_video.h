@@ -32,6 +32,7 @@
 #ifdef USE_SDL2
 
 #include "../hal/hal_types.h"
+#include "../hal/hal_video.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,6 +57,8 @@ void          SDL2_SetGrab(hal_bool grab);
 void          SDL2_WarpMouse(int x, int y);
 void          SDL2_EndFrame(void);
 void         *SDL2_GetWindowHandle(void);
+hal_aspect_t  SDL2_GetAspectRatioType(void);
+void          SDL2_GetSubscreenExtents(int *x, int *y, int *w, int *h);
 
 #ifdef __cplusplus
 }
