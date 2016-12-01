@@ -4,7 +4,7 @@
 #include "doomdef.h"
 #include "r_local.h"
 
-extern int mystrlen (char *string);
+extern int mystrlen(const char *string);
 
 /*
 ==================
@@ -28,12 +28,12 @@ void BufferedDrawSprite(int sprite, int frame, int rotation)
    boolean        flip;
    int            texturecolumn;
 
-   if((unsigned int)sprite >= NUMSPRITES)
-      I_Error ("BufferedDrawSprite: invalid sprite number %i ", sprite);
+   if(sprite < 0 || sprite >= NUMSPRITES)
+      I_Error("BufferedDrawSprite: invalid sprite number %i ", sprite);
 
    sprdef = &sprites[sprite];
-   if((frame&FF_FRAMEMASK) >= sprdef->numframes)
-      I_Error ("BufferedDrawSprite: invalid sprite frame %i : %i ", sprite, frame);
+   if((frame & FF_FRAMEMASK) >= sprdef->numframes)
+      I_Error("BufferedDrawSprite: invalid sprite frame %i : %i ", sprite, frame);
    sprframe = &sprdef->spriteframes[frame & FF_FRAMEMASK];
 
    lump = sprframe->lump[rotation];
@@ -44,19 +44,19 @@ void BufferedDrawSprite(int sprite, int frame, int rotation)
    W_ReadLump(lump+1,pixels);
 
    S_UpdateSounds();
-	 	
-   /* */
-   /* coordinates are in a 160*112 screen (doubled pixels) */
-   /* */
+
+   //
+   // coordinates are in a 160*112 screen (doubled pixels)
+   //
    sprtop = 90;
    sprleft = 80;
 
    sprtop -= patch->topoffset;
    sprleft -= patch->leftoffset;
-	
-   /* */
-   /* draw it by hand */
-   /* */
+
+   //
+   // draw it by hand
+   //
    for(x = 0; x < patch->width; x++)
    {
       if(flip)
@@ -66,12 +66,13 @@ void BufferedDrawSprite(int sprite, int frame, int rotation)
 
       column = (column_t *) ((byte *)patch + BIGSHORT(patch->columnofs[texturecolumn]));
 
-      /* */
-      /* draw a masked column */
-      /* */
-      for( ; column->topdelta != 0xff; column++) 
+      //
+      // draw a masked column
+      //
+      for(; column->topdelta != 0xff; column++) 
       {
-         /* calculate unclipped screen coordinates for post */
+         // calculate unclipped screen coordinates for post
+         // CALICO_FIXME: draw to framebuffer
          dest = bufferpage + (short)(sprtop+column->topdelta)*(short)640+(sprleft + x)*2;
          count = column->length;
          src = pixels + column->dataofs;
@@ -86,11 +87,11 @@ void BufferedDrawSprite(int sprite, int frame, int rotation)
       }
    }
    
-   Z_Free(pixels);	
+   Z_Free(pixels);
 }
 
 
-/*============================================================================ */
+//============================================================================
 
 typedef struct
 {
@@ -130,7 +131,7 @@ final_e	status;
 #define TEXTTIME 4
 #define STARTX   8
 #define STARTY   8
-boolean textprint; /* is endtext done printing? */
+boolean textprint; // is endtext done printing?
 int textindex;
 int textdelay;
 int text_x;
@@ -140,7 +141,7 @@ int text_y;
 jagobj_t *endobj[NUMENDOBJ];
 
 #if 0
-/* '*' = newline */
+// '*' = newline
 char	endtextstring[] =
    "you did it! by turning*"
    "the evil of the horrors*"
@@ -154,7 +155,7 @@ char	endtextstring[] =
    "  congratulations!";
 #endif
 
-/* '*' = newline */
+// '*' = newline
 char	endtextstring[] =
    "     id software*"
    "     salutes you!*"
@@ -169,12 +170,12 @@ char	endtextstring[] =
    "*"
    "  congratulations!";
 
-/*=============================================== */
-/* */
-/* Print a string in big font - LOWERCASE INPUT ONLY! */
-/* */
-/*=============================================== */
-void F_PrintString(char *string)
+//===============================================
+//
+// Print a string in big font - LOWERCASE INPUT ONLY!
+//
+//===============================================
+void F_PrintString(const char *string)
 {
    int index;
    int val;
@@ -198,7 +199,7 @@ void F_PrintString(char *string)
       case '*':
          val = 30;
          text_x = STARTX;
-         text_y += endobj[0]->height + 4;
+         text_y += BIGSHORT(endobj[0]->height) + 4; // CALICO: endianness
          break;
       default:
          val = string[index] - 'a';
@@ -219,12 +220,12 @@ void F_PrintString(char *string)
    }
 }
 
-/*=============================================== */
-/* */
-/* Print character cast strings */
-/* */
-/*=============================================== */
-void F_CastPrint(char *string)
+//===============================================
+//
+// Print character cast strings
+//
+//===============================================
+void F_CastPrint(const char *string)
 {
    int i, width, slen;
 
@@ -235,7 +236,7 @@ void F_CastPrint(char *string)
       switch(string[i])
       {
       case ' ': width += SPACEWIDTH; break;
-      default : width += endobj[string[i] - 'a']->width;
+      default : width += BIGSHORT(endobj[string[i] - 'a']->width); // CALICO: endianness
       }
    }
 
@@ -261,7 +262,7 @@ void F_Start(void)
 
    S_StartSong(2, 1);
 
-   status = fin_endtext; /* END TEXT PRINTS FIRST */
+   status = fin_endtext; // END TEXT PRINTS FIRST
    textprint = false;
    textindex = 0;
    textdelay = TEXTTIME;
@@ -284,7 +285,7 @@ void F_Start(void)
    DoubleBufferSetup();
 }
 
-void F_Stop (void)
+void F_Stop(void)
 {
    int i;
 
@@ -302,13 +303,13 @@ void F_Stop (void)
 
 int F_Ticker(void)
 {
-   int		st;
-   int		buttons, oldbuttons;
+   int st;
+   int buttons, oldbuttons;
 
 
-   /* */
-   /* check for press a key to kill actor */
-   /* */
+   //
+   // check for press a key to kill actor
+   //
    buttons    = ticbuttons[consoleplayer];
    oldbuttons = oldticbuttons[consoleplayer];
 
@@ -323,7 +324,7 @@ int F_Ticker(void)
          textprint == true)
       {
          status = fin_charcast;
-         /* S_StartSound (NULL, mobjinfo[castorder[castnum].type].seesound); */
+         // S_StartSound(NULL, mobjinfo[castorder[castnum].type].seesound);
       }
       return 0;
    }
@@ -334,7 +335,7 @@ int F_Ticker(void)
          ((buttons & BT_B) && !(oldbuttons & BT_B)) || 
          ((buttons & BT_C) && !(oldbuttons & BT_C)))
       {
-         /* go into death frame */
+         // go into death frame
          castdeath = true;
          caststate = &states[mobjinfo[castorder[castnum].type].deathstate];
          casttics = caststate->tics;
@@ -342,37 +343,36 @@ int F_Ticker(void)
          castattacking = false;
       }
    }
-	
 
-   /* */
-   /* advance state */
-   /* */
+   //
+   // advance state
+   //
    if(--casttics > 0)
-      return 0; /* not time to change state yet */
-		
+      return 0; // not time to change state yet
+
    if(caststate->tics == -1 || caststate->nextstate == S_NULL)
    {
-      /* switch from deathstate to next monster */
+      // switch from deathstate to next monster
       castnum++;
       castdeath = false;
-      if (castorder[castnum].name == NULL)
+      if(castorder[castnum].name == NULL)
          castnum = 0;
-      /* if (mobjinfo[castorder[castnum].type].seesound) */
-      /*    S_StartSound (NULL, mobjinfo[castorder[castnum].type].seesound); */
+      // if (mobjinfo[castorder[castnum].type].seesound)
+      //    S_StartSound (NULL, mobjinfo[castorder[castnum].type].seesound);
       caststate = &states[mobjinfo[castorder[castnum].type].seestate];
       castframes = 0;
    }
    else
-   {	
-      /* just advance to next state in animation */
+   {
+      // just advance to next state in animation
       if (caststate == &states[S_PLAY_ATK1])
-         goto stopattack; /* Oh, gross hack! */
+         goto stopattack; // Oh, gross hack!
       st = caststate->nextstate;
       caststate = &states[st];
       castframes++;
 #if 0
-      /*============================================== */
-      /* sound hacks.... */
+      //==============================================
+      // sound hacks....
       {
          int sfx;
 
@@ -407,16 +407,16 @@ int F_Ticker(void)
          default: sfx = 0; break;
          }
 
-         /* if(sfx) */
-         /*    S_StartSound (NULL, sfx); */
+         // if(sfx)
+         //    S_StartSound (NULL, sfx);
       }
 #endif
-      /*============================================== */
+      //==============================================
    }
-	
+
    if(castframes == 12)
    {
-      /* go into attack frame */
+      // go into attack frame
       castattacking = true;
       if(castonmelee)
          caststate = &states[mobjinfo[castorder[castnum].type].meleestate];
@@ -431,7 +431,7 @@ int F_Ticker(void)
             caststate = &states[mobjinfo[castorder[castnum].type].missilestate];
       }
    }
-	
+
    if(castattacking)
    {
       if(castframes == 24 || caststate == &states[mobjinfo[castorder[castnum].type].seestate])
@@ -447,7 +447,7 @@ stopattack:
    if(casttics == -1)
       casttics = 15;
 
-   return 0; /* finale never exits */
+   return 0; // finale never exits
 }
 
 /*
@@ -465,7 +465,7 @@ void F_Drawer(void)
    case fin_endtext:
       if(!--textdelay)
       {
-         char	str[2];
+         char str[2];
 
          str[1] = 0;
          str[0] = endtextstring[textindex];
@@ -480,7 +480,7 @@ void F_Drawer(void)
       EraseBlock(0, 0, 320, 200, NULL);
       F_CastPrint(castorder[castnum].name);
 
-      BufferedDrawSprite(caststate->sprite, caststate->frame&FF_FRAMEMASK, 0);
+      BufferedDrawSprite(caststate->sprite, caststate->frame & FF_FRAMEMASK, 0);
       break;
    }
    UpdateBuffer();

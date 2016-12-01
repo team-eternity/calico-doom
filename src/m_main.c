@@ -41,10 +41,10 @@ menu_t     cursorpos;
 skill_t    playerskill;
 
 void M_Start(void)
-{	
+{
    int i,l;
 
-   /* cache all needed graphics	 */
+   // cache all needed graphics
    m_doom       = W_CacheLumpName("M_DOOM",   PU_STATIC);
    m_skull1     = W_CacheLumpName("M_SKULL1", PU_STATIC);
    m_skull2     = W_CacheLumpName("M_SKULL2", PU_STATIC);
@@ -76,7 +76,7 @@ void M_Start(void)
 }
 
 void M_Stop(void)
-{	
+{
    WriteEEProm();
 }
 
@@ -94,31 +94,31 @@ int M_Ticker(void)
 
    buttons = ticbuttons[consoleplayer];
 
-   /* exit menu if button press */
+   // exit menu if button press
    if(ticon > 10 && (buttons & (JP_A|JP_B|JP_C)))
    {
-      startmap   = playermap;       /*set map number */
-      startskill = playerskill;     /* set skill level */
-      starttype  = currentplaymode; /* set play type */
-      return 1;                     /* done with menu */
+      startmap   = playermap;       // set map number
+      startskill = playerskill;     // set skill level
+      starttype  = currentplaymode; // set play type
+      return 1;                     // done with menu
    }
 
-   /* animate skull */
+   // animate skull
    if(++cursorcount == 4)
    {
       cursorframe ^= 1;
       cursorcount = 0;
    }
 
-   /* check for movement */
+   // check for movement
    if(!(buttons & (JP_UP|JP_DOWN|JP_LEFT|JP_RIGHT)))
-      movecount = 0; /* move immediately on next press */
+      movecount = 0; // move immediately on next press
    else
    {
       if(cursorpos == level && movecount == 3)
-         movecount = 0; /* fast level select */
+         movecount = 0; // fast level select
       if(movecount == 6)
-         movecount = 0; /* slower everything else */
+         movecount = 0; // slower everything else
       if(++movecount == 1)
       {
          if(buttons & JP_DOWN)
@@ -196,7 +196,7 @@ int M_Ticker(void)
 =================
 */
 
-void M_Drawer (void)
+void M_Drawer(void)
 {
    int leveltens, levelones;
    int m_doomheight = BIGSHORT(m_doom->height); // CALICO: needs endianness correction
