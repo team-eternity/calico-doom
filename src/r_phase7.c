@@ -277,9 +277,15 @@ mp_entry:
    */
 }
 
+//
+// Render the horizontal spans of a single visplane
+//
 static void R_PlaneLoop(visplane_t *pl)
 {
-   // CALICO_TODO
+   int pl_x, pl_stopx;
+   unsigned short *pl_openptr;
+   unsigned short pl_t1, pl_t2, pl_b1, pl_b2, pl_oldtop, pl_oldbottom;
+
    /*
 pl_L_topstarts	.equr	r0
 pl_L_checkbottomdif .equr r1
@@ -305,60 +311,85 @@ pl_ff			.equr	r25
 pl_cmdhigh		.equr	r26
 
 pl_stopfp		.equr	r13 ; must stay constant across R_MapPlane
+ */
 
- load	(FP),pl_pl ; get plane                                             pl = *(FP)
+   pl_x       = pl->minx;
+   pl_stopx   = pl->maxx;
 
- move	pl_pl,pl_openptr                                                   pl_openptr = pl
- load	(pl_pl+3),pl_x     ; pl_x = pl->minx                               pl_x = pl->minx
- addq	#6*4,pl_openptr    ; pl_openptr = pl->open                         pl_openptr += &visplane_t::open
- load	(pl_pl+4),pl_stopx ; pl_stopx = pl->maxx                           pl_stopx = pl->maxx
- 
- cmp	pl_x,pl_stopx      ; see if there is any open space                if(pl_x > pl_stopx)
- jump	U_GT,(RETURNPOINT) ; nothing to map                                   return;
- addq	#2,pl_stopx        ; pl_stopx = pl->maxx+2 (harmless delay slot)         pl_stopx += 2 // before jump
- 
+   // see if there is any open space
+   if(pl_x > pl_stopx)
+      return; // nothing to map
+
+   pl_stopx += 2;
+
+   /*
  subq 	#4,FP            ; space for returnpoint                        FP -= 4
  store	RETURNPOINT,(FP) ; save returnpoint before pushing cmds         *FP = RETURNPOINT
  move	FP,pl_stopfp        ; when command que is back here, stop          pl_stopfp = FP
+ */
 
- move	pl_x,scratch                                                       scratch = pl_x
- shlq	#1,scratch                                                         scratch <<= 1
- add	scratch,pl_openptr  ; pl_openptr = &pl->open[x-1]                  pl_openptr += scratch
- subq	#2,pl_openptr                                                      pl_openptr -= 2
- 
+   pl_openptr = &pl->open[pl_x - 1];
+
+   /*
  movei	#_spanstart,pl_spanstart ; allow indexed loads on spanstart[]   pl_spanstart = &spanstart
  movei	#$ff,pl_ff                                                      pl_ff = 0xff
-  
- movei	#pl_topstarts,pl_L_topstarts                                    pl_L_topstarts = &pl_topstarts
- movei	#pl_checkbottmdif,pl_L_checkbottomdif                           pl_L_checkbottomdiff = &pl_checkbottmdiff
- movei	#pl_topdif,pl_L_topdif                                          pl_L_topdif = &pl_topdif
- movei	#pl_next,pl_L_next                                              pl_L_next = &pl_next
- movei	#pl_bottomstarts,pl_L_bottomstarts                              pl_L_bottomstarts = &pl_bottomstarts
- movei	#pl_xloop,pl_L_xloop                                            pl_L_xloop = &pl_xloop
- movei	#pl_bottomdif,pl_L_bottomdif                                    pl_L_bottomdif = &pl_bottomdif
+ */
 
-;	oldtop = open[x-1];
-;	oldbottom = oldtop&0xff;
-;	oldtop >>= 8;
- loadw	(pl_openptr),pl_t1                                              pl_t1 = *pl_openptr
- addq	#2,pl_openptr                                                      pl_openptr += 2
- move	pl_t1,pl_b1                                                        pl_b1 = pl_t1
- and	pl_ff,pl_b1                                                        pl_b1 &= pl_ff
- shrq	#8,pl_t1                                                           pl_t1 >>= 8
- 
- loadw	(pl_openptr),pl_t2 ; delay sloted                               pl_t2 = *pl_openptr
+   pl_t1 = *pl_openptr++;
+   pl_b1 = pl_t1 & 0xff;
+   pl_t1 >>= 8;
+
+   //pl_xloop:
+   do 
+   {
+      pl_t2 = *pl_openptr++;
+      pl_b2 = pl_t2 & 0xff;
+      pl_t2 >>= 8;
+
+      pl_oldtop = pl_t2;
+      pl_oldbottom = pl_b2;
+
+      if(pl_t1 != pl_t2)
+      {
+         // pl_topdif:
+         if(pl_t1 >= pl_t2 || pl_t1 > pl_b1)
+         {
+            // pl_topstarts:
+            // top dif spanstarts
+
+            // CALICO_TODO
+         }
+         else
+         {
+            // CALICO_TODO
+         }
+         // CALICO_TODO
+      }
+
+      // bottom diffs
+      // pl_checkbottmdif:
+      if(pl_b1 != pl_b2)
+      {
+         // pl_bottomdif:
+         // CALICO_TODO
+      }
+      // CALICO_TODO
+
+      // pl_next:
+      ++pl_x;
+      pl_b1 = pl_oldbottom;
+      pl_t1 = pl_oldtop;
+   }
+   while(pl_x != pl_stopx);
+
+   // CALICO_TODO
+
+   /*
 ;----------------------
 ;
 pl_xloop:
 ;
 ;-----------------------
-;		t1 = oldtop;
-;		b1 = oldbottom;
-;		t2 = open[x];
-;		b2 = t2&0xff;
-;		t2 >>= 8;
-;		oldtop = t2;
-;		oldbottom = b2;
 
  move	pl_t2,pl_b2                                                      pl_b2 = pl_t2
  and	pl_ff,pl_b2                                                      pl_b2 &= pl_ff
@@ -504,20 +535,15 @@ pl_isadraw:                                                            call R_Ma
    */
 }
 
+//
+// Render all visplanes
+//
 void R_DrawPlanes(void)
 {
    angle_t angle;
    visplane_t *pl;
 
-   /*
-;================
-; load constants into alternate register bank
-;================
-	movei	#$400000,r0                   r0 = 0x400000
-	moveta	r0,alt_400000              alt_400000 = r0
-   */
-
-   planex = viewx;
+   planex =  viewx;
    planey = -viewy;
 
    planeangle = viewangle;
@@ -528,26 +554,12 @@ void R_DrawPlanes(void)
 
    // Jag-specific setup
    /*
-   L53:
-   movei #_junk,r0                       r0 = &junk
-   movei #15737400,r1                    r1 = 0xf02238
-   load (r1),r1                          r1 = *r1
-   store r1,(r0)                         *r0 = r1
-   move r1,r0                            r0 = r1
-   moveq #1,r1                           r1 = 1
-   and r1,r0                             r0 &= r1
-   moveq #0,r1                           r1 = 0
-   cmp r0,r1                             if(r0 == r1)
-   movei #L53,scratch                       goto L53
-   jump EQ,(scratch)
-   nop
-  
-   movei #15737348,r0                    r0 = 0xf02204
-   movei #,r1                            r1 = 208928 // 0x33020
+   movei #15737348,r0                    r0 = 0xf02204 // BLIT_A1FLAGS
+   movei #,r1                            r1 = 208928   // 0x33020 = pixel size 2^4, width 64, xadd 0b11 (add increment)
    store r1,(r0)                         *r0 = r1
   
-   movei #15737384,r0                    r0 = 0xf02228
-   movei #80416,r1                       r1 = 80416 // 0x13A20
+   movei #15737384,r0                    r0 = 0xf02228 // BLIT_A2FLAGS
+   movei #80416,r1                       r1 = 80416    // 0x13A20 = pixel size 2^4, width 160, xadd 0b01 (add pixel size)
    store r1,(r0)                         *r0 = r1
    */
 
@@ -560,21 +572,8 @@ void R_DrawPlanes(void)
 
          // Jag-specific
          /*
-         L63:
-          movei #_junk,r0                       r0 = &junk 
-          movei #15737400,r1                    r1 = 0xf02238
-          load (r1),r1                          r1 = *r1
-          store r1,(r0)                         *r0 = r1
-          move r1,r0                            r0 = r1
-          moveq #1,r1                           r1 = 1
-          and r1,r0                             r0 &= r1
-          moveq #0,r1                           r1 = 0
-          cmp r0,r1                             if(r0 == r1)
-          movei #L63,scratch                       goto L63
-          jump EQ,(scratch)
-          nop
           load (r15+1),r1 ; (pl)                r1 = *(pl+&visplane_t::picnum)
-          movei #$f02200,r0 ; plane source      r0 = 0xf02200
+          movei #$f02200,r0 ; plane source      r0 = 0xf02200 // A1 BASE
           store r1,(r0)                         *r0 = r1
          */
 
