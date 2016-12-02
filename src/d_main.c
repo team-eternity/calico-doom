@@ -293,6 +293,7 @@ int MiniLoop(void (*start)(void), void (*stop)(void),
 
       if(entertic <= oldentertic)
          continue;
+
       lasttics = entertic - oldentertic;
       oldentertic = entertic;
 
@@ -305,11 +306,10 @@ int MiniLoop(void (*start)(void), void (*stop)(void),
          vblsinframe = 4;
       else
       {
-         vblsinframe = lasttics;
+         vblsinframe = lasttics * 2;
          if(vblsinframe > 8)
             vblsinframe = 8;
       }
-      
       // get buttons for next tic
       oldticbuttons[0] = ticbuttons[0];
       oldticbuttons[1] = ticbuttons[1];
@@ -476,7 +476,7 @@ void RunTitle(void)
 
    exit = MiniLoop(START_Title, STOP_Title, TIC_Abortable, DRAW_Title);
    if(exit == ga_exitdemo)
-      RunMenu ();
+      RunMenu();
 }
 
 void RunCredits(void)
