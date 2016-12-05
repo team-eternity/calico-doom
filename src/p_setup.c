@@ -44,7 +44,7 @@ void P_LoadVertexes(int lump)
    vertex_t    *li;
 
    numvertexes = W_LumpLength(lump) / sizeof(mapvertex_t);
-   vertexes    = Z_Malloc(numvertexes*sizeof(vertex_t),PU_LEVEL,0);	
+   vertexes    = Z_Malloc(numvertexes * sizeof(vertex_t), PU_LEVEL, 0);
    data = I_TempBuffer();
    W_ReadLump(lump, data);
    
@@ -52,8 +52,8 @@ void P_LoadVertexes(int lump)
    li = vertexes;
    for(i = 0; i < numvertexes; i++, li++, ml++)
    {
-      li->x = LITTLESHORT(ml->x)<<FRACBITS;
-      li->y = LITTLESHORT(ml->y)<<FRACBITS;
+      li->x = LITTLESHORT(ml->x) << FRACBITS;
+      li->y = LITTLESHORT(ml->y) << FRACBITS;
    }
 }
 
@@ -75,8 +75,8 @@ void P_LoadSegs(int lump)
    int       linedef, side;
 
    numsegs = W_LumpLength(lump) / sizeof(mapseg_t);
-   segs    = Z_Malloc(numsegs*sizeof(seg_t),PU_LEVEL,0);	
-   D_memset(segs, 0, numsegs*sizeof(seg_t));
+   segs    = Z_Malloc(numsegs * sizeof(seg_t), PU_LEVEL, 0);
+   D_memset(segs, 0, numsegs * sizeof(seg_t));
    data = I_TempBuffer();
    W_ReadLump(lump, data);
 
@@ -87,8 +87,8 @@ void P_LoadSegs(int lump)
       li->v1 = &vertexes[LITTLESHORT(ml->v1)];
       li->v2 = &vertexes[LITTLESHORT(ml->v2)];
 
-      li->angle = (LITTLESHORT(ml->angle))<<16;
-      li->offset = (LITTLESHORT(ml->offset))<<16;
+      li->angle = (LITTLESHORT(ml->angle)) << 16;
+      li->offset = (LITTLESHORT(ml->offset)) << 16;
       linedef = LITTLESHORT(ml->linedef);
       ldef = &lines[linedef];
       li->linedef = ldef;
@@ -97,7 +97,7 @@ void P_LoadSegs(int lump)
       li->frontsector = sides[ldef->sidenum[side]].sector;
       
       if(ldef-> flags & ML_TWOSIDED)
-         li->backsector = sides[ldef->sidenum[side^1]].sector;
+         li->backsector = sides[ldef->sidenum[side ^ 1]].sector;
       else
          li->backsector = 0;
 
@@ -123,12 +123,12 @@ void P_LoadSubsectors(int lump)
    subsector_t    *ss;
 
    numsubsectors = W_LumpLength(lump) / sizeof(mapsubsector_t);
-   subsectors    = Z_Malloc(numsubsectors*sizeof(subsector_t),PU_LEVEL,0);	
+   subsectors    = Z_Malloc(numsubsectors * sizeof(subsector_t), PU_LEVEL, 0);
    data = I_TempBuffer();
    W_ReadLump(lump, data);
 
    ms = (mapsubsector_t *)data;
-   D_memset (subsectors,0, numsubsectors*sizeof(subsector_t));
+   D_memset (subsectors,0, numsubsectors * sizeof(subsector_t));
    ss = subsectors;
    for(i = 0; i < numsubsectors; i++, ss++, ms++)
    {
@@ -152,9 +152,9 @@ void P_LoadSectors(int lump)
    mapsector_t *ms;
    sector_t    *ss;
 
-   numsectors = W_LumpLength (lump) / sizeof(mapsector_t);
-   sectors    = Z_Malloc(numsectors*sizeof(sector_t),PU_LEVEL,0);
-   D_memset(sectors, 0, numsectors*sizeof(sector_t));
+   numsectors = W_LumpLength(lump) / sizeof(mapsector_t);
+   sectors    = Z_Malloc(numsectors * sizeof(sector_t), PU_LEVEL, 0);
+   D_memset(sectors, 0, numsectors * sizeof(sector_t));
    data = I_TempBuffer();
    W_ReadLump(lump, data);
 
@@ -162,8 +162,8 @@ void P_LoadSectors(int lump)
    ss = sectors;
    for(i = 0; i < numsectors; i++, ss++, ms++)
    {
-      ss->floorheight   = LITTLESHORT(ms->floorheight)<<FRACBITS;
-      ss->ceilingheight = LITTLESHORT(ms->ceilingheight)<<FRACBITS;
+      ss->floorheight   = LITTLESHORT(ms->floorheight) << FRACBITS;
+      ss->ceilingheight = LITTLESHORT(ms->ceilingheight) << FRACBITS;
       ss->floorpic      = R_FlatNumForName(ms->floorpic);
       
       if(!D_strncasecmp(ms->ceilingpic,"F_SKY1", 6))
@@ -192,12 +192,12 @@ void P_LoadSectors(int lump)
 void P_LoadNodes(int lump)
 {
    byte *data;
-   int   i,j,k;
+   int   i, j, k;
    mapnode_t *mn;
    node_t    *no;
 
-   numnodes = W_LumpLength (lump) / sizeof(mapnode_t);
-   nodes    = Z_Malloc(numnodes*sizeof(node_t),PU_LEVEL,0);	
+   numnodes = W_LumpLength(lump) / sizeof(mapnode_t);
+   nodes    = Z_Malloc(numnodes * sizeof(node_t), PU_LEVEL, 0);
    data     = I_TempBuffer();
    W_ReadLump(lump, data);
 
@@ -205,16 +205,16 @@ void P_LoadNodes(int lump)
    no = nodes;
    for(i = 0; i < numnodes; i++, no++, mn++)
    {
-      no->x  = LITTLESHORT(mn->x)<<FRACBITS;
-      no->y  = LITTLESHORT(mn->y)<<FRACBITS;
-      no->dx = LITTLESHORT(mn->dx)<<FRACBITS;
-      no->dy = LITTLESHORT(mn->dy)<<FRACBITS;
+      no->x  = LITTLESHORT(mn->x ) << FRACBITS;
+      no->y  = LITTLESHORT(mn->y ) << FRACBITS;
+      no->dx = LITTLESHORT(mn->dx) << FRACBITS;
+      no->dy = LITTLESHORT(mn->dy) << FRACBITS;
       
       for(j = 0; j < 2; j++)
       {
          no->children[j] = (unsigned short)LITTLESHORT(mn->children[j]);
          for(k = 0; k < 4; k++)
-            no->bbox[j][k] = LITTLESHORT(mn->bbox[j][k])<<FRACBITS;
+            no->bbox[j][k] = LITTLESHORT(mn->bbox[j][k]) << FRACBITS;
       }
    }
 }
@@ -268,8 +268,8 @@ void P_LoadLineDefs(int lump)
    vertex_t     *v1, *v2;
 
    numlines = W_LumpLength(lump) / sizeof(maplinedef_t);
-   lines    = Z_Malloc(numlines*sizeof(line_t),PU_LEVEL,0);
-   D_memset(lines, 0, numlines*sizeof(line_t));
+   lines    = Z_Malloc(numlines * sizeof(line_t), PU_LEVEL, 0);
+   D_memset(lines, 0, numlines * sizeof(line_t));
    data     = I_TempBuffer();
    W_ReadLump(lump, data);
 
@@ -299,24 +299,24 @@ void P_LoadLineDefs(int lump)
 
       if(v1->x < v2->x)
       {
-         ld->bbox[BOXLEFT] = v1->x;
+         ld->bbox[BOXLEFT ] = v1->x;
          ld->bbox[BOXRIGHT] = v2->x;
       }
       else
       {
-         ld->bbox[BOXLEFT] = v2->x;
+         ld->bbox[BOXLEFT ] = v2->x;
          ld->bbox[BOXRIGHT] = v1->x;
       }
 
       if(v1->y < v2->y)
       {
          ld->bbox[BOXBOTTOM] = v1->y;
-         ld->bbox[BOXTOP] = v2->y;
+         ld->bbox[BOXTOP   ] = v2->y;
       }
       else
       {
          ld->bbox[BOXBOTTOM] = v2->y;
-         ld->bbox[BOXTOP] = v1->y;
+         ld->bbox[BOXTOP   ] = v1->y;
       }
 
       ld->sidenum[0] = LITTLESHORT(mld->sidenum[0]);
@@ -352,9 +352,9 @@ void P_LoadSideDefs(int lump)
    for(i = 0; i < numtextures; i++)
       textures[i].usecount = 0;
 
-   numsides = W_LumpLength (lump) / sizeof(mapsidedef_t);
-   sides    = Z_Malloc (numsides*sizeof(side_t),PU_LEVEL,0);	
-   D_memset(sides, 0, numsides*sizeof(side_t));
+   numsides = W_LumpLength(lump) / sizeof(mapsidedef_t);
+   sides    = Z_Malloc(numsides * sizeof(side_t), PU_LEVEL, 0);
+   D_memset(sides, 0, numsides * sizeof(side_t));
    data     = I_TempBuffer();
    W_ReadLump(lump, data);
 
@@ -362,8 +362,8 @@ void P_LoadSideDefs(int lump)
    sd  = sides;
    for(i = 0; i < numsides; i++, msd++, sd++)
    {
-      sd->textureoffset = LITTLESHORT(msd->textureoffset)<<FRACBITS;
-      sd->rowoffset     = LITTLESHORT(msd->rowoffset)<<FRACBITS;
+      sd->textureoffset = LITTLESHORT(msd->textureoffset) << FRACBITS;
+      sd->rowoffset     = LITTLESHORT(msd->rowoffset) << FRACBITS;
       sd->toptexture    = R_TextureNumForName(msd->toptexture);
       sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);
       sd->midtexture    = R_TextureNumForName(msd->midtexture);
@@ -388,20 +388,20 @@ void P_LoadBlockMap(int lump)
    int count;
    int i;
 
-   blockmaplump = W_CacheLumpNum (lump,PU_LEVEL);
-   blockmap = blockmaplump+4;
-   count = W_LumpLength (lump)/2;
+   blockmaplump = W_CacheLumpNum(lump, PU_LEVEL);
+   blockmap = blockmaplump + 4;
+   count = W_LumpLength(lump) / 2;
    for(i = 0; i < count; i++)
       blockmaplump[i] = LITTLESHORT(blockmaplump[i]);
 
-   bmaporgx   = blockmaplump[0]<<FRACBITS;
-   bmaporgy   = blockmaplump[1]<<FRACBITS;
+   bmaporgx   = blockmaplump[0] << FRACBITS;
+   bmaporgy   = blockmaplump[1] << FRACBITS;
    bmapwidth  = blockmaplump[2];
    bmapheight = blockmaplump[3];
 
    // clear out mobj chains
-   count = sizeof(*blocklinks)* bmapwidth*bmapheight;
-   blocklinks = Z_Malloc(count,PU_LEVEL, 0);
+   count = sizeof(*blocklinks) * bmapwidth * bmapheight;
+   blocklinks = Z_Malloc(count, PU_LEVEL, 0);
    D_memset(blocklinks, 0, count);
 }
 
@@ -449,7 +449,7 @@ void P_GroupLines(void)
    }
 
    // build line tables for each sector
-   linebuffer = Z_Malloc(total*4, PU_LEVEL, 0);
+   linebuffer = Z_Malloc(total * 4, PU_LEVEL, 0);
    sector = sectors;
    for(i = 0; i < numsectors; i++, sector++)
    {
@@ -461,33 +461,33 @@ void P_GroupLines(void)
          if(li->frontsector == sector || li->backsector == sector)
          {
             *linebuffer++ = li;
-            M_AddToBox (bbox, li->v1->x, li->v1->y);
-            M_AddToBox (bbox, li->v2->x, li->v2->y);
+            M_AddToBox(bbox, li->v1->x, li->v1->y);
+            M_AddToBox(bbox, li->v2->x, li->v2->y);
          }
       }
       if(linebuffer - sector->lines != sector->linecount)
          I_Error("P_GroupLines: miscounted");
 
       // set the degenmobj_t to the middle of the bounding box
-      sector->soundorg.x = (bbox[BOXRIGHT]+bbox[BOXLEFT])/2;
-      sector->soundorg.y = (bbox[BOXTOP]+bbox[BOXBOTTOM])/2;
+      sector->soundorg.x = (bbox[BOXRIGHT] + bbox[BOXLEFT  ]) / 2;
+      sector->soundorg.y = (bbox[BOXTOP  ] + bbox[BOXBOTTOM]) / 2;
 
       // adjust bounding box to map blocks
-      block = (bbox[BOXTOP]-bmaporgy+MAXRADIUS)>>MAPBLOCKSHIFT;
+      block = (bbox[BOXTOP] - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
       block = block >= bmapheight ? bmapheight-1 : block;
-      sector->blockbox[BOXTOP]=block;
+      sector->blockbox[BOXTOP] = block;
 
-      block = (bbox[BOXBOTTOM]-bmaporgy-MAXRADIUS)>>MAPBLOCKSHIFT;
+      block = (bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
       block = block < 0 ? 0 : block;
-      sector->blockbox[BOXBOTTOM]=block;
+      sector->blockbox[BOXBOTTOM] = block;
 
-      block = (bbox[BOXRIGHT]-bmaporgx+MAXRADIUS)>>MAPBLOCKSHIFT;
+      block = (bbox[BOXRIGHT] - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
       block = block >= bmapwidth ? bmapwidth-1 : block;
-      sector->blockbox[BOXRIGHT]=block;
+      sector->blockbox[BOXRIGHT] = block;
 
-      block = (bbox[BOXLEFT]-bmaporgx-MAXRADIUS)>>MAPBLOCKSHIFT;
+      block = (bbox[BOXLEFT] - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
       block = block < 0 ? 0 : block;
-      sector->blockbox[BOXLEFT]=block;
+      sector->blockbox[BOXLEFT] = block;
    }
 }
 
@@ -551,8 +551,8 @@ void P_SetupLevel(int map, skill_t skill)
    lumpname[0] = 'M';
    lumpname[1] = 'A';
    lumpname[2] = 'P';
-   lumpname[3] = '0' + map/10;
-   lumpname[4] = '0' + map%10;
+   lumpname[3] = '0' + map / 10;
+   lumpname[4] = '0' + map % 10;
    lumpname[5] = 0;
 
    lumpnum = W_GetNumForName(lumpname);
@@ -567,12 +567,12 @@ void P_SetupLevel(int map, skill_t skill)
    P_LoadNodes(lumpnum+ML_NODES);
    P_LoadSegs(lumpnum+ML_SEGS);
 
-   rejectmatrix = W_CacheLumpNum(lumpnum+ML_REJECT,PU_LEVEL);
+   rejectmatrix = W_CacheLumpNum(lumpnum + ML_REJECT, PU_LEVEL);
 
    P_GroupLines();
 
    deathmatch_p = deathmatchstarts;
-   P_LoadThings(lumpnum+ML_THINGS);
+   P_LoadThings(lumpnum + ML_THINGS);
 
    //
    // if deathmatch, randomly spawn the active players
@@ -584,7 +584,7 @@ void P_SetupLevel(int map, skill_t skill)
          if(playeringame[i])
          {
             // must give a player spot before deathmatchspawn
-            mobj = P_SpawnMobj(deathmatchstarts[0].x<<16 ,deathmatchstarts[0].y<<16,0, MT_PLAYER);
+            mobj = P_SpawnMobj(deathmatchstarts[0].x << 16 ,deathmatchstarts[0].y << 16, 0, MT_PLAYER);
             players[i].mo = mobj;
             G_DeathMatchSpawnPlayer(i);
             P_RemoveMobj(mobj);
