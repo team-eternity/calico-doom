@@ -1,7 +1,9 @@
 
+#include "hal/hal_input.h"
 #include "gl/gl_render.h"
 #include "rb/rb_common.h"
 #include "doomdef.h"
+#include "jagcry.h"
 #include "p_local.h"
 
 int playertics, thinkertics, sighttics, basetics, latetics;
@@ -95,7 +97,7 @@ void P_RunThinkers(void)
    while(currentthinker != &thinkercap)
    {
       if(currentthinker->function == (think_t)-1) // CALICO_FIXME: non-portable
-      {	
+      {
          /* time to remove it */
          currentthinker->next->prev = currentthinker->prev;
          currentthinker->prev->next = currentthinker->next;
@@ -188,7 +190,7 @@ void P_CheckCheats(void)
       buttons    = ticbuttons[i];
       oldbuttons = oldticbuttons[i];
 
-      if((buttons & BT_PAUSE) && !(oldbuttons&BT_PAUSE))
+      if((buttons & BT_PAUSE) && !(oldbuttons & BT_PAUSE))
          gamepaused ^= 1;
    }
 
@@ -264,7 +266,7 @@ int P_Ticker(void)
    //ticstart = samplecount;
 
    while(!I_RefreshLatched())
-      ;	// wait for refresh to latch all needed data before running the next tick
+      ; // wait for refresh to latch all needed data before running the next tick
 
    gameaction = ga_nothing;
 
@@ -274,7 +276,7 @@ int P_Ticker(void)
    // check for pause and cheats
    //
    P_CheckCheats();
-	
+
    //
    // do option screen processing
    //
@@ -323,11 +325,11 @@ int P_Ticker(void)
    P_UpdateSpecials();
 
    P_RespawnSpecials();
-	
+
    ST_Ticker(); // update status bar
-		
+
    //tictics = samplecount - ticstart;
-	
+
    return gameaction; // may have been set to ga_died, ga_completed, or ga_secretexit
 }
 
@@ -337,84 +339,86 @@ int P_Ticker(void)
 = DrawPlaque 
 = 
 ============= 
-*/ 
- 
-void DrawPlaque(jagobj_t *pl)
+*/
+
+void DrawPlaque(jagobj_t *pl, const char *name)
 {
-   // CALICO_TODO: non-portable, requires working video
-#if 0
-   int    x,y,w;
-   short  *sdest;
-   byte   *bdest, *source;
-   extern int isrvmode;
+   int       x, y ,w, h;
+   byte     *source;
+   void     *rez;   // CALICO
+   uint32_t *bdest; // CALICO
 
    while(!I_RefreshCompleted())
       ;
 
-   bufferpage = (byte *)screens[!workpage];
    source = pl->data;
-	
-   if(isrvmode == 0xc1 + (3<<9) )
+   w      = BIGSHORT(pl->width);
+   h      = BIGSHORT(pl->height);
+
+   // CALICO: create or retrieve a texture resource for this plaque
+   if(!(rez = GL_CheckForTextureResource(name)))
    {
-      /* 320 mode, stretch pixels */
-      bdest = (byte *)bufferpage + 80*320 + (160 - pl->width);
-      w = pl->width;
-      for(y = 0; y < pl->height; y++)
+      if(!(rez = GL_NewTextureResource(name, NULL, w, h, RES_FRAMEBUFFER, 0)))
+         return;
+      
+      GL_TextureResourceSetUpdated(rez);
+      bdest = GL_GetTextureResourceStore(rez);
+
+      for(y = 0; y < h; y++)
       {
          for(x = 0; x < w; x++)
          {
-            bdest[x*2] = bdest[x*2+1] = *source++;
+            bdest[x] = CRYToRGB[palette8[*source++]];
          }
-         bdest += 320;
+         bdest += w;
       }
    }
-   else
-   {
-      /* 160 mode, draw directly */
-      sdest = (short *)bufferpage + 80*160 + (80 - pl->width/2);
-      w = pl->width;
-      for(y = 0; y < pl->height; y++)
-      {
-         for(x = 0; x < w; x++)
-         {
-            sdest[x] = palette8[*source++];
-         }
-         sdest += 160;
-      }
-   }
-#endif
+
+   GL_AddLateDrawCommand(rez, 160 - w, 80, w*2, h);
 }
 
 /* 
-============= 
+=================== 
 = 
-= DrawPlaque 
+= DrawSinglePlaque 
 = 
-============= 
+=================== 
 */ 
  
-void DrawSinglePlaque(jagobj_t *pl)
+void DrawSinglePlaque(jagobj_t *pl, const char *name)
 {
-   // CALICO_TODO: non-portable, requires working video
-#if 0
-   int   x,y,w;
-   byte *bdest, *source;
+   int       x, y ,w, h;
+   byte     *source;
+   void     *rez;   // CALICO
+   uint32_t *bdest; // CALICO
 
    while(!I_RefreshCompleted())
       ;
 
-   bufferpage = (byte *)screens[!workpage];
    source = pl->data;
+   w      = BIGSHORT(pl->width);
+   h      = BIGSHORT(pl->height);
 
-   bdest = (byte *)bufferpage + 80*320 + (160 - pl->width/2);
-   w = pl->width;
-   for(y = 0; y < pl->height; y++)
+   // CALICO: create or retrieve a texture resource for this plaque
+   if(!(rez = GL_CheckForTextureResource(name)))
    {
-      for(x = 0; x < w; x++)
-         bdest[x] = *source++;
-      bdest += 320;
+      if(!(rez = GL_NewTextureResource(name, NULL, w, h, RES_FRAMEBUFFER, 0)))
+         return;
+
+      GL_TextureResourceSetUpdated(rez);
+      bdest = GL_GetTextureResourceStore(rez);
+
+      for(y = 0; y < h; y++)
+      {
+         for(x = 0; x < w; x++)
+         {
+            bdest[x] = CRYToRGB[palette8[*source++]];
+         }
+         bdest += w;
+      }
    }
-#endif
+
+   GL_AddLateDrawCommand(rez, 160 - w / 2, 80, w, h);
 }
 
 /* 
@@ -435,10 +439,6 @@ void P_Drawer(void)
       O_Drawer();
       refreshdrawn = false;
    }
-   else if(gamepaused && refreshdrawn)
-   {
-      DrawPlaque(pausepic);
-   }
    else if(players[consoleplayer].automapflags & AF_ACTIVE)
    {
       ST_Drawer();
@@ -448,6 +448,8 @@ void P_Drawer(void)
    }
    else
    {
+      if(gamepaused && refreshdrawn)     // CALICO: do this here
+         DrawPlaque(pausepic, "paused");
       ST_Drawer();
       R_RenderPlayerView();
       refreshdrawn = true;
@@ -466,9 +468,6 @@ void P_Start(void)
    players[1].automapflags = 0;
    ticremainder[0] = ticremainder[1] = 0;
    M_ClearRandom();
-
-   // CALICO
-   GL_ClearFramebuffer(FB_160, D_RGBA(0, 0, 0, 0xff));
 }
 
 void P_Stop(void)

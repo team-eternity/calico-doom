@@ -370,7 +370,7 @@ int MiniLoop(void (*start)(void), void (*stop)(void),
 //=============================================================================
 
 void ClearEEProm(void);
-void DrawSinglePlaque(jagobj_t *pl);
+void DrawSinglePlaque(jagobj_t *pl, const char *name);
 
 int TIC_Abortable(void)
 {
@@ -387,12 +387,13 @@ int TIC_Abortable(void)
 
       ClearEEProm();
       pl = W_CacheLumpName("defaults", PU_STATIC);
-      DrawSinglePlaque(pl);
+      DrawSinglePlaque(pl, "defaults");
       Z_Free(pl);
       S_Clear();
       count = I_GetTime();
       while((junk = I_GetTime()) < count + 240)
          ;
+      // CALICO_FIXME: this is a pretty bad idea for us.
       Jag68k_main(myargc, myargv);
    }
 
@@ -414,7 +415,7 @@ void START_Title(void)
 {
    backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
    DoubleBufferSetup();
-   titlepic = W_CacheLumpName ("title",PU_STATIC);
+   titlepic = W_CacheLumpName("title", PU_STATIC);
    S_StartSong(mus_intro, 0);
    hal_appstate.setGrabState(HAL_FALSE); // CALICO: don't grab input
 }

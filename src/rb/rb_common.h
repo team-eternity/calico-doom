@@ -36,6 +36,11 @@
 #define D_BGRA(r,g,b,a) \
    ((unsigned int)((((a)&0xff)<<24)|(((r)&0xff)<<16)|(((g)&0xff)<<8)|((b)&0xff)))
 
+// Common colors
+#define RB_COLOR_WHITE D_RGBA(0xff, 0xff, 0xff, 0xff)
+#define RB_COLOR_BLACK D_RGBA(0,    0,    0,    0xff)
+#define RB_COLOR_CLEAR D_RGBA(0,    0,    0,    0)
+
 #endif
 
 // EOF

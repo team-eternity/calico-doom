@@ -57,8 +57,8 @@ int workpage; // which frame is not being displayed
 int worklist; // which listbuffer is not being used
 
 int joypad[32]; 
-
 int joystick1; 
+
 //int ticcount; 
  
 int junk; 
@@ -73,6 +73,14 @@ char hexdigits[] = "0123456789ABCDEF";
 void ReadEEProm(void);
 
 static void I_GetFramebuffer(void);
+
+//
+// CALICO: HAL callback for getting game's opinion of whether input should be grabbed
+//
+static hal_bool ShouldGrabInput(void)
+{
+   return !gamepaused;
+}
 
 /* 
 ================ 
@@ -112,6 +120,7 @@ void Jag68k_main(int argc, const char *const *argv)
 
    // CALICO: initialize input
    hal_input.initInput();
+   hal_appstate.gameGrabCallback = ShouldGrabInput;
 
    if(M_FindArgument("-devparm")) // CALICO: turn on debugging features
       debugscreenstate = true;
@@ -248,9 +257,9 @@ void I_Print8(int x, int y, char *string)
          for(b = 0; b < 8; b++)
          {
             if(s & (1 << (7 - b)))
-               *(d + b) = D_RGBA(0xff, 0xff, 0xff, 0xff);
+               *(d + b) = RB_COLOR_WHITE;
             else
-               *(d + b) = D_RGBA(0, 0, 0, 0);
+               *(d + b) = RB_COLOR_CLEAR;
          }
          d += 256;
       }
@@ -722,8 +731,8 @@ void DoubleBufferSetup(void)
    while(!I_RefreshCompleted())
       ;
 
-   GL_ClearFramebuffer(FB_320, D_RGBA(0, 0, 0, 0));
-   GL_ClearTextureResource(debugscreenrez, D_RGBA(0, 0, 0, 0));
+   GL_ClearFramebuffer(FB_320, RB_COLOR_CLEAR);
+   GL_ClearTextureResource(debugscreenrez, RB_COLOR_CLEAR);
 
    cy = 4;
 }
@@ -1079,7 +1088,7 @@ reget:
 
    return val;
 #else
-   return 0;
+   return -1;
 #endif
 }
 
@@ -1144,6 +1153,8 @@ void Player0Setup(void)
    /* wait until we see a 0x22 from other side */
    do
    {
+      joystick1 = hal_input.getEvents(); // CALICO
+
       if(joystick1 == JP_OPTION)
       {
          starttype = gt_single;
@@ -1208,7 +1219,7 @@ void Player1Setup(void)
    PutSerialChar(0x22);
 }
 
-void DrawSinglePlaque(jagobj_t *pl);
+void DrawSinglePlaque(jagobj_t *pl, const char *name);
 
 int listen1, listen2;
 
@@ -1217,11 +1228,12 @@ void I_NetSetup(void)
    jagobj_t *pl;
 
    DoubleBufferSetup();
-   UpdateBuffer();
 
    pl = W_CacheLumpName("connect", PU_STATIC);
-   DrawSinglePlaque(pl);
+   DrawSinglePlaque(pl, "connect");
    Z_Free(pl);
+
+   UpdateBuffer(); // CALICO: after plaque
 
    // CALICO_FIXME: Jag-specific
 #if 0
@@ -1314,7 +1326,7 @@ unsigned I_NetTransfer(unsigned int buttons)
 
       S_Clear();
       pl = W_CacheLumpName("neterror", PU_STATIC);	
-      DrawPlaque (pl);
+      DrawPlaque(pl, "neterror");
       Z_Free (pl);
 
       wait(200);

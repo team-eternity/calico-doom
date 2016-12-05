@@ -798,7 +798,7 @@ extern int       controltype;
 void WriteEEProm(void);
 void O_SetButtonsFromControltype(void);
 void PrintHex(int x, int y, unsigned num);
-void DrawPlaque(jagobj_t *pl);
+void DrawPlaque(jagobj_t *pl, const char *name);
 extern int maxlevel; // highest level selectable in menu (1-25)
 
 extern int gamevbls;    // may not really be vbls in multiplayer

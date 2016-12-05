@@ -3,7 +3,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-void P_SpawnMapThing (mapthing_t *mthing);
+void P_SpawnMapThing(mapthing_t *mthing);
 
 int          numvertexes;
 vertex_t    *vertexes;
@@ -19,12 +19,12 @@ int          numlines;
 line_t      *lines;
 int          numsides;
 side_t      *sides;
-short       *blockmaplump; /* offsets in blockmap are from here */
+short       *blockmaplump; // offsets in blockmap are from here
 short       *blockmap;
-int          bmapwidth, bmapheight; /* in mapblocks */
-fixed_t      bmaporgx, bmaporgy;    /* origin of block map */
-mobj_t     **blocklinks;            /* for thing chains */
-byte        *rejectmatrix;          /* for fast sight rejection */
+int          bmapwidth, bmapheight; // in mapblocks
+fixed_t      bmaporgx, bmaporgy;    // origin of block map
+mobj_t     **blocklinks;            // for thing chains
+byte        *rejectmatrix;          // for fast sight rejection
 mapthing_t   deathmatchstarts[10], *deathmatch_p;
 mapthing_t   playerstarts[MAXPLAYERS];
 
@@ -43,8 +43,8 @@ void P_LoadVertexes(int lump)
    mapvertex_t *ml;
    vertex_t    *li;
 
-   numvertexes = W_LumpLength (lump) / sizeof(mapvertex_t);
-   vertexes    = Z_Malloc (numvertexes*sizeof(vertex_t),PU_LEVEL,0);	
+   numvertexes = W_LumpLength(lump) / sizeof(mapvertex_t);
+   vertexes    = Z_Malloc(numvertexes*sizeof(vertex_t),PU_LEVEL,0);	
    data = I_TempBuffer();
    W_ReadLump(lump, data);
    
@@ -74,8 +74,8 @@ void P_LoadSegs(int lump)
    line_t   *ldef;
    int       linedef, side;
 
-   numsegs = W_LumpLength (lump) / sizeof(mapseg_t);
-   segs    = Z_Malloc (numsegs*sizeof(seg_t),PU_LEVEL,0);	
+   numsegs = W_LumpLength(lump) / sizeof(mapseg_t);
+   segs    = Z_Malloc(numsegs*sizeof(seg_t),PU_LEVEL,0);	
    D_memset(segs, 0, numsegs*sizeof(seg_t));
    data = I_TempBuffer();
    W_ReadLump(lump, data);
@@ -122,8 +122,8 @@ void P_LoadSubsectors(int lump)
    mapsubsector_t *ms;
    subsector_t    *ss;
 
-   numsubsectors = W_LumpLength (lump) / sizeof(mapsubsector_t);
-   subsectors    = Z_Malloc (numsubsectors*sizeof(subsector_t),PU_LEVEL,0);	
+   numsubsectors = W_LumpLength(lump) / sizeof(mapsubsector_t);
+   subsectors    = Z_Malloc(numsubsectors*sizeof(subsector_t),PU_LEVEL,0);	
    data = I_TempBuffer();
    W_ReadLump(lump, data);
 
@@ -153,7 +153,7 @@ void P_LoadSectors(int lump)
    sector_t    *ss;
 
    numsectors = W_LumpLength (lump) / sizeof(mapsector_t);
-   sectors    = Z_Malloc (numsectors*sizeof(sector_t),PU_LEVEL,0);	
+   sectors    = Z_Malloc(numsectors*sizeof(sector_t),PU_LEVEL,0);
    D_memset(sectors, 0, numsectors*sizeof(sector_t));
    data = I_TempBuffer();
    W_ReadLump(lump, data);
@@ -197,7 +197,7 @@ void P_LoadNodes(int lump)
    node_t    *no;
 
    numnodes = W_LumpLength (lump) / sizeof(mapnode_t);
-   nodes    = Z_Malloc (numnodes*sizeof(node_t),PU_LEVEL,0);	
+   nodes    = Z_Malloc(numnodes*sizeof(node_t),PU_LEVEL,0);	
    data     = I_TempBuffer();
    W_ReadLump(lump, data);
 
@@ -235,8 +235,8 @@ void P_LoadThings(int lump)
    int numthings;
 
    data = I_TempBuffer();
-   W_ReadLump(lump,data);
-   numthings = W_LumpLength (lump) / sizeof(mapthing_t);
+   W_ReadLump(lump, data);
+   numthings = W_LumpLength(lump) / sizeof(mapthing_t);
 
    mt = (mapthing_t *)data;
    for(i = 0; i < numthings; i++, mt++)
@@ -266,13 +266,13 @@ void P_LoadLineDefs(int lump)
    maplinedef_t *mld;
    line_t       *ld;
    vertex_t     *v1, *v2;
-	
-   numlines = W_LumpLength (lump) / sizeof(maplinedef_t);
-   lines    = Z_Malloc (numlines*sizeof(line_t),PU_LEVEL,0);	
+
+   numlines = W_LumpLength(lump) / sizeof(maplinedef_t);
+   lines    = Z_Malloc(numlines*sizeof(line_t),PU_LEVEL,0);
    D_memset(lines, 0, numlines*sizeof(line_t));
    data     = I_TempBuffer();
-   W_ReadLump(lump,data);
-	
+   W_ReadLump(lump, data);
+
    mld = (maplinedef_t *)data;
    ld = lines;
    for(i = 0; i < numlines; i++, mld++, ld++)
@@ -387,19 +387,19 @@ void P_LoadBlockMap(int lump)
 {
    int count;
    int i;
-	
+
    blockmaplump = W_CacheLumpNum (lump,PU_LEVEL);
    blockmap = blockmaplump+4;
    count = W_LumpLength (lump)/2;
    for(i = 0; i < count; i++)
       blockmaplump[i] = LITTLESHORT(blockmaplump[i]);
-		
+
    bmaporgx   = blockmaplump[0]<<FRACBITS;
    bmaporgy   = blockmaplump[1]<<FRACBITS;
    bmapwidth  = blockmaplump[2];
    bmapheight = blockmaplump[3];
 
-   /* clear out mobj chains */
+   // clear out mobj chains
    count = sizeof(*blocklinks)* bmapwidth*bmapheight;
    blocklinks = Z_Malloc(count,PU_LEVEL, 0);
    D_memset(blocklinks, 0, count);
@@ -426,7 +426,7 @@ void P_GroupLines(void)
    line_t       *li;
    fixed_t       bbox[4];
 
-   /* look up sector number for each subsector */
+   // look up sector number for each subsector
    ss = subsectors;
    for(i = 0; i < numsubsectors; i++, ss++)
    {
@@ -434,7 +434,7 @@ void P_GroupLines(void)
       ss->sector = seg->sidedef->sector;
    }
 
-   /* count number of lines in each sector */
+   // count number of lines in each sector
    li = lines;
    total = 0;
    for(i = 0; i < numlines; i++, li++)
@@ -447,8 +447,8 @@ void P_GroupLines(void)
          total++;
       }
    }
-	
-   /* build line tables for each sector	 */
+
+   // build line tables for each sector
    linebuffer = Z_Malloc(total*4, PU_LEVEL, 0);
    sector = sectors;
    for(i = 0; i < numsectors; i++, sector++)
@@ -466,13 +466,13 @@ void P_GroupLines(void)
          }
       }
       if(linebuffer - sector->lines != sector->linecount)
-         I_Error ("P_GroupLines: miscounted");
+         I_Error("P_GroupLines: miscounted");
 
-      /* set the degenmobj_t to the middle of the bounding box */
+      // set the degenmobj_t to the middle of the bounding box
       sector->soundorg.x = (bbox[BOXRIGHT]+bbox[BOXLEFT])/2;
       sector->soundorg.y = (bbox[BOXTOP]+bbox[BOXBOTTOM])/2;
 
-      /* adjust bounding box to map blocks */
+      // adjust bounding box to map blocks
       block = (bbox[BOXTOP]-bmaporgy+MAXRADIUS)>>MAPBLOCKSHIFT;
       block = block >= bmapheight ? bmapheight-1 : block;
       sector->blockbox[BOXTOP]=block;
@@ -491,7 +491,7 @@ void P_GroupLines(void)
    }
 }
 
-/*============================================================================= */
+//=============================================================================
 
 /*
 =================
@@ -505,12 +505,12 @@ void P_LoadingPlaque(void)
 {
    jagobj_t *pl;
 
-   pl = W_CacheLumpName("loading", PU_STATIC);	
-   DrawPlaque(pl);
+   pl = W_CacheLumpName("loading", PU_STATIC);
+   DrawPlaque(pl, "loading");
    Z_Free(pl);
-}	
+}
 
-/*============================================================================= */
+//=============================================================================
 
 /*
 =================
@@ -527,7 +527,7 @@ void P_SetupLevel(int map, skill_t skill)
    int          lumpnum;
    mobj_t      *mobj;
    extern int   cy;
-	
+
    M_ClearRandom();
 
    P_LoadingPlaque();
@@ -544,20 +544,20 @@ void P_SetupLevel(int map, skill_t skill)
    Z_FreeTags(mainzone);
 
    P_InitThinkers();
-	
-   /* */
-   /* look for a regular (development) map first */
-   /* */
+
+   //
+   // look for a regular (development) map first
+   //
    lumpname[0] = 'M';
    lumpname[1] = 'A';
    lumpname[2] = 'P';
    lumpname[3] = '0' + map/10;
    lumpname[4] = '0' + map%10;
    lumpname[5] = 0;
-	
+
    lumpnum = W_GetNumForName(lumpname);
 
-   /* note: most of this ordering is important	 */
+   // note: most of this ordering is important
    P_LoadBlockMap(lumpnum+ML_BLOCKMAP);
    P_LoadVertexes(lumpnum+ML_VERTEXES);
    P_LoadSectors(lumpnum+ML_SECTORS);
@@ -566,33 +566,33 @@ void P_SetupLevel(int map, skill_t skill)
    P_LoadSubsectors(lumpnum+ML_SSECTORS);
    P_LoadNodes(lumpnum+ML_NODES);
    P_LoadSegs(lumpnum+ML_SEGS);
-	
-   rejectmatrix = W_CacheLumpNum (lumpnum+ML_REJECT,PU_LEVEL);
 
-   P_GroupLines ();
+   rejectmatrix = W_CacheLumpNum(lumpnum+ML_REJECT,PU_LEVEL);
+
+   P_GroupLines();
 
    deathmatch_p = deathmatchstarts;
-   P_LoadThings (lumpnum+ML_THINGS);
-	
-   /* */
-   /* if deathmatch, randomly spawn the active players */
-   /* */
+   P_LoadThings(lumpnum+ML_THINGS);
+
+   //
+   // if deathmatch, randomly spawn the active players
+   //
    if(netgame == gt_deathmatch)
    {
       for(i = 0; i < MAXPLAYERS; i++)
       {
          if(playeringame[i])
          {
-            /* must give a player spot before deathmatchspawn */
-            mobj = P_SpawnMobj (deathmatchstarts[0].x<<16 ,deathmatchstarts[0].y<<16,0, MT_PLAYER);
+            // must give a player spot before deathmatchspawn
+            mobj = P_SpawnMobj(deathmatchstarts[0].x<<16 ,deathmatchstarts[0].y<<16,0, MT_PLAYER);
             players[i].mo = mobj;
             G_DeathMatchSpawnPlayer(i);
             P_RemoveMobj(mobj);
          }
       }
    }
-	
-   /* set up world state */
+
+   // set up world state
    P_SpawnSpecials();
    ST_InitEveryLevel();
 

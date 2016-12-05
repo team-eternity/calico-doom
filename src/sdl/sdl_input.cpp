@@ -32,6 +32,7 @@
 #include "../elib/elib.h"
 #include "../elib/configfile.h"
 #include "../hal/hal_types.h"
+#include "../hal/hal_input.h"
 #include "../hal/hal_ml.h"
 #include "../hal/hal_video.h"
 #include "../jagpad.h"
@@ -59,7 +60,13 @@ void SDL2_SetGrabState(hal_bool state)
 //
 hal_bool SDL2_MouseShouldBeGrabbed(void)
 {
-   return (hal_bool)(windowFocused && shouldGrabInput);
+   hal_bool gameWants = HAL_TRUE;
+   
+   // get game's opinion if available
+   if(hal_appstate.gameGrabCallback)
+      gameWants = hal_appstate.gameGrabCallback();
+   
+   return (hal_bool)(windowFocused && shouldGrabInput && gameWants);
 }
 
 //

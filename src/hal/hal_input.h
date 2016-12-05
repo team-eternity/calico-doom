@@ -37,6 +37,7 @@ typedef struct hal_appstate_s
    void     (*updateGrab)(void);
    void     (*updateFocus)(void);
    void     (*setGrabState)(hal_bool state);
+   hal_bool (*gameGrabCallback)(void);
 } hal_appstate_t;
 
 typedef struct hal_input_s

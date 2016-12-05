@@ -58,12 +58,14 @@ void *GL_NewTextureResource(const char *lumpname, void *data,
                             unsigned int width, unsigned int height,
                             glrestype_t restype, int palshift);
 void *GL_TextureResourceGetFramebuffer(glfbwhich_t which);
+void *GL_CheckForTextureResource(const char *name);
 
 void          GL_UpdateTextureResource(void *resource);
 void          GL_TextureResourceSetUpdated(void *resource);
 unsigned int *GL_GetTextureResourceStore(void *resource);
 void          GL_ClearTextureResource(void *resource, unsigned int clearColor);
 void          GL_AddDrawCommand(void *res, int x, int y, unsigned int w, unsigned int h);
+void          GL_AddLateDrawCommand(void *res, int x, int y, unsigned int w, unsigned int h);
 
 #ifdef __cplusplus
 }

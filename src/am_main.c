@@ -332,7 +332,7 @@ void AM_Drawer(void)
    int       drawn; // HOW MANY LINES DRAWN?
 
    // CALICO: Clear playfield framebuffer
-   GL_ClearFramebuffer(FB_160, D_RGBA(0, 0, 0, 0xff));
+   GL_ClearFramebuffer(FB_160, RB_COLOR_BLACK);
 
    p = &players[consoleplayer];
    ox = p->automapx;

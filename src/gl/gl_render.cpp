@@ -268,6 +268,15 @@ void *GL_NewTextureResource(const char *name, void *data,
 }
 
 //
+// Call from game code to check if a texture resource exists. If so, it will be
+// returned. It will not be created if it does not.
+//
+void *GL_CheckForTextureResource(const char *name)
+{
+   return graphics.findResourceType<TextureResource>(name);
+}
+
+//
 // Call from game code to draw to backing store of a texture resource
 //
 void GL_UpdateTextureResource(void *resource)
@@ -340,6 +349,7 @@ struct drawcommand_t
 };
 
 static BDList<drawcommand_t, &drawcommand_t::links> drawCommands;
+static BDList<drawcommand_t, &drawcommand_t::links> lateDrawCommands;
 
 //
 // Add a texture resource to the draw command list. If the resource needs its
@@ -364,6 +374,28 @@ void GL_AddDrawCommand(void *res, int x, int y, unsigned int w, unsigned int h)
       dc->res->update();
 }
 
+//
+// Add a late draw command, which will draw after everything else.
+//
+void GL_AddLateDrawCommand(void *res, int x, int y, unsigned int w, unsigned int h)
+{
+   if(!res)
+      return;
+
+   auto dc = estructalloc(drawcommand_t, 1);
+
+   dc->res = static_cast<TextureResource *>(res);
+   dc->x   = x;
+   dc->y   = y;
+   dc->w   = w;
+   dc->h   = h;
+
+   lateDrawCommands.insert(dc);
+
+   if(dc->res->needsUpdate())
+      dc->res->update();
+}
+
 static void GL_clearDrawCommands(void)
 {
    while(!drawCommands.empty())
@@ -378,6 +410,13 @@ static void GL_executeDrawCommands(void)
 {
    BDListItem<drawcommand_t> *item;
    vtx_t v[4];
+
+   // fold in the late draw commands now
+   while((item = lateDrawCommands.first()) != &lateDrawCommands.head)
+   {
+      lateDrawCommands.remove(item->bdObject);
+      drawCommands.insert(item->bdObject);
+   }
 
    for(item = drawCommands.first(); item != &drawCommands.head; item = item->bdNext)
    {
