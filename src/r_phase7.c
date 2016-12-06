@@ -4,9 +4,13 @@
   Renderer phase 7 - Visplanes
 */
 
+// DEBUG
+#include "hal/hal_timer.h"
+
 #include "r_local.h"
 
 #define OPENMASK 0xff00
+//#define OPENMASK ((SCREENHEIGHT - 1) << 8)
 
 static fixed_t planeheight;
 static angle_t planeangle;
@@ -19,7 +23,7 @@ static fixed_t basexscale, baseyscale;
 static int *pl_stopfp;
 static int *pl_fp;
 
-static int spanstart[SCREENHEIGHT];
+static int spanstart[/*SCREENHEIGHT*/256];
 static pixel_t *ds_source;
 
 //
@@ -76,7 +80,8 @@ mp_entry:
    */
    do
    {
-      parm = *(--pl_fp);
+      --pl_fp;
+      parm = *pl_fp;
       x2 = parm >> FRACBITS;
       y  = (parm >> 8) & 0xff;
       x  = parm & 0xff;
@@ -120,9 +125,11 @@ mp_entry:
       // transform to hardware value
       light = -((255 - light) << 14) & 0xffffff;
 
-#if 0
+#if 1
       // Does not work yet...
-      I_DrawSpan(y, x, x2, light, xfrac, yfrac, axstep, aystep, ds_source);
+      I_DrawSpan(y, x, x2, light, xfrac, yfrac, xstep, ystep, ds_source);
+      I_Update();
+      hal_timer.delay(10);
 #endif
 
       // Jag-specific blitter setup (equivalent to R_MakeSpans/R_DrawSpan)
@@ -366,9 +373,9 @@ static void R_PlaneLoop(visplane_t *pl)
    }
    while(pl_x != pl_stopx);
 
-   // anything to draw?
+   // all done calculating, so execute the plane commands
    if(pl_fp != pl_stopfp)
-      R_MapPlane();    // CALICO_TODO
+      R_MapPlane();
 }
 
 //

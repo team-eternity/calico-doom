@@ -549,7 +549,9 @@ void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
    if(ds_x2 < ds_x1 || ds_x1 < 0 || ds_x2 >= SCREENWIDTH || ds_y < 0 || ds_y >= SCREENHEIGHT) 
       I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y); 
 #endif 
-
+   
+   GL_FramebufferSetUpdated(FB_160);
+   
    xfrac = ds_xfrac; 
    yfrac = ds_yfrac; 
 
