@@ -6,8 +6,6 @@
 
 #include "r_local.h"
 
-#define OPENMARK 0xff00
-
 static int spropening[SCREENWIDTH + 1];
 
 static void R_DrawVisSprite(vissprite_t *vis)

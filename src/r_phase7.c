@@ -4,12 +4,7 @@
   Renderer phase 7 - Visplanes
 */
 
-// DEBUG
-#include "hal/hal_timer.h"
-
 #include "r_local.h"
-
-#define OPENMASK 0xff00
 
 static fixed_t planeheight;
 static angle_t planeangle;
@@ -370,8 +365,8 @@ void R_DrawPlanes(void)
          plane_lightsub  = ((light - plane_lightmin) * 160) / 640;
          plane_lightcoef = (light - plane_lightmin) << SLOPEBITS;
 
-         pl->open[pl->maxx + 1] = OPENMASK;
-         pl->open[pl->minx - 1] = OPENMASK;
+         pl->open[pl->maxx + 1] = OPENMARK;
+         pl->open[pl->minx - 1] = OPENMARK;
 
          R_PlaneLoop(pl);
       }

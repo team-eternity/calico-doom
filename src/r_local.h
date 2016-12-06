@@ -228,6 +228,8 @@ extern unsigned short distscale[SCREENWIDTH]; // 1.15 frac
 #define FIXEDTOSCALE  (FRACBITS-SCALEBITS)
 #define FIXEDTOHEIGHT (FRACBITS-HEIGHTBITS)
 
+// CALICO
+#define OPENMARK 0xff00
 
 extern fixed_t viewx, viewy, viewz;
 extern angle_t viewangle;

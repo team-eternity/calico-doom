@@ -6,8 +6,6 @@
 
 #include "r_local.h"
 
-#define OPENMARK 0xff00
-
 typedef struct drawtex_s
 {
    pixel_t *data;

@@ -565,9 +565,6 @@ void GL_RenderFrame(void)
    GL_executeDrawCommands();
    GL_clearDrawCommands();
    hal_video.endFrame();
-
-   // TEMP/DEBUG
-   //GL_ClearFramebuffer(FB_160, 0xff505050);
 }
 
 // EOF

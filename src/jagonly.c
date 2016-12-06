@@ -499,7 +499,6 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
    inpixel_t  cry;
    int32_t    y;
    uint32_t  *dest;
-   uint32_t   rgb;
 
    count = dc_yh - dc_yl;
    if(count < 0)
@@ -525,9 +524,8 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
       if(y < 0)
          y = 0;
       cry = (cry & CRY_COLORMASK) | (y & 0xff);
-      rgb = CRYToRGB[cry];
 
-      *dest = rgb;
+      *dest = CRYToRGB[cry];
       dest += SCREENWIDTH;
       frac += fracstep;
    }
@@ -539,11 +537,10 @@ void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
                 inpixel_t *ds_source) 
 { 
    fixed_t    xfrac, yfrac; 
-   int        count, spot; 
+   int        count; 
    inpixel_t  cry;
    int32_t    y;
    uint32_t  *dest;
-   uint32_t   rgb;
 
 #ifdef RANGECHECK 
    if(ds_x2 < ds_x1 || ds_x1 < 0 || ds_x2 >= SCREENWIDTH || ds_y < 0 || ds_y >= SCREENHEIGHT) 
@@ -557,23 +554,20 @@ void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 
    // CALICO: our destination framebuffer is 32-bit
    dest = framebuffer160_p + ds_y * SCREENWIDTH + ds_x1;
-   count = ds_x2 - ds_x1; 
+   count = ds_x2 - ds_x1;
 
    do 
    { 
-      spot = ((yfrac >> (16 - 6)) & (63 * 64)) + ((xfrac >> 16) & 63);
-
       // CALICO: calculate CRY lighting and lookup RGB
-      cry = ds_source[spot];
+      cry = ds_source[((yfrac >> (16 - 6)) & (63 * 64)) + ((xfrac >> 16) & 63)];
       y = (cry & CRY_YMASK) << CRY_IINCSHIFT;
       y += (s.ext = light);
       y >>= CRY_IINCSHIFT;
       if(y < 0)
          y = 0;
       cry = (cry & CRY_COLORMASK) | (y & 0xff);
-      rgb = CRYToRGB[cry];
 
-      *dest++ = rgb; 
+      *dest++ = CRYToRGB[cry];
       xfrac += ds_xstep; 
       yfrac += ds_ystep; 
    }
