@@ -10,7 +10,6 @@
 #include "r_local.h"
 
 #define OPENMASK 0xff00
-//#define OPENMASK ((SCREENHEIGHT - 1) << 8)
 
 static fixed_t planeheight;
 static angle_t planeangle;
@@ -35,49 +34,8 @@ static void R_MapPlane(void)
    int remaining;
    fixed_t distance, length, xfrac, yfrac, xstep, ystep;
    angle_t angle;
-
-   fixed_t axstep, aystep;
    int light;
 
-   // CALICO_TODO
-   /*
-mp_ystep	.equr	r0
-mp_axstep	.equr	r1
-mp_aystep	.equr	r2
-mp_count	.equr	r3
-mp_a1pixel	.equr	r4
-mp_FREE		.equr	r5
-mp_remaining .equr	r6
-mp_xremain	.equr	r7
-mp_yremain	.equr	r8
-mp_ffff		.equr	r9
-mp_ffff0000	.equr	r12
-
-mp_blitter	.equr	r15
-mp_y		.equr	r16
-mp_3fffff	.equr	r17
-mp_x2		.equr	r18
-mp_angle	.equr	r19
-mp_distance	.equr	r20
-mp_length	.equr	r21
-mp_x		.equr	r22
-mp_light	.equr	r23
-mp_xfrac	.equr	r24
-mp_yfrac	.equr	r25
-mp_xstep	.equr	r26
-mp_blitcommand	.equr	r27
-
-;
-; set up for multiple R_MapPlanes
-;                                                             // Jag-specific setup
-	movei	#$f02200,mp_blitter                                  mp_blitter = 0xf02200
-	movei	#$ffff,mp_ffff                                       mp_ffff = 0xffff
-	movei	#$ffff0000,mp_ffff0000                               mp_ffff0000 = 0xffff0000
-	movei	#$3fffff,mp_3fffff                                   mp_3fffff = 0x3fffff
-	movei	#1+(1<<11)+(1<<13)+(1<<30)+(12<<21),mp_blitcommand   mp_blitcommand = 0x41802801
-
-mp_entry:
-   */
    do
    {
       --pl_fp;
@@ -98,22 +56,10 @@ mp_entry:
       yfrac = planey - (((  finesine[angle] >> 1) * length) >> 4);
    
       xstep = (distance * basexscale) >> 4;   
-      if(!xstep)
-         axstep = xstep = 1;
-      else if(xstep < 0)
-         axstep = -xstep;
-      else
-         axstep = xstep;
    
       light = plane_lightcoef / distance;
 
       ystep = (baseyscale * distance) >> 4;
-      if(!ystep)
-         aystep = ystep = 1;
-      else if(ystep < 0)
-         aystep = -ystep;
-      else
-         aystep = ystep;
 
       // finish light calculations
       light -= plane_lightsub;
@@ -125,12 +71,8 @@ mp_entry:
       // transform to hardware value
       light = -((255 - light) << 14) & 0xffffff;
 
-#if 1
-      // Does not work yet...
+      // CALICO: invoke I_DrawSpan here.
       I_DrawSpan(y, x, x2, light, xfrac, yfrac, xstep, ystep, ds_source);
-      I_Update();
-      hal_timer.delay(10);
-#endif
 
       // Jag-specific blitter setup (equivalent to R_MakeSpans/R_DrawSpan)
       /*
@@ -323,22 +265,24 @@ static void R_PlaneLoop(visplane_t *pl)
    t1 = *pl_openptr++;
    b1 = t1 & 0xff;
    t1 >>= 8;
-
+   t2 = *pl_openptr;
+   
    do
    {
-      t2 = *pl_openptr++;
       b2 = t2 & 0xff;
       t2 >>= 8;
 
       pl_oldtop = t2;
       pl_oldbottom = b2;
 
+      ++pl_openptr;
+
       // top diffs
-      if(t1 != t2)
+      if(t1 != pl_oldtop)
       {
          while(t1 < t2 && t1 <= b1)
          {
-            *pl_fp++ = ((pl_x - 1) << FRACBITS) + (t1 << 8) + spanstart[t1];
+            *pl_fp++ = ((pl_x - 1) << FRACBITS) | (t1 << 8) | spanstart[t1];
             ++t1;
          }
          
@@ -353,9 +297,9 @@ static void R_PlaneLoop(visplane_t *pl)
       // bottom diffs
       if(b1 != b2)
       {
-         while(b1 > b2 && b1 >= b2)
+         while(b1 > b2 && b1 >= t1)
          {
-            *pl_fp++ = ((pl_x - 1) << FRACBITS) + (b1 << 8) + spanstart[b1];
+            *pl_fp++ = ((pl_x - 1) << FRACBITS) | (b1 << 8) | spanstart[b1];
             --b1;
          }
 
@@ -370,6 +314,7 @@ static void R_PlaneLoop(visplane_t *pl)
       ++pl_x;
       b1 = pl_oldbottom;
       t1 = pl_oldtop;
+      t2 = *pl_openptr;
    }
    while(pl_x != pl_stopx);
 
