@@ -98,6 +98,9 @@ static void R_DrawTexture(drawtex_t *tex)
    colnum = texturecol;
    frac = tex->texturemid - (CENTERY - top) * iscale;
 
+   // DEBUG: fixes green pixels in MAP01...
+   frac += (iscale + (iscale >> 5) + (iscale >> 6));
+
    while(frac < 0)
    {
       colnum--;
