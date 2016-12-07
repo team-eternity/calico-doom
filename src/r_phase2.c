@@ -120,7 +120,7 @@ void R_WallPrep(void)
 
             b_texturemid += si->rowoffset; // add in sidedef texture offset
 
-            segl->b_topheight    = segl->floornewheight = b_floorheight / (1 << FIXEDTOHEIGHT);
+            segl->b_topheight = segl->floornewheight = b_floorheight / (1 << FIXEDTOHEIGHT);
             segl->b_bottomheight = f_floorheight / (1 << FIXEDTOHEIGHT);
             actionbits |= (AC_BOTTOMTEXTURE|AC_NEWFLOOR); // generate bottom wall and floor
          }
