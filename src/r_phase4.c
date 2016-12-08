@@ -202,17 +202,17 @@ static void R_FinishSprite(vissprite_t *vis)
 
    // calculate edges of the shape
    tx -= ((fixed_t)BIGSHORT(vis->patch->leftoffset)) << FRACBITS;
-   x1  = (80*FRACUNIT + FixedMul(tx, xscale)) / FRACUNIT;
+   x1  = (CENTERXFRAC + FixedMul(tx, xscale)) / FRACUNIT;
 
    // off the right side?
-   if(x1 > 160)
+   if(x1 > SCREENWIDTH)
    {
       vis->patch = NULL;
       return;
    }
 
    tx += ((fixed_t)BIGSHORT(vis->patch->width) << FRACBITS);
-   x2  = ((80*FRACUNIT + FixedMul(tx, xscale)) / FRACUNIT) - 1;
+   x2  = ((CENTERXFRAC + FixedMul(tx, xscale)) / FRACUNIT) - 1;
 
    // off the left side
    if(x2 < 0)
@@ -225,7 +225,7 @@ static void R_FinishSprite(vissprite_t *vis)
    vis->gzt = vis->gz + ((fixed_t)BIGSHORT(vis->patch->topoffset) << FRACBITS);
    vis->texturemid = vis->gzt - viewz;
    vis->x1 = x1 < 0 ? 0 : x1;
-   vis->x2 = x2 >= 160 ? 160 - 1 : x2;
+   vis->x2 = x2 >= SCREENWIDTH ? SCREENWIDTH - 1 : x2;
    
    if(vis->xiscale < 0)
       vis->startfrac = ((fixed_t)BIGSHORT(vis->patch->width) << FRACBITS) - 1;
@@ -233,7 +233,7 @@ static void R_FinishSprite(vissprite_t *vis)
       vis->startfrac = 0;
 
    if(x1 < 0)
-      vis->startfrac -= vis->xscale * x1;
+      vis->startfrac += vis->xiscale * (vis->x1 - x1);
 }
 
 //

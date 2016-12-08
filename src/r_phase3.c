@@ -47,7 +47,7 @@ static void R_PrepMobj(mobj_t *thing)
       return;
 
    // check sprite for validity
-   if((unsigned int)thing->spawnangle >= NUMSPRITES)
+   if(thing->sprite < 0 || thing->sprite >= NUMSPRITES)
       return;
 
    sprdef = &sprites[thing->sprite];
@@ -85,7 +85,7 @@ static void R_PrepMobj(mobj_t *thing)
    vis->gz       = thing->z;
    vis->xscale   = xscale = FixedDiv(PROJECTION, tz);
    vis->yscale   = FixedMul(xscale, STRETCH);
-   vis->yiscale  = FixedDiv(FRACUNIT, vis->yscale); // NB: -1 in GAS... test w/o.
+   vis->yiscale  = FixedDiv(FRACUNIT, vis->yscale); // CALICO_FIXME: -1 in GAS... test w/o.
 
    if(flip)
       vis->xiscale = -FixedDiv(FRACUNIT, xscale);
