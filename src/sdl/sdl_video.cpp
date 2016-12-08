@@ -63,15 +63,21 @@ static int screenheight    = CALICO_ORIG_SCREENHEIGHT;
 static int fullscreen      = 0;
 static int monitornum      = 0;
 static hal_aspect_t aspect = HAL_ASPECT_NOMINAL;
+static int aspectNum       = 10;
+static int aspectDenom     = 7;
 
 static cfgrange_t<int> swRange = { 320, 32768 };
 static cfgrange_t<int> shRange = { 224, 32768 };
 static cfgrange_t<int> fsRange = { -1,  1     };
+static cfgrange_t<int> anRange = {  3,  32    };
+static cfgrange_t<int> adRange = {  2,  32    };
 
 static CfgItem cfgScreenWidth ("screenwidth",  &screenwidth,  &swRange);
 static CfgItem cfgScreenHeight("screenheight", &screenheight, &shRange);
 static CfgItem cfgFullScreen  ("fullscreen",   &fullscreen,   &fsRange);
 static CfgItem cfgMonitorNum  ("monitornum",   &monitornum);
+static CfgItem cfgAspectNum   ("aspectnum",    &aspectNum,    &anRange);
+static CfgItem cfgAspectDenom ("aspectdenom",  &aspectDenom,  &adRange);
 
 //=============================================================================
 //
@@ -123,13 +129,14 @@ static void SDL2_setOrthoMode(int w, int h)
 }
 
 //
-// Calculate the 10:7 subrect on the framebuffer
+// Calculate the game area's subrect on the framebuffer
 //
 static void SDL2_calcSubRect()
 {
-   rbfixed aspectRatio = curscreenwidth * RBFRACUNIT / curscreenheight;
+   rbfixed aspectRatio    = curscreenwidth * RBFRACUNIT / curscreenheight;
+   rbfixed nomAspectRatio = aspectNum * RBFRACUNIT / aspectDenom;
 
-   if(aspectRatio == 10 * RBFRACUNIT / 7) // nominal
+   if(aspectRatio == nomAspectRatio) // nominal
    {
       subscreen.width  = curscreenwidth;
       subscreen.height = curscreenheight;
@@ -137,9 +144,9 @@ static void SDL2_calcSubRect()
       subscreen.y      = 0;
       aspect           = HAL_ASPECT_NOMINAL;
    }
-   else if(aspectRatio > 10 * RBFRACUNIT / 7) // widescreen
+   else if(aspectRatio > nomAspectRatio) // widescreen
    {
-      subscreen.width  = curscreenheight * 10 / 7;
+      subscreen.width  = curscreenheight * aspectNum / aspectDenom;
       subscreen.height = curscreenheight;
       subscreen.x      = (curscreenwidth - subscreen.width) / 2;
       subscreen.y      = 0;
@@ -148,7 +155,7 @@ static void SDL2_calcSubRect()
    else // narrow
    {
       subscreen.width  = curscreenwidth;
-      subscreen.height = curscreenwidth * 7 / 10;
+      subscreen.height = curscreenwidth * aspectDenom / aspectNum;
       subscreen.x      = 0;
       subscreen.y      = (curscreenheight - subscreen.height) / 2;
       aspect           = HAL_ASPECT_NARROW;
