@@ -28,8 +28,6 @@ static void R_DrawVisSprite(vissprite_t *vis)
    stopx    = vis->x2 + 1;
    fracstep = vis->xiscale;
    
-   // movei #$f02200,dv_blitter                                    dv_blitter = 0xf02200
-
    for(x = vis->x1; x < stopx; x++, xfrac += fracstep)
    {
       column_t *column = (column_t *)((byte *)patch + BIGSHORT(patch->columnofs[xfrac>>FRACBITS]));
@@ -144,8 +142,9 @@ static void R_ClipVisSprite(vissprite_t *vis)
    {
       --ds;
 
-      if(ds->start > x2 || ds->stop < x1 || ds->scalefrac < scalefrac || ds->scale2 < scalefrac ||
-         !(ds->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL)))
+      if(ds->start > x2 || ds->stop < x1 ||                            // does not intersect
+         (ds->scalefrac < scalefrac && ds->scale2 < scalefrac) ||      // is completely behind
+         !(ds->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL))) // does not clip sprites
       {
          continue;
       }
