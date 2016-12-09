@@ -353,7 +353,6 @@ void R_Setup(void)
 
    shadepixel = ((shadex<<12)&0xf000) + ((shadey<<8)&0xf00) + (shadei&0xff);
 
-
    //
    // plane filling
    //

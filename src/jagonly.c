@@ -485,8 +485,40 @@ static void I_GetFramebuffer(void)
    framebuffer320_p = GL_GetFramebuffer(FB_320);
 }
 
+extern pixel_t shadepixel;
+
+struct cextender_s { signed int ext:4; }; // sign extender for 4-bit CRY chroma component
+struct iextender_s { signed int ext:8; }; // sign extender for 8-bit CRY luminance component
+
+//
+// Blend two CRY colors
+//
+static inline inpixel_t I_BlendCRY(inpixel_t in)
+{
+   static struct cextender_s c;
+   static struct iextender_s i;
+
+   int cc = (in & CRY_CMASK) >> CRY_CSHIFT;
+   int cr = (in & CRY_RMASK) >> CRY_RSHIFT;
+   int cy = (in & CRY_YMASK) >> CRY_YSHIFT;
+   
+   int sc = (c.ext = (shadepixel & CRY_CMASK) >> CRY_CSHIFT);
+   int sr = (c.ext = (shadepixel & CRY_RMASK) >> CRY_RSHIFT);
+   int sy = (i.ext = (shadepixel & CRY_YMASK) >> CRY_YSHIFT);
+
+   cc += sc;
+   cr += sr;
+   cy += sy;
+
+   cc = (cc < 0 ? 0 : (0x0f < cc ? 0x0f : cc));
+   cr = (cr < 0 ? 0 : (0x0f < cr ? 0x0f : cr));
+   cy = (cy < 0 ? 0 : (0xff < cy ? 0xff : cy));
+
+   return (inpixel_t)((cc << CRY_CSHIFT) | (cr << CRY_RSHIFT) | (cy << CRY_YSHIFT));
+}
+
 // Sign-extender for 24-bit CRY values
-struct extender_s { signed int ext:24; } s;
+struct yextender_s { signed int ext:24; };
 
 // 
 // Draw a vertical column of pixels from a projected wall texture.
@@ -495,6 +527,8 @@ struct extender_s { signed int ext:24; } s;
 void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, 
                   fixed_t fracstep, inpixel_t *dc_source) 
 { 
+   static struct yextender_s s;
+
    int        count;
    inpixel_t  cry;
    int32_t    y;
@@ -524,6 +558,10 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
       if(y < 0)
          y = 0;
       cry = (cry & CRY_COLORMASK) | (y & 0xff);
+      
+      // CALICO: apply screen shading if active
+      if(shadepixel)
+         cry = I_BlendCRY(cry);
 
       *dest = CRYToRGB[cry];
       dest += SCREENWIDTH;
@@ -536,6 +574,8 @@ void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
                 fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, 
                 inpixel_t *ds_source) 
 { 
+   static struct yextender_s s;
+
    fixed_t    xfrac, yfrac; 
    int        count; 
    inpixel_t  cry;
@@ -567,6 +607,10 @@ void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
          y = 0;
       cry = (cry & CRY_COLORMASK) | (y & 0xff);
 
+      // CALICO: apply screen shading if active
+      if(shadepixel)
+         cry = I_BlendCRY(cry);
+
       *dest++ = CRYToRGB[cry];
       xfrac += ds_xstep; 
       yfrac += ds_ystep; 
@@ -579,8 +623,6 @@ void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 #define GPULINE (BASEORGY+SCREENHEIGHT+1)
 int lastticcount;
 int lasttics;
-
-extern pixel_t shadepixel;
 
 //
 // Display the current framebuffer
