@@ -306,7 +306,7 @@ int MiniLoop(void (*start)(void), void (*stop)(void),
          vblsinframe = 4;
       else
       {
-         vblsinframe = lasttics * 2;
+         vblsinframe = lasttics * 4;
          if(vblsinframe > 8)
             vblsinframe = 8;
       }
