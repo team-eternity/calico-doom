@@ -67,7 +67,7 @@ static void R_DrawVisSprite(vissprite_t *vis)
             continue;
 
          // CALICO: invoke column drawer
-         I_DrawColumn(x, top, bottom, light, frac, iscale, vis->pixels + BIGSHORT(column->dataofs));
+         I_DrawColumn(x, top, bottom, light, frac, iscale, vis->pixels + BIGSHORT(column->dataofs), 128);
       }
    }
 }

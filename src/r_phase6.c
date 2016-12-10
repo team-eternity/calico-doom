@@ -114,7 +114,10 @@ static void R_DrawTexture(drawtex_t *tex)
    // CALICO: Jaguar-specific GPU blitter input calculation starts here.
    // We invoke a software column drawer instead.
    src = tex->data + colnum * tex->height;
-   I_DrawColumn(x, top, bottom, texturelight, frac, iscale, src);
+   if(tex->height & (tex->height - 1)) // height is not a power-of-2?
+      I_DrawColumnNPO2(x, top, bottom, texturelight, frac, iscale, src, tex->height);
+   else
+      I_DrawColumn(x, top, bottom, texturelight, frac, iscale, src, tex->height);
 }
 
 //
@@ -258,7 +261,7 @@ static void R_SegLoop(viswall_t *segl)
             // CALICO: draw sky column
             int colnum = ((viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT) & 0xff;
             pixel_t *data = skytexturep->data + colnum * skytexturep->height;
-            I_DrawColumn(x, top, bottom, 0, (top * 18204) << 2,  FRACUNIT + 7281, data);
+            I_DrawColumn(x, top, bottom, 0, (top * 18204) << 2,  FRACUNIT + 7281, data, 128);
          }
       }
 

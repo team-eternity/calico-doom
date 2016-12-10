@@ -525,11 +525,11 @@ struct yextender_s { signed int ext:24; };
 // Source is the top of the column to scale.
 // 
 void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, 
-                  fixed_t fracstep, inpixel_t *dc_source) 
+                  fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 { 
    static struct yextender_s s;
 
-   int        count;
+   int        count, heightmask;
    inpixel_t  cry;
    int32_t    y;
    uint32_t  *dest;
@@ -548,10 +548,12 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
    // CALICO: our destination framebuffer is 32-bit
    dest = framebuffer160_p + dc_yl * SCREENWIDTH + dc_x;
 
+   heightmask = dc_texheight - 1;
+
    do
    {
       // CALICO: calculate CRY lighting and lookup RGB
-      cry = dc_source[(frac >> FRACBITS)&127];
+      cry = dc_source[(frac >> FRACBITS) & heightmask];
       y = (cry & CRY_YMASK) << CRY_IINCSHIFT;
       y += (s.ext = light);
       y >>= CRY_IINCSHIFT;
@@ -562,13 +564,75 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
       // CALICO: apply screen shading if active
       if(shadepixel)
          cry = I_BlendCRY(cry);
-
+ 
       *dest = CRYToRGB[cry];
       dest += SCREENWIDTH;
       frac += fracstep;
    }
    while(count--);
 } 
+
+//
+// CALICO: the Jag blitter could wrap around textures of arbitrary height, so
+// we need to do the "tutti fruiti" fix here. Carmack didn't bother fixing
+// this for the NeXT "simulator" build of the game.
+//
+void I_DrawColumnNPO2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, 
+                      fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
+{
+   static struct yextender_s s;
+
+   int        count, heightmask;
+   inpixel_t  cry;
+   int32_t    y;
+   uint32_t  *dest;
+
+   count = dc_yh - dc_yl;
+   if(count < 0)
+      return;
+
+#ifdef RANGECHECK
+   if((unsigned int)dc_x >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT)
+      I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+#endif
+
+   GL_FramebufferSetUpdated(FB_160);
+
+   // CALICO: our destination framebuffer is 32-bit
+   dest = framebuffer160_p + dc_yl * SCREENWIDTH + dc_x;
+
+   heightmask = dc_texheight << FRACBITS;
+
+   if(frac < 0)
+      while((frac += heightmask) < 0);
+   else
+   {
+      while(frac >= heightmask)
+         frac -= heightmask;
+   }
+
+   do
+   {
+      cry = dc_source[frac >> FRACBITS];
+      y = (cry & CRY_YMASK) << CRY_IINCSHIFT;
+      y += (s.ext = light);
+      y >>= CRY_IINCSHIFT;
+      if(y < 0)
+         y = 0;
+      cry = (cry & CRY_COLORMASK) | (y & 0xff);
+
+      // CALICO: apply screen shading if active
+      if(shadepixel)
+         cry = I_BlendCRY(cry);
+
+      *dest = CRYToRGB[cry];
+      dest += SCREENWIDTH;
+
+      if((frac += fracstep) >= heightmask)
+         frac -= heightmask;
+   }
+   while(count--);
+}
  
 void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, 
                 fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, 
