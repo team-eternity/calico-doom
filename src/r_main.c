@@ -1,5 +1,6 @@
 /* r_main.c */
 
+#include "gl/gl_render.h"
 #include "doomdef.h"
 #include "r_local.h"
 
@@ -255,9 +256,7 @@ void R_DebugScreen(void)
 
 //=============================================================================
 
-int    shadepixel;
-extern int workpage;
-extern pixel_t *screens[2]; // [SCREENWIDTH*SCREENHEIGHT]; 
+int shadepixel;
 
 /*
 ==================
@@ -273,19 +272,21 @@ void R_Setup(void)
    player_t *player;
    int shadex, shadey, shadei;
 
+#if 0
    //
    // set up globals for new frame
    //
    workingscreen = screens[workpage];
 
-   // CALICO_TODO: non-portable
-#if 0
    *(pixel_t  **)0xf02224 = workingscreen;  // a2 base pointer
    *(int *)0xf02234 = 0x10000;              // a2 outer loop add (+1 y)
    *(int *)0xf0226c = *(int *)0xf02268 = 0; // pattern compare
 #endif
 
-   framecount++;	
+   // CALICO: framebuffer is modified
+   GL_FramebufferSetUpdated(FB_160);
+
+   framecount++;
    validcount++;
 
    viewplayer = player = &players[displayplayer];

@@ -77,7 +77,7 @@ void Z_Init(void)
 
 void Z_Free2(memzone_t *mainzone, void *ptr)
 {
-   memblock_t	*block;
+   memblock_t *block;
 
    block = (memblock_t *)((byte *)ptr - sizeof(memblock_t));
    if(block->id != ZONEID)

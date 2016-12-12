@@ -86,7 +86,7 @@ typedef int fixed_t;
 #define ANG90  0x40000000
 #define ANG180 0x80000000
 #define ANG270 0xc0000000
-typedef unsigned angle_t;
+typedef unsigned int angle_t;
 
 #define FINEANGLES       8192
 #define FINEMASK         (FINEANGLES-1)
@@ -496,8 +496,8 @@ long  LongSwap(long dat);
 #define PU_LEVEL      50  // static until level exited
 #define PU_LEVSPEC    51  // a special thinker in a level
 // tags >= 100 are purgable whenever needed
-#define	PU_PURGELEVEL 100
-#define	PU_CACHE      101
+#define PU_PURGELEVEL 100
+#define PU_CACHE      101
 
 #define	ZONEID 0x1d4a
 
@@ -581,7 +581,6 @@ int   W_strncasecmp(const char *s1, const char *s2, int len);
 //BASE LEVEL //
 //---------- //
 void D_DoomMain(void);
-void D_DoomLoop(void);
 
 extern boolean demoplayback, demorecording;
 extern int    *demo_p, *demobuffer;
@@ -717,8 +716,7 @@ void M_AddToBox(fixed_t *box, fixed_t x, fixed_t y);
 //
 //============================================================================
 
-extern pixel_t *workingscreen;
-extern int      junk, spincount;
+extern int junk;
 
 extern int joybuttons;
 
@@ -770,29 +768,19 @@ void EraseBlock(int x, int y, int width, int height, void *destResource);
 void DrawJagobj(jagobj_t *jo, int x, int y, void *destResource);
 void UpdateBuffer(void);
 
-extern byte *bufferpage;  // draw here
-extern byte *displaypage; // copied to here when finished
-
 extern jagobj_t *backgroundpic;
 
 //=================
 
 // CALICO_TODO: non-portable DSP stuff
 #if 0
-extern int gpucodestart, gpucodeend; // gpu function control
-extern int gpufinished;
-
 extern volatile int dspcodestart, dspcodeend, dspfinished;
 #endif
 
 extern unsigned short *palette8;
-extern int zero, ZERO, zero2;
 
 extern boolean   gamepaused;
 extern jagobj_t *pausepic;
-
-extern pixel_t  *screens[2];
-extern int       workpage;
 
 extern int       controltype;
 

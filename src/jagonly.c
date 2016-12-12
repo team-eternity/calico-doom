@@ -42,9 +42,7 @@ static boolean debugscreenstate = false;
 
 boolean debugscreenactive;
 
-pixel_t        *screens[2];     // [SCREENWIDTH*SCREENHEIGHT];
 unsigned short *palette8;       // [256] for translating 8 bit source to 16 bit
-int            *screenshade;    // pixels for screen shifting
 
 void *debugscreenrez; // CALICO
 uint32_t *debugscreen;
@@ -53,20 +51,14 @@ extern void     *sbartop;
 
 static void *sbarrez;
 
-int workpage; // which frame is not being displayed
-int worklist; // which listbuffer is not being used
-
 int joypad[32]; 
 int joystick1; 
 
 //int ticcount; 
  
 int junk; 
-int spincount;  
 
 pixel_t *framebuffer;
-
-extern jagobj_t *sbar;
 
 char hexdigits[] = "0123456789ABCDEF";
 
@@ -282,12 +274,12 @@ void I_Error(const char *error, ...)
    I_Print8(0, 25, errormessage);
    debugscreenactive = true;
    I_Update();
+   hal_appstate.setGrabState(HAL_FALSE); // CALICO: ungrab input
    while(1)
    {
       // CALICO: run event loop
       hal_input.getEvents();
-
-      // CALICO_TODO: keep screen refreshing also?
+      hal_timer.delay(1);
    }
 } 
 
@@ -491,7 +483,7 @@ struct cextender_s { signed int ext:4; }; // sign extender for 4-bit CRY chroma 
 struct iextender_s { signed int ext:8; }; // sign extender for 8-bit CRY luminance component
 
 //
-// Blend two CRY colors
+// CALICO: Blend a CRY color with the value of the shadepixel color add object
 //
 static inline inpixel_t I_BlendCRY(inpixel_t in)
 {
@@ -517,7 +509,7 @@ static inline inpixel_t I_BlendCRY(inpixel_t in)
    return (inpixel_t)((cc << CRY_CSHIFT) | (cr << CRY_RSHIFT) | (cy << CRY_YSHIFT));
 }
 
-// Sign-extender for 24-bit CRY values
+// Sign extender for 24-bit CRY luminance values
 struct yextender_s { signed int ext:24; };
 
 // 
@@ -539,11 +531,9 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
       return;
 
 #ifdef RANGECHECK
-   if((unsigned int)dc_x >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT)
+   if(dc_x < 0 || dc_x >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT)
       I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
-
-   GL_FramebufferSetUpdated(FB_160);
 
    // CALICO: our destination framebuffer is 32-bit
    dest = framebuffer160_p + dc_yl * SCREENWIDTH + dc_x;
@@ -556,9 +546,9 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
       cry = dc_source[(frac >> FRACBITS) & heightmask];
       y = (cry & CRY_YMASK) << CRY_IINCSHIFT;
       y += (s.ext = light);
-      y >>= CRY_IINCSHIFT;
       if(y < 0)
          y = 0;
+      y >>= CRY_IINCSHIFT;
       cry = (cry & CRY_COLORMASK) | (y & 0xff);
       
       // CALICO: apply screen shading if active
@@ -574,7 +564,7 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
 
 //
 // CALICO: the Jag blitter could wrap around textures of arbitrary height, so
-// we need to do the "tutti fruiti" fix here. Carmack didn't bother fixing
+// we need to do the "tutti frutti" fix here. Carmack didn't bother fixing
 // this for the NeXT "simulator" build of the game.
 //
 void I_DrawColumnNPO2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, 
@@ -592,11 +582,9 @@ void I_DrawColumnNPO2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
       return;
 
 #ifdef RANGECHECK
-   if((unsigned int)dc_x >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT)
+   if(dc_x < 0 || dc_x >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT)
       I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
-
-   GL_FramebufferSetUpdated(FB_160);
 
    // CALICO: our destination framebuffer is 32-bit
    dest = framebuffer160_p + dc_yl * SCREENWIDTH + dc_x;
@@ -651,8 +639,6 @@ void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
       I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y); 
 #endif 
    
-   GL_FramebufferSetUpdated(FB_160);
-   
    xfrac = ds_xfrac; 
    yfrac = ds_yfrac; 
 
@@ -697,121 +683,15 @@ int lasttics;
 // When displaying the automap, use full resolution, otherwise use
 // wide pixels
 //
-// CALICO_FIXME: ALL Jag-specific nonsense.
-//
 void I_Update(void) 
 {
-#if 0
-   int *worklist_p;   /* list currently being built */
-   unsigned int link;
-   unsigned int pwidth;
-   unsigned int temp;
-   int delta;
-
-   /* */
-   /* background object */
-   /* */
-
-   /* skip the color add object if it doesn't do anything */
-   if (shadepixel)
-      link = (int)( (byte *)&worklist_p[16] - delta)>>3;
-   else
-      link = (int)( (byte *)&worklist_p[20] - delta)>>3;
-   pwidth = SCREENWIDTH/4;
-
-   worklist_p[12] = 
-      ((int)workingscreen<<8)			/* data pointer */
-      + (link>>8);						/* link */
-
-   worklist_p[13] =
-      (link<<24)							/* link */
-      + (SCREENHEIGHT<<14)				/* height */
-      + (BASEORGY<<4)						/* ypos */
-      + 0;								/* bitmap type */
-
-   worklist_p[14] =
-      (0<<(49-32))						/* firstpix */
-      + (0<<(48-32))						/* release */
-      + (0<<(47-32))						/* transparent */
-      + (0<<(46-32))						/* add to buffer */
-      + (0<<(45-32))						/* reflect */
-      + (0<<(38-32))						/* color index */
-      + ((pwidth)>>4);					/* iwidth */
-
-   temp =
-      ((pwidth)<<28)						/* iwidth */
-      + ((pwidth)<<18)					/* dwidth */
-      + (1<<15)							/* pitch */
-      + (4<<12)							/* depth */
-      + BASEORGX;							/* xpos */
-
-   worklist_p[15] = temp;
-
-   /* */
-   /* color add object */
-   /* */
-   link = (int)( (byte *)&worklist_p[20] - delta)>>3;
-
-   worklist_p[16] = 
-      ((int)screenshade<<8)				/* data pointer */
-      + (link>>8);						/* link */
-
-   worklist_p[17] =
-      (link<<24)							/* link */
-      + (180<<14)							/* height */
-      + ((BASEORGY)<<4)					/* ypos */
-      + 0;								/* bitmap type */
-
-   worklist_p[18] =
-      (0<<(49-32))						/* firstpix */
-      + (0<<(48-32))						/* release */
-      + (0<<(47-32))						/* transparent */
-      + (1<<(46-32))						/* add to buffer */
-      + (0<<(45-32))						/* reflect */
-      + (0<<(38-32))						/* color index */
-      + (40>>4);							/* iwidth */
-
-   worklist_p[19] =
-      (40<<28)							/* iwidth */
-      + (0<<18)							/* dwidth */
-      + (0<<15)							/* pitch */
-      + (4<<12)							/* depth */
-      + BASEORGX;							/* xpos */
-
-   // CALICO: stat bar was here
-   // CALICO: debug screen was here
-
-   /* */
-   /* wait until on the third tic after last display */
-   /* */
-   do
-   {
-      junk = ticcount;
-   }
-   while (junk-lastticcount < 3);
-
-   /* */
-   /* start using the list */
-   /* */
-   isrvmode = 0xc1 + (7<<9);		/* 160 * 224, 16 bit color */
-   readylist_p = worklist_p;
-   do
-   {
-      junk = (int)displaylist_p;
-   }
-   while (junk != (int)readylist_p);
-   lasttics = ticcount - lastticcount;
-   lastticcount = ticcount;
-#else
    GL_UpdateFramebuffer(FB_160);
    GL_AddFramebuffer(FB_160);
-   // CALICO_TODO: "color add" object for "palette" flashes here
    GL_AddDrawCommand(sbarrez, 0, 2 + SCREENHEIGHT + 1, 320, 40);
    GL_AddDrawCommand(sbartop, 0, 2 + SCREENHEIGHT + 1, 320, 40);
    if(debugscreenactive)
       GL_AddDrawCommand(debugscreenrez, 0, 0, 256, 224);
    GL_RenderFrame();
-#endif
 }
 
 static byte tempbuffer[0x10000];
@@ -833,9 +713,6 @@ byte *I_TempBuffer(void)
 //=============================================================================
 
 // double buffered display support functions
-
-byte *bufferpage;  // draw here
-byte *displaypage; // copied to here when finished
 
 extern int cy;
 
@@ -1038,43 +915,6 @@ void DoubleBufferObjList(void)
    GL_AddFramebuffer(FB_320);
    if(debugscreenactive)
       GL_AddDrawCommand(debugscreenrez, 0, 0, 256, 224);
-
-#if 0
-   /* */
-   /* transparent foreground object */
-   /* */
-   if (debugscreenactive)
-      link = (int)(16+(byte *)work_p -  delta)>>3;
-   else
-      link = (int)stopobj>>3;
-   pwidth = 320/8;
-
-   *work_p++ = 
-      (((int)displaypage)<<8)				/* data pointer */
-      + (link>>8);						/* link */
-
-   *work_p++ =
-      (link<<24)							/* link */
-      + (200<<14)							/* height */
-      + ((BASEORGY+8)<<4)					/* ypos */
-      + 0;								/* bitmap type */
-
-   *work_p++ =
-      (0<<(49-32))						/* firstpix */
-      + (0<<(48-32))						/* release */
-      + (1<<(47-32))						/* transparent */
-      + (0<<(46-32))						/* add to buffer */
-      + (0<<(45-32))						/* reflect */
-      + (0<<(38-32))						/* color index */
-      + (pwidth>>4);						/* iwidth */
-
-   *work_p++ =
-      (pwidth<<28)						/* iwidth */
-      + (pwidth<<18)						/* dwidth */
-      + (1<<15)							/* pitch */
-      + (3<<12)							/* depth */
-      + 15;								/* xpos */
-#endif
 }
 
 //=============================================================================
@@ -1301,6 +1141,8 @@ void Player1Setup(void)
    oldval = 999;
    do
    {
+      joystick1 = hal_input.getEvents(); // CALICO
+      
       if(joystick1 == JP_OPTION)
       {
          starttype = gt_single;
@@ -1414,7 +1256,7 @@ unsigned I_NetTransfer(unsigned int buttons)
       // player 1 waits before sending
       for(i = 0; i <= 5; i++)
       {
-         val = WaitGetSerialChar ();
+         val = WaitGetSerialChar();
          if (val == -1)
             goto reconnect;
 

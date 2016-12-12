@@ -295,7 +295,6 @@ void R_SegCommands(void)
       *clip++ = SCREENHEIGHT;
    }
 
-   // CALICO_TODO: JAG SPECIFIC (probably irrelevant to Calico)
    /*
    ; setup blitter
    movei #15737348,r0   r0 = 15737348; // 0xf02204 - A1_FLAGS
