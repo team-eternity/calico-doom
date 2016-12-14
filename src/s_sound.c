@@ -1,42 +1,47 @@
 /* s_sound.c */
 #include "doomdef.h"
+#include "m_argv.h"
 #include "music.h"
 
 #define EXTERN_BUFFER_SIZE (EXTERNALQUADS*32/2)
 
 sfxchannel_t sfxchannels[SFXCHANNELS];
 
-boolean channelschanged; /* set by S_StartSound to signal update to remix speculative samples */
+boolean channelschanged; // set by S_StartSound to signal update to remix speculative samples
 
-int finalquad; /* the last quad mixed by update. */
+int finalquad; // the last quad mixed by update.
 
-int sfxvolume    = 128; /* range 0 - 255 */
-int musicvolume  = 128; /* range 0 - 255 */
-int oldsfxvolume = 128; /* to detect transition to sound off */
+int sfxvolume    = 128; // range 0 - 255
+int musicvolume  = 128; // range 0 - 255
+int oldsfxvolume = 128; // to detect transition to sound off
 
-int soundtics;      /* time spent mixing sounds */
-int soundstarttics; /* time S_Update started */
+int soundtics;      // time spent mixing sounds
+int soundstarttics; // time S_Update started
 
-int sfxsample;      /* the sample about to be output by S_WriteOutSamples */
+int sfxsample;      // the sample about to be output by S_WriteOutSamples
 
-/* MUSIC VARIABLES */
+// MUSIC VARIABLES
 
-sfx_t *instruments[256];       /* pointers to all patches */
+sfx_t *instruments[256];       // pointers to all patches
 
-channel_t music_channels[10];  /* master music channel list */
+channel_t music_channels[10];  // master music channel list
 
-int            musictime;      /* internal music time, follows samplecount */
-int            next_eventtime; /* when next event will occur */
-unsigned char *music;          /* pointer to current music data */
-unsigned char *music_start;    /* current music start pointer */
-unsigned char *music_end;      /* current music end pointer */
-unsigned char *music_memory;   /* current location of cached music */
+int            musictime;      // internal music time, follows samplecount
+int            next_eventtime; // when next event will occur
+unsigned char *music;          // pointer to current music data
+unsigned char *music_start;    // current music start pointer
+unsigned char *music_end;      // current music end pointer
+unsigned char *music_memory;   // current location of cached music
 
-int samples_per_midiclock;     /* multiplier for midi clocks */
+int samples_per_midiclock;     // multiplier for midi clocks
 
 int musictics = 0;
 
-#define S_abs(x) ((x)<0 ? -(x) : (x))
+#define S_abs(x) ((x) < 0 ? -(x) : (x))
+
+// CALICO: additional options
+boolean nosfx;
+boolean nomusic;
 
 /*
 ==================
@@ -52,38 +57,46 @@ void S_Init(void)
    int lump, end;
    int instnum;
 
-   /* SFX */
+   // CALICO: options to turn off sound or music
+   nosfx   = M_FindArgument("-nosfx"  );
+   nomusic = M_FindArgument("-nomusic");
 
-   for(i = 1; i < NUMSFX ; i++)
+   // SFX
+   if(!nosfx)
    {
-      l = W_CheckNumForName(S_sfx[i].name);
-      if (l != -1)
-         S_sfx[i].md_data = W_POINTLUMPNUM(l);
-   }	
-
-   /* MUSIC */
-
-   D_memset(instruments, 0, 256 * 4);
-   lump = W_GetNumForName("inststrt"); /* get available instruments[] */
-   end	= W_GetNumForName("instend");
-   while (lump != end)
-   {
-      instnum = 
-         (lumpinfo[lump].name[1]-'0')*100
-          + (lumpinfo[lump].name[2]-'0')*10
-          + (lumpinfo[lump].name[3]-'0')
-          + (lumpinfo[lump].name[0] == 'P' ? 128 : 0);
-      instruments[instnum] = (sfx_t *)(wadfileptr + lumpinfo[lump].filepos);
-      lump++;
+      for(i = 1; i < NUMSFX ; i++)
+      {
+         l = W_CheckNumForName(S_sfx[i].name);
+         if(l != -1)
+            S_sfx[i].md_data = W_POINTLUMPNUM(l);
+      }
    }
- 
-   /* hack test */
 
-   music_memory = 0;
-   music = 0;
-   D_memset(music_channels, 0, sizeof(music_channels));
-   musictime = 0;
-   next_eventtime = 0;
+   // MUSIC
+   if(!nomusic)
+   {
+      D_memset(instruments, 0, 256 * 4);
+      lump = W_GetNumForName("inststrt"); // get available instruments[]
+      end  = W_GetNumForName("instend");
+      while(lump != end)
+      {
+         instnum = 
+            (lumpinfo[lump].name[1]-'0')*100
+             + (lumpinfo[lump].name[2]-'0')*10
+             + (lumpinfo[lump].name[3]-'0')
+             + (lumpinfo[lump].name[0] == 'P' ? 128 : 0);
+         instruments[instnum] = (sfx_t *)(wadfileptr + BIGLONG(lumpinfo[lump].filepos)); // CALICO: endianness
+         lump++;
+      }
+ 
+      // hack test
+
+      music_memory = 0;
+      music = 0;
+      D_memset(music_channels, 0, sizeof(music_channels));
+      musictime = 0;
+      next_eventtime = 0;
+   }
 }
 
 
@@ -127,9 +140,12 @@ void S_StartSound(mobj_t *origin, int sound_id)
    short      vol;
    sfxinfo_t *sfx;
 
-   /* */
-   /* spatialize */
-   /* */
+   if(nosfx) // CALICO
+      return;
+
+   //
+   // spatialize
+   //
    player = &players[consoleplayer];
 
    if(!origin || origin == player->mo)
@@ -141,45 +157,45 @@ void S_StartSound(mobj_t *origin, int sound_id)
       dist_approx = dx + dy - ((dx < dy ? dx : dy) >> 1);
       vol = dist_approx >> 20;
       if(vol > 127)
-         return;		/* too far away */
+         return;        // too far away
       vol = 127 - vol;
    }
 
 
-   /* Get sound effect data pointer */
+   // Get sound effect data pointer
    sfx = &S_sfx[sound_id];
 
    newchannel = NULL;
-	
-   /* reject sounds started at the same instant and singular sounds */
+
+   // reject sounds started at the same instant and singular sounds
    for(channel = sfxchannels, i = 0; i < SFXCHANNELS; i++, channel++)
    {
       if(channel->sfx == sfx)
       {
          if(channel->startquad == finalquad)
          {
-            return;		/* exact sound allready started */
+            return;        // exact sound allready started
          }
 
          if(sfx->singularity)
          {
-            newchannel = channel;	/* overlay this	 */
+            newchannel = channel;    // overlay this
             goto gotchannel;
          }
       }
       if(channel->origin == origin)
-      {	
-         /* cut off whatever was coming from this origin */
+      {
+         // cut off whatever was coming from this origin
          newchannel = channel;
          goto gotchannel;
       }
 
       if(channel->stopquad <= finalquad)
-         newchannel = channel;	/* this is a dead channel, ok to reuse */
+         newchannel = channel;    // this is a dead channel, ok to reuse
    }
 
-   /* if there weren't any dead channels, try to kill an equal or lower */
-   /* priority channel */
+   // if there weren't any dead channels, try to kill an equal or lower
+   // priority channel
 
    if(!newchannel)
    {
@@ -188,19 +204,19 @@ void S_StartSound(mobj_t *origin, int sound_id)
          if(newchannel->sfx->priority >= sfx->priority)
             goto gotchannel;
       }
-      return;		/* couldn't override a channel */
+      return;        // couldn't override a channel
    }
 
-   /* */
-   /* fill in the new values */
-   /* */
+   //
+   // fill in the new values
+   //
 gotchannel:
-   newchannel->sfx = sfx;
-   newchannel->origin = origin;
+   newchannel->sfx       = sfx;
+   newchannel->origin    = origin;
    newchannel->startquad = finalquad;
-   newchannel->stopquad = finalquad + (sfx->md_data->samples>>2);
-   newchannel->source = (int *)&sfx->md_data->data;	
-   newchannel->volume = vol * (short)sfxvolume;
+   newchannel->stopquad  = finalquad + (sfx->md_data->samples>>2);
+   newchannel->source    = (int *)&sfx->md_data->data;
+   newchannel->volume    = vol * (short)sfxvolume;
 }
 
 /*
@@ -220,30 +236,30 @@ void S_UpdateSounds(void)
 #if 0
    int st;
 
-   /* */
-   /* if sound was just turned off, clear out the buffer */
-   /* */
+   //
+   // if sound was just turned off, clear out the buffer
+   //
    if(!sfxvolume)
    {
       if(oldsfxvolume)
       {
          oldsfxvolume = 0;
-         S_Clear ();
+         S_Clear();
       }
       return;
    }
    else
    {
       if(!oldsfxvolume)
-         finalquad = (samplecount >> 3) - 100;	/* don't mix lots of junk */
+         finalquad = (samplecount >> 3) - 100;    // don't mix lots of junk
       oldsfxvolume = sfxvolume;
    }
 
-   soundstarttics = samplecount;		/* for timing calculations */
+   soundstarttics = samplecount;        // for timing calculations
 
-   /* */
-   /* run the mixing in parallel on the dsp */
-   /*	 */
+   //
+   // run the mixing in parallel on the dsp
+   //
    if(music)
    {
       if(!musictime)
@@ -256,7 +272,6 @@ void S_UpdateSounds(void)
       st = samplecount;
       DSPFunction(&music_dspcode);
       musictics = samplecount - st;
-
    }
    else
    {
@@ -270,17 +285,23 @@ void S_StartSong(int music_id, int looping)
 {
    int lump;
 
+   if(nomusic) // CALICO
+      return;
+
    musictime = 0;
    samples_per_midiclock = 0;
    lump = W_GetNumForName(S_music[music_id].name);
    music_memory = music = (unsigned char *)(W_CacheLumpNum(lump, PU_STATIC));
    music_start  = looping ? music : 0;
-   music_end    = (unsigned char *)music + lumpinfo[lump].size;
+   music_end    = (unsigned char *)music + BIGLONG(lumpinfo[lump].size); // CALICO: endianness
 
 }
 
 void S_StopSong(void)
 {
+   if(nomusic) // CALICO
+      return;
+
    Z_Free(music_memory);
    music = 0; // prevent the DSP from running
    
