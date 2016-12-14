@@ -98,7 +98,7 @@ void P_RunThinkers(void)
    {
       if(currentthinker->function == (think_t)-1) // CALICO_FIXME: non-portable
       {
-         /* time to remove it */
+         // time to remove it
          currentthinker->next->prev = currentthinker->prev;
          currentthinker->prev->next = currentthinker->next;
          Z_Free(currentthinker);
@@ -127,7 +127,7 @@ void P_RunThinkers(void)
 ===============
 */
 
-void P_CheckSights2();
+void P_CheckSights2(void);
 
 void P_CheckSights(void)
 {
@@ -200,10 +200,10 @@ void P_CheckCheats(void)
    buttons    = ticbuttons[0];
    oldbuttons = oldticbuttons[0];
 
-   if((oldbuttons&JP_PAUSE) || !(buttons & JP_PAUSE ))
+   if((oldbuttons & JP_PAUSE) || !(buttons & JP_PAUSE))
       return;
 
-   if(buttons&JP_NUM)
+   if(buttons & JP_NUM)
    {
       // free stuff
       p = &players[0];
@@ -217,23 +217,23 @@ void P_CheckCheats(void)
          p->ammo[i] = p->maxammo[i] = 500;
    }
 
-   if(buttons&JP_STAR)
+   if(buttons & JP_STAR)
    {
       // godmode
       players[0].cheats ^= CF_GODMODE;
    }
    warpmap = 0;
-   if(buttons&JP_1) warpmap = 1;
-   if(buttons&JP_2) warpmap = 2;
-   if(buttons&JP_3) warpmap = 3;
-   if(buttons&JP_4) warpmap = 4;
-   if(buttons&JP_5) warpmap = 5;
-   if(buttons&JP_6) warpmap = 6;
-   if(buttons&JP_7) warpmap = 7;
-   if(buttons&JP_8) warpmap = 8;
-   if(buttons&JP_9) warpmap = 9;
-   if(buttons&JP_A) warpmap += 10;
-   else if(buttons&JP_B) warpmap += 20;
+   if(buttons & JP_1) warpmap = 1;
+   if(buttons & JP_2) warpmap = 2;
+   if(buttons & JP_3) warpmap = 3;
+   if(buttons & JP_4) warpmap = 4;
+   if(buttons & JP_5) warpmap = 5;
+   if(buttons & JP_6) warpmap = 6;
+   if(buttons & JP_7) warpmap = 7;
+   if(buttons & JP_8) warpmap = 8;
+   if(buttons & JP_9) warpmap = 9;
+   if(buttons & JP_A) warpmap += 10;
+   else if(buttons & JP_B) warpmap += 20;
 
    // CALICO_FIXME: limit incorrect for warp cheat
    if(warpmap > 0 && warpmap < 27)
@@ -311,7 +311,7 @@ int P_Ticker(void)
    //thinkertics = samplecount - start;
 
    //start = samplecount;
-   P_CheckSights();	
+   P_CheckSights();
    //sighttics = samplecount - start;
 
    //start = samplecount;

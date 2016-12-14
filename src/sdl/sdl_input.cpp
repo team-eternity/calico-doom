@@ -345,7 +345,6 @@ int SDL2_GetEvents(void)
          // CALICO_TODO: game controller buttons
          break;
       case SDL_QUIT:
-         // CALICO_TODO: notify game loop?
          hal_medialayer.exit();
          break;
       case SDL_WINDOWEVENT:

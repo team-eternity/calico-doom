@@ -38,7 +38,7 @@ boolean P_CheckMeleeRange(mobj_t *actor)
    if(dist >= MELEERANGE)
       return false;
 
-   return true;		
+   return true;
 }
 
 /*
@@ -53,7 +53,7 @@ boolean P_CheckMissileRange(mobj_t *actor)
 {
    fixed_t dist;
 
-   if(!(actor->flags & MF_SEETARGET) )
+   if(!(actor->flags & MF_SEETARGET))
       return false;
 
    if(actor->flags & MF_JUSTHIT)
@@ -364,7 +364,7 @@ void A_Look (mobj_t *actor)
    // if current target is visible, start attacking
    if(!P_LookForPlayers(actor, false))
       return;
-		
+
    // go into chase state
    if(actor->info->seesound)
    {
