@@ -76,12 +76,12 @@ int P_DivlineSide(fixed_t x, fixed_t y, divline_t *node)
    right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
 
    if(right < left)
-      return 0;	// front side
+      return 0;    // front side
 
    if(left == right)
       return 2;
    
-   return 1;		// back side
+   return 1;       // back side
 }
 
 //
@@ -173,14 +173,14 @@ static boolean PS_CrossSubsector(int num)
       // might do this after updating validcount?
       if(!(line->flags & ML_TWOSIDED))
          return false;
-	
+
       // crosses a two sided line
       front = seg->frontsector;
       back = seg->backsector;
 
       // no wall to block sight with?
       if(front->floorheight == back->floorheight && front->ceilingheight == back->ceilingheight)
-         continue;	
+         continue;
 
       // possible occluder
       // because of ceiling height differences
@@ -194,7 +194,7 @@ static boolean PS_CrossSubsector(int num)
          openbottom = front->floorheight;
       else
          openbottom = back->floorheight;
-		
+
       // quick test for totally closed doors
       if(openbottom >= opentop)
          return false; // stop
@@ -214,13 +214,13 @@ static boolean PS_CrossSubsector(int num)
          if(slope < topslope)
             topslope = slope;
       }
-		
+
       if(topslope <= bottomslope)
-         return false;		// stop
+         return false;    // stop
    }
 
    // passed the subsector ok
-   return true;		
+   return true;
 }
 
 //
@@ -300,7 +300,7 @@ boolean PS_CheckSight(mobj_t *t1, mobj_t *t2)
 // Optimal mobj sight checking that checks sights in the main tick loop rather
 // than from multiple mobj action routines.
 //
-void P_CheckSights2()
+void P_CheckSights2(void)
 {
    mobj_t *mobj;
 
@@ -314,8 +314,8 @@ void P_CheckSights2()
       if(!(mobj->flags & MF_COUNTKILL))
          continue;
 
-      // must have longer tics
-      if(mobj->tics == 1)
+      // must be about to change states
+      if(mobj->tics != 1)
          continue;
 
       mobj->flags &= ~MF_SEETARGET;
