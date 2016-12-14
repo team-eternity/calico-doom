@@ -54,11 +54,7 @@ static void *sbarrez;
 int joypad[32]; 
 int joystick1; 
 
-//int ticcount; 
- 
 int junk; 
-
-pixel_t *framebuffer;
 
 char hexdigits[] = "0123456789ABCDEF";
 
@@ -395,7 +391,7 @@ byte *I_ZoneBase(int *size)
    // CALICO: allocate from C heap
    if(!zonebase)
    {
-      if(!(zonebase = malloc(*size)))
+      if(!(zonebase = calloc(*size, 1)))
          hal_platform.fatalError("I_ZoneBase: could not allocate %d bytes for zone", size);
    }
 
