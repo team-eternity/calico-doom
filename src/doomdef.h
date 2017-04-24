@@ -575,7 +575,7 @@ void *W_CacheLumpNum(int lump, int tag);
 void *W_CacheLumpName(const char *name, int tag);
 int   W_strncasecmp(const char *s1, const char *s2, int len);
 
-#define W_POINTLUMPNUM(x) (void*)(wadfileptr + BIGLONG(lumpinfo[x].filepos));
+#define W_POINTLUMPNUM(x) (void*)(wadfileptr + BIGLONG(lumpinfo[x].filepos))
 
 //---------- //
 //BASE LEVEL //

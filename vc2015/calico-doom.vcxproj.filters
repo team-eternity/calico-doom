@@ -294,6 +294,12 @@
     <ClCompile Include="..\src\hal\hal_timer.c">
       <Filter>Source Files\hal</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hal\hal_sfx.c">
+      <Filter>Source Files\hal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\sdl\sdl_sound.c">
+      <Filter>Source Files\sdl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\doomdata.h">
@@ -442,6 +448,12 @@
     </ClInclude>
     <ClInclude Include="..\src\hal\hal_timer.h">
       <Filter>Header Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hal\hal_sfx.h">
+      <Filter>Header Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sdl\sdl_sound.h">
+      <Filter>Header Files\sdl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

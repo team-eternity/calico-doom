@@ -97,6 +97,7 @@
     <ClCompile Include="..\src\hal\hal_input.c" />
     <ClCompile Include="..\src\hal\hal_ml.c" />
     <ClCompile Include="..\src\hal\hal_platform.c" />
+    <ClCompile Include="..\src\hal\hal_sfx.c" />
     <ClCompile Include="..\src\hal\hal_timer.c" />
     <ClCompile Include="..\src\hal\hal_video.c" />
     <ClCompile Include="..\src\info.c" />
@@ -148,6 +149,7 @@
     <ClCompile Include="..\src\sdl\sdl_hal.c" />
     <ClCompile Include="..\src\sdl\sdl_init.c" />
     <ClCompile Include="..\src\sdl\sdl_input.cpp" />
+    <ClCompile Include="..\src\sdl\sdl_sound.c" />
     <ClCompile Include="..\src\sdl\sdl_timer.cpp" />
     <ClCompile Include="..\src\sdl\sdl_video.cpp" />
     <ClCompile Include="..\src\sounds.c" />
@@ -182,6 +184,7 @@
     <ClInclude Include="..\src\hal\hal_input.h" />
     <ClInclude Include="..\src\hal\hal_ml.h" />
     <ClInclude Include="..\src\hal\hal_platform.h" />
+    <ClInclude Include="..\src\hal\hal_sfx.h" />
     <ClInclude Include="..\src\hal\hal_timer.h" />
     <ClInclude Include="..\src\hal\hal_types.h" />
     <ClInclude Include="..\src\hal\hal_video.h" />
@@ -203,6 +206,7 @@
     <ClInclude Include="..\src\sdl\sdl_hal.h" />
     <ClInclude Include="..\src\sdl\sdl_init.h" />
     <ClInclude Include="..\src\sdl\sdl_input.h" />
+    <ClInclude Include="..\src\sdl\sdl_sound.h" />
     <ClInclude Include="..\src\sdl\sdl_timer.h" />
     <ClInclude Include="..\src\sdl\sdl_video.h" />
     <ClInclude Include="..\src\sound.h" />

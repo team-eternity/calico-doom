@@ -3,6 +3,11 @@
 
 /* newsfx.h */
 
+// CALICO_FIXME: Use packing pragmas til alignment-free IO implemented
+#if defined(CALICO_HAS_PACKING)
+#pragma pack(push, 1)
+#endif
+
 typedef struct
 {
    int samples;
@@ -14,6 +19,10 @@ typedef struct
    int decay_step;
    unsigned char data[1];
 } sfx_t;
+
+#if defined(CALICO_HAS_PACKING)
+#pragma pack(pop)
+#endif
 
 typedef struct sfxinfo_s
 {

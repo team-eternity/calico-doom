@@ -75,7 +75,7 @@ void S_Init(void)
    // MUSIC
    if(!nomusic)
    {
-      D_memset(instruments, 0, 256 * 4);
+      D_memset(instruments, 0, sizeof(instruments));
       lump = W_GetNumForName("inststrt"); // get available instruments[]
       end  = W_GetNumForName("instend");
       while(lump != end)
@@ -85,7 +85,7 @@ void S_Init(void)
              + (lumpinfo[lump].name[2]-'0')*10
              + (lumpinfo[lump].name[3]-'0')
              + (lumpinfo[lump].name[0] == 'P' ? 128 : 0);
-         instruments[instnum] = (sfx_t *)(wadfileptr + BIGLONG(lumpinfo[lump].filepos)); // CALICO: endianness
+         instruments[instnum] = (sfx_t *)(W_POINTLUMPNUM(lump)); // CALICO: endianness
          lump++;
       }
  
@@ -214,7 +214,7 @@ gotchannel:
    newchannel->sfx       = sfx;
    newchannel->origin    = origin;
    newchannel->startquad = finalquad;
-   newchannel->stopquad  = finalquad + (sfx->md_data->samples>>2);
+   newchannel->stopquad  = finalquad + (sfx->md_data->samples / 4);
    newchannel->source    = (int *)&sfx->md_data->data;
    newchannel->volume    = vol * (short)sfxvolume;
 }
