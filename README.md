@@ -1,9 +1,10 @@
 # Calico
-Calico is a port of the Atari Jaguar DOOM codebase back to the PC, aiming to
-support playing the game in its original form on that console with a minimum 
-number of required changes. It accepts either the game's ROM file or the 
-extracted jagdoom.wad file from inside it. You will need a backup device for
-Jaguar ROM cartridges in order to legally play the game.
+Calico is a port of the [Atari Jaguar DOOM](https://doomwiki.org/wiki/Atari_Jaguar) 
+codebase back to the PC, aiming to support playing the game in its original 
+form on that console with a minimum number of required changes. It accepts 
+either the game's ROM file or the extracted jagdoom.wad file from inside it.
+You will need a backup device for Jaguar ROM cartridges in order to legally 
+play the game.
 
 I have undertaken reverse engineering of the GAS assembly files for the 
 renderer, which are written in a custom assembly language understood only by
@@ -28,16 +29,17 @@ detected at runtime and is not dependent on the name of the file.
 Currently only keyboard input is supported; mouse and gamepad support will be 
 added in future versions. The default controls, which can be rebound via the 
 configuration file, are as follows, when using control scheme "A":
-* 1 - 9: Select weapon
-* 0: Toggle automap
-* Right Ctrl: Fire weapon
-* Right Alt: Press to use; hold to strafe
-* Right Shift: Hold to run
-* Arrow keys: Move the player
-* Escape: Toggle menus
-* Pause: Pause the game
-* Jaguar # Keypad button: Keypad /
-* Jaguar * Keypad button: Keypad *
+* 1 - 9 : Select weapon
+* 0 : Toggle automap
+* Right Ctrl : Fire weapon
+* Right Alt : Press to use; hold to strafe
+* Right Shift : Hold to run
+* Arrow keys : Move the player
+* Escape : Toggle menus
+* Pause : Pause the game
+* Jaguar # Keypad button : Keypad /
+* Jaguar * Keypad button : Keypad *
+
 Control schemes A through C are available as always through the game's menu.
 
 ## Command-line Parameters
@@ -54,6 +56,11 @@ options are available through the configuration file only:
 * monitornum : Set to a value > 0 to move the program to a different monitor.
 * screenwidth : Set the width of the display resolution.
 * screenheight : Set the height of the display resolution.
+
+## Credits
+* Programming and Reverse Engineering : James Haley
+* Additional Code By : Samuel Villarreal, Rebecca Heineman
+* Original Jaguar DOOM Source: John Carmack, id Software
 
 ## License
 All original code, as well as code derived from the 3DO source code, is
