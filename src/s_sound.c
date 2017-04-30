@@ -199,6 +199,7 @@ void S_StartSound(mobj_t *origin, int sound_id)
 
          if(sfx->singularity)
          {
+            hal_sound.stopSound(channel->handle);
             newchannel = channel;    // overlay this
             break;
          }
@@ -207,6 +208,7 @@ void S_StartSound(mobj_t *origin, int sound_id)
       if(channel->origin == origin)
       {
          // cut off whatever was coming from this origin
+         hal_sound.stopSound(channel->handle);
          newchannel = channel;
          break;
       }
@@ -226,7 +228,10 @@ void S_StartSound(mobj_t *origin, int sound_id)
       for(newchannel = sfxchannels, i = 0; i < SFXCHANNELS; i++, newchannel++)
       {
          if(newchannel->sfx->priority >= sfx->priority)
+         {
+            hal_sound.stopSound(newchannel->handle);
             break;
+         }
       }
 
       if(!newchannel)
