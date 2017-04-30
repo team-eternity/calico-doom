@@ -64,6 +64,14 @@ static FILE *W_haveJagDoomWAD(void)
 }
 
 //
+// Check if doom.jag is visible
+//
+static FILE *W_haveJagDoomROM(void)
+{
+   return fopen("doom.jag", "rb");
+}
+
+//
 // Test whether the loaded file is an IWAD
 //
 static wfiletype_e W_isIWAD(FILE *f, long *offset)
@@ -212,9 +220,13 @@ byte *W_LoadIWAD(void)
    // check for -iwad specification on command line
    if(!(f = W_checkForIWADArg()))
    {
-      // check if jagdoom.wad is available
-      if(!(f = W_haveJagDoomWAD()))
-         return NULL;
+      // check if doom.jag is available
+      if(!(f = W_haveJagDoomROM()))
+      {
+         // check if jagdoom.wad is available
+         if(!(f = W_haveJagDoomWAD()))
+            return NULL;
+      }
    }
 
    // check format of opened file
