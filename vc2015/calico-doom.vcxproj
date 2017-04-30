@@ -149,13 +149,14 @@
     <ClCompile Include="..\src\sdl\sdl_hal.c" />
     <ClCompile Include="..\src\sdl\sdl_init.c" />
     <ClCompile Include="..\src\sdl\sdl_input.cpp" />
-    <ClCompile Include="..\src\sdl\sdl_sound.c" />
+    <ClCompile Include="..\src\sdl\sdl_sound.cpp" />
     <ClCompile Include="..\src\sdl\sdl_timer.cpp" />
     <ClCompile Include="..\src\sdl\sdl_video.cpp" />
     <ClCompile Include="..\src\sounds.c" />
     <ClCompile Include="..\src\sprinfo.c" />
     <ClCompile Include="..\src\st_main.c" />
     <ClCompile Include="..\src\s_sound.c" />
+    <ClCompile Include="..\src\s_soundfmt.cpp" />
     <ClCompile Include="..\src\tables.c" />
     <ClCompile Include="..\src\vsprintf.c" />
     <ClCompile Include="..\src\win32\win32_main.c" />
@@ -169,6 +170,7 @@
     <ClInclude Include="..\src\doomdef.h" />
     <ClInclude Include="..\src\elib\atexit.h" />
     <ClInclude Include="..\src\elib\bdlist.h" />
+    <ClInclude Include="..\src\elib\binary.h" />
     <ClInclude Include="..\src\elib\compare.h" />
     <ClInclude Include="..\src\elib\configfile.h" />
     <ClInclude Include="..\src\elib\dllist.h" />
@@ -177,6 +179,7 @@
     <ClInclude Include="..\src\elib\m_ctype.h" />
     <ClInclude Include="..\src\elib\parser.h" />
     <ClInclude Include="..\src\elib\qstring.h" />
+    <ClInclude Include="..\src\elib\swap.h" />
     <ClInclude Include="..\src\elib\zone.h" />
     <ClInclude Include="..\src\gl\gl_render.h" />
     <ClInclude Include="..\src\gl\resource.h" />
@@ -213,6 +216,7 @@
     <ClInclude Include="..\src\sounds.h" />
     <ClInclude Include="..\src\soundst.h" />
     <ClInclude Include="..\src\st_main.h" />
+    <ClInclude Include="..\src\s_soundfmt.h" />
     <ClInclude Include="..\src\win32\win32_platform.h" />
     <ClInclude Include="..\src\w_iwad.h" />
     <ClInclude Include="resource.h" />

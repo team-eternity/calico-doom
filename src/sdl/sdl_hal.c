@@ -32,10 +32,12 @@
 #include "../hal/hal_types.h"
 #include "../hal/hal_input.h"
 #include "../hal/hal_ml.h"
+#include "../hal/hal_sfx.h"
 #include "../hal/hal_timer.h"
 #include "../hal/hal_video.h"
 #include "sdl_init.h"
 #include "sdl_input.h"
+#include "sdl_sound.h"
 #include "sdl_timer.h"
 #include "sdl_video.h"
 
@@ -82,6 +84,17 @@ void SDL2_InitHAL(void)
    hal_input.initInput     = SDL2_InitInput;
    hal_input.getEvents     = SDL2_GetEvents;
    hal_input.resetInput    = SDL2_ResetInput;
+
+   // Sound
+   hal_sound.initSound       = SDL2Sfx_MixerInit;
+   hal_sound.isInit          = SDL2Sfx_IsInit;
+   hal_sound.startSound      = SDL2Sfx_StartSound;
+   hal_sound.stopSound       = SDL2Sfx_StopSound;
+   hal_sound.isSamplePlaying = SDL2Sfx_IsSamplePlaying;
+   hal_sound.isSampleAtStart = SDL2Sfx_IsSampleAtStart;
+   hal_sound.stopAllChannels = SDL2Sfx_StopAllChannels;
+   hal_sound.updateEQParams  = SDL2Sfx_UpdateEQParams;
+   hal_sound.getSampleRate   = SDL2Sfx_GetSampleRate;
 
    // Timer
    hal_timer.delay     = SDL2_Delay;

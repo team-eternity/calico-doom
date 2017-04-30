@@ -297,8 +297,11 @@
     <ClCompile Include="..\src\hal\hal_sfx.c">
       <Filter>Source Files\hal</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\sdl\sdl_sound.c">
+    <ClCompile Include="..\src\sdl\sdl_sound.cpp">
       <Filter>Source Files\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\s_soundfmt.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -454,6 +457,15 @@
     </ClInclude>
     <ClInclude Include="..\src\sdl\sdl_sound.h">
       <Filter>Header Files\sdl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\s_soundfmt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\binary.h">
+      <Filter>Header Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\swap.h">
+      <Filter>Header Files\elib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,4 +1,7 @@
 /* s_sound.c */
+
+#include "hal/hal_sfx.h" // CALICO
+#include "s_soundfmt.h"  // CALICO
 #include "doomdef.h"
 #include "m_argv.h"
 #include "music.h"
@@ -61,6 +64,10 @@ void S_Init(void)
    nosfx   = M_FindArgument("-nosfx"  );
    nomusic = M_FindArgument("-nomusic");
 
+   // CALICO: initialize low-level sound API
+   if(!nosfx || !nomusic)
+      hal_sound.initSound();
+
    // SFX
    if(!nosfx)
    {
@@ -68,7 +75,11 @@ void S_Init(void)
       {
          l = W_CheckNumForName(S_sfx[i].name);
          if(l != -1)
+         {
             S_sfx[i].md_data = W_POINTLUMPNUM(l);
+            // CALICO: convert to output format
+            S_sfx[i].sample  = SfxSample_LoadFromData(S_sfx[i].name, W_POINTLUMPNUM(l), W_LumpLength(l));
+         }
       }
    }
 
@@ -86,6 +97,7 @@ void S_Init(void)
              + (lumpinfo[lump].name[3]-'0')
              + (lumpinfo[lump].name[0] == 'P' ? 128 : 0);
          instruments[instnum] = (sfx_t *)(W_POINTLUMPNUM(lump)); // CALICO: endianness
+         // CALICO-TODO: also load as SfxSample
          lump++;
       }
  
@@ -110,12 +122,15 @@ void S_Init(void)
 
 void S_Clear(void)
 {
+   int i;
+
    D_memset(sfxchannels, 0, sizeof(sfxchannels));
 
-   // CALICO_TODO: non-portable
-#if 0
-   D_memset(soundbuffer, 0, 0x4000);
-#endif
+   // CALICO
+   for(i = 0; i < SFXCHANNELS; i++)
+      sfxchannels[i].handle = -1;
+
+   hal_sound.stopAllChannels();
 }
 
 void S_RestartSounds(void)
@@ -139,6 +154,8 @@ void S_StartSound(mobj_t *origin, int sound_id)
    int        dx, dy;
    short      vol;
    sfxinfo_t *sfx;
+   float     *sampledata; // CALICO
+   size_t     samplelen;  // CALICO
 
    if(nosfx) // CALICO
       return;
@@ -161,9 +178,12 @@ void S_StartSound(mobj_t *origin, int sound_id)
       vol = 127 - vol;
    }
 
-
    // Get sound effect data pointer
    sfx = &S_sfx[sound_id];
+
+   // CALICO: check for valid sample
+   if(!sfx->sample)
+      return;
 
    newchannel = NULL;
 
@@ -172,7 +192,7 @@ void S_StartSound(mobj_t *origin, int sound_id)
    {
       if(channel->sfx == sfx)
       {
-         if(channel->startquad == finalquad)
+         if(hal_sound.isSampleAtStart(channel->handle)) // CALICO
          {
             return;        // exact sound allready started
          }
@@ -180,18 +200,22 @@ void S_StartSound(mobj_t *origin, int sound_id)
          if(sfx->singularity)
          {
             newchannel = channel;    // overlay this
-            goto gotchannel;
+            break;
          }
       }
+
       if(channel->origin == origin)
       {
          // cut off whatever was coming from this origin
          newchannel = channel;
-         goto gotchannel;
+         break;
       }
 
-      if(channel->stopquad <= finalquad)
+      if(!hal_sound.isSamplePlaying(channel->handle))
+      {
          newchannel = channel;    // this is a dead channel, ok to reuse
+         break;
+      }
    }
 
    // if there weren't any dead channels, try to kill an equal or lower
@@ -202,21 +226,27 @@ void S_StartSound(mobj_t *origin, int sound_id)
       for(newchannel = sfxchannels, i = 0; i < SFXCHANNELS; i++, newchannel++)
       {
          if(newchannel->sfx->priority >= sfx->priority)
-            goto gotchannel;
+            break;
       }
-      return;        // couldn't override a channel
+
+      if(!newchannel)
+         return;        // couldn't override a channel
    }
 
    //
    // fill in the new values
    //
-gotchannel:
    newchannel->sfx       = sfx;
    newchannel->origin    = origin;
    newchannel->startquad = finalquad;
    newchannel->stopquad  = finalquad + (sfx->md_data->samples / 4);
    newchannel->source    = (int *)&sfx->md_data->data;
    newchannel->volume    = vol * (short)sfxvolume;
+
+   // CALICO: start sound through HAL
+   sampledata = SfxSample_GetSamples(sfx->sample);
+   samplelen  = SfxSample_GetNumSamples(sfx->sample);
+   newchannel->handle = hal_sound.startSound(sampledata, samplelen, newchannel->volume / 255, HAL_FALSE);
 }
 
 /*
@@ -232,10 +262,6 @@ extern int music_dspcode;
 
 void S_UpdateSounds(void)
 {
-   // CALICO_TODO: non-portable
-#if 0
-   int st;
-
    //
    // if sound was just turned off, clear out the buffer
    //
@@ -250,10 +276,17 @@ void S_UpdateSounds(void)
    }
    else
    {
+#if 0
+      // Jag-specific
       if(!oldsfxvolume)
          finalquad = (samplecount >> 3) - 100;    // don't mix lots of junk
+#endif
       oldsfxvolume = sfxvolume;
    }
+
+   // CALICO_TODO: non-portable
+#if 0
+   int st;
 
    soundstarttics = samplecount;        // for timing calculations
 

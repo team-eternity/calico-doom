@@ -33,6 +33,8 @@ typedef struct sfxinfo_s
    int      pitch;         // pitch if a link
    int      volume;        // volume if a link
    sfx_t   *md_data;       // machine-dependent sound data
+
+   struct SfxSample *sample; // CALICO: converted sample data
 } sfxinfo_t;
 
 typedef struct
@@ -47,7 +49,7 @@ typedef struct
 #define	EXTERNALQUADS 512 // 16k  / 32 bytes per quad (16 bits+music)
 #define	SFXCHANNELS   4
 
-typedef struct
+typedef struct sfxchannel_s
 {
    unsigned int *source;    // work in groups of 4 8 bit samples
    int           startquad;
@@ -55,6 +57,7 @@ typedef struct
    int           volume;    // range from 0-32k
    sfxinfo_t    *sfx;
    mobj_t       *origin;
+   int           handle;     // CALICO: handle to low-level sound channel
 } sfxchannel_t;
 
 extern sfxchannel_t sfxchannels[SFXCHANNELS];

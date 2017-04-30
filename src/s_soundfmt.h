@@ -1,7 +1,7 @@
 /*
   CALICO
   
-  SDL2 Audio Implementation
+  Sound effects loading
   
   The MIT License (MIT)
   
@@ -26,9 +26,33 @@
   SOFTWARE.
 */
 
-#ifdef USE_SDL2
+#ifndef S_SOUNDFMT_H__
+#define S_SOUNDFMT_H__
 
-#include "SDL.h"
+#ifdef __cplusplus
+
+typedef class SfxSample       *PSFXSAMPLE;
+typedef class SfxSample const *PCSFXSAMPLE;
+
+#else
+
+typedef struct SfxSample       *PSFXSAMPLE;
+typedef struct SfxSample const *PCSFXSAMPLE;
+
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+PSFXSAMPLE SfxSample_LoadFromData(const char *tag, void *data, size_t len);
+PSFXSAMPLE SfxSample_FindByTag(const char *tag);
+size_t     SfxSample_GetNumSamples(PCSFXSAMPLE sfx);
+float     *SfxSample_GetSamples(PCSFXSAMPLE sfx);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 
