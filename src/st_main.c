@@ -191,15 +191,6 @@ void ST_Ticker(void)
       stbar.gotgibbed = false;
    }
 
-   // CALICO: Need to tick the gib face here, not in the drawer routine
-   if(gibdraw && !--gibdelay)
-   {
-      ++gibframe;
-      gibdelay = GIBTIME/4;
-      //if(gibframe > 6)
-      //   gibdraw = false;
-   }
-
    //
    // Tried to open a CARD or SKULL door?
    //
@@ -422,21 +413,20 @@ void ST_Drawer(void)
    //
    // Draw gibbed head
    //
-   if(gibdraw)
+   if(gibdraw && !--gibdelay)
    {
       // CALICO: the original code performs out-of-bounds accesses on the faces
       // array here, up to an unknown upper bound. This will crash the code
       // when run on PC without bounds-checking added.
-      int gibframetodraw = FIRSTSPLAT + gibframe;
-
-      // CALICO: clear the area behind the face
-      EraseBlock(FACEX, FACEY, FACEW, FACEH, sbartop);
-
+      // NB: This is also all bugged anyway, to such a degree that it never shows up.
+      // Burger Becky (I assume, or maybe Dave Taylor?) fixed the code that is in
+      // the 3DO version so that it appears properly.
+      int gibframetodraw = FIRSTSPLAT + gibframe++;
       if(gibframetodraw < NUMFACES)
          DrawJagobj(faces[gibframetodraw], FACEX, FACEY, sbartop);
-
-      // CALICO: also need a return here...
-      return;
+      gibdelay = GIBTIME;
+      if(gibframe > 6)
+         gibdraw = false;
    }
 
    //
