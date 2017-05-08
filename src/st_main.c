@@ -191,6 +191,15 @@ void ST_Ticker(void)
       stbar.gotgibbed = false;
    }
 
+   // CALICO: Need to tick the gib face here, not in the drawer routine
+   if(gibdraw && !--gibdelay)
+   {
+      ++gibframe;
+      gibdelay = GIBTIME/4;
+      //if(gibframe > 6)
+      //   gibdraw = false;
+   }
+
    //
    // Tried to open a CARD or SKULL door?
    //
@@ -413,12 +422,21 @@ void ST_Drawer(void)
    //
    // Draw gibbed head
    //
-   if(gibdraw && !--gibdelay)
+   if(gibdraw)
    {
-      DrawJagobj(faces[FIRSTSPLAT + gibframe++], FACEX, FACEY, sbartop);
-      gibdelay = GIBTIME;
-      if(gibframe > 6)
-         gibdraw = false;
+      // CALICO: the original code performs out-of-bounds accesses on the faces
+      // array here, up to an unknown upper bound. This will crash the code
+      // when run on PC without bounds-checking added.
+      int gibframetodraw = FIRSTSPLAT + gibframe;
+
+      // CALICO: clear the area behind the face
+      EraseBlock(FACEX, FACEY, FACEW, FACEH, sbartop);
+
+      if(gibframetodraw < NUMFACES)
+         DrawJagobj(faces[gibframetodraw], FACEX, FACEY, sbartop);
+
+      // CALICO: also need a return here...
+      return;
    }
 
    //
@@ -493,6 +511,8 @@ void valtostr(char *string,int val)
    {
       temp[index++] = val % 10 + '0';
       val /= 10;
+      if(index >= sizeof(temp))
+         break; // CALICO: bounds-safety
    } 
    while(val);
 
