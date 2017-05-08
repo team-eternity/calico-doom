@@ -80,7 +80,6 @@ static hal_bool ShouldGrabInput(void)
 
 //
 // Main routine.
-// CALICO_FIXME: Jag-specific bits need emulation or replacement
 //
 void Jag68k_main(int argc, const char *const *argv)
 {
@@ -117,7 +116,7 @@ void Jag68k_main(int argc, const char *const *argv)
    debugscreenrez = GL_NewTextureResource("debugscreen", NULL, 256, 224, RES_FRAMEBUFFER, 0);
    debugscreen    = GL_GetTextureResourceStore(debugscreenrez);
 
-   // CALICO_FIXME: Jag-specific
+   // CALICO: Jag-specific
 #if 0
    /* clear bss and screens */
    D_memset(&enddata, 0, 0x1fc000 - (int)&enddata);
@@ -133,7 +132,7 @@ void Jag68k_main(int argc, const char *const *argv)
 
    I_Print8(1, 0, "GPU_main");
 
-   // CALICO_FIXME: Jag-specific
+   // CALICO: Jag-specific
 #if 0
    // init sound hardware
    *(int *)0xf14000 = 0x100; /* JOYSTICK (unmute sound) */
@@ -903,7 +902,9 @@ void DrawMTitle(void)
    GL_AddDrawCommand(m_titleres, sx, sy, width, height);
 }
 
-// CALICO_FIXME: Jag-specific
+//
+// Double-buffered refresh
+//
 void DoubleBufferObjList(void)
 {
    DrawMTitle();

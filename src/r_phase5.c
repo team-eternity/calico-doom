@@ -66,7 +66,7 @@ backtostart:
 
          // CALICO_FIXME: if this actually runs out of RAM, it will loop forever.
          // CALICO_FIXME: also, if it frees something the game still needs, it may crash!
-         if(base == start)	// scanned all the way around the list
+         if(base == start) // scanned all the way around the list
             ++framecount;  // increment framecount to try again
          continue;
       }

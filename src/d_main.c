@@ -349,7 +349,7 @@ int MiniLoop(void (*start)(void), void (*stop)(void),
       S_UpdateSounds();
       drawer();
 
-      // CALICO_FIXME: Jag-specific
+      // CALICO: Jag-specific
 #if 0
       while(DSPRead(&dspfinished) != 0xdef6 )
          ;

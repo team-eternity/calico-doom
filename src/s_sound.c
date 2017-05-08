@@ -344,7 +344,7 @@ void S_StopSong(void)
    Z_Free(music_memory);
    music = 0; // prevent the DSP from running
    
-   // CALICO_TODO: non-portable
+   // CALICO: Jag-specific.
 #if 0
    int i;
    int *ptr;

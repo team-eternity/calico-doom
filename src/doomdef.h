@@ -461,7 +461,6 @@ fixed_t FixedDiv(fixed_t a, fixed_t b);
 #define ACC_MULSI3   12
 #define ACC_UDIVSI3  16
 
-// CALICO_FIXME: must deal with endianness
 #if defined(JAGUAR) || (defined(MARS) && !defined(NeXT))
 #ifndef __BIG_ENDIAN__
 #define __BIG_ENDIAN__
