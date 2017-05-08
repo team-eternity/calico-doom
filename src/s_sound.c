@@ -225,11 +225,12 @@ void S_StartSound(mobj_t *origin, int sound_id)
 
    if(!newchannel)
    {
-      for(newchannel = sfxchannels, i = 0; i < SFXCHANNELS; i++, newchannel++)
+      for(channel = sfxchannels, i = 0; i < SFXCHANNELS; i++, channel++)
       {
-         if(newchannel->sfx->priority >= sfx->priority)
+         if(channel->sfx->priority >= sfx->priority)
          {
-            hal_sound.stopSound(newchannel->handle);
+            hal_sound.stopSound(channel->handle);
+            newchannel = channel;
             break;
          }
       }
