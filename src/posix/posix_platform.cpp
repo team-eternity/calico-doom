@@ -33,6 +33,7 @@
 
 #include "../elib/elib.h"
 #include "../elib/misc.h"
+#include "../elib/qstring.h"
 #include "../hal/hal_ml.h"
 #include "../hal/hal_platform.h"
 #include "../hal/hal_video.h"
