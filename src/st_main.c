@@ -492,7 +492,7 @@ void ST_Num(int x, int y, int num)
 // Convert an int to a string (my_itoa?)
 //
 //=================================================
-void valtostr(char *string,int val)
+void valtostr(char *string, int val, int maxlen)
 {
    char temp[10];
    int  index = 0, i, dindex = 0;
@@ -505,6 +505,10 @@ void valtostr(char *string,int val)
          break; // CALICO: bounds-safety
    } 
    while(val);
+
+   // CALICO: bounds-safety
+   if(index >= maxlen)
+      index = maxlen - 1;
 
    string[index] = 0;
    for(i = index - 1; i >= 0; i--)
@@ -522,7 +526,7 @@ void ST_DrawValue(int x, int y, int value)
    int  j;
    int  index;
 
-   valtostr(v,value);
+   valtostr(v, value, sizeof(v));
    j = mystrlen(v) - 1;
    while(j >= 0)
    {

@@ -133,7 +133,7 @@ void IN_DrawValue(int x, int y, int value)
    int  j;
    int  index;
 
-   valtostr(v,value);
+   valtostr(v, value, sizeof(v));
    j = mystrlen(v) - 1;
    while(j >= 0)
    {
