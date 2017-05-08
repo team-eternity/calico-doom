@@ -1,11 +1,11 @@
 /*
   CALICO
   
-  HAL Initialization
+  POSIX Basic Platform Functions
   
   The MIT License (MIT)
   
-  Copyright (C) 2016 James Haley
+  Copyright (c) 2017 James Haley
   
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -26,32 +26,24 @@
   SOFTWARE.
 */
 
-#include "hal_types.h"
-#include "hal_ml.h"
-#include "../sdl/sdl_hal.h"
-#include "../posix/posix_platform.h"
-#include "../win32/win32_platform.h"
+#ifndef POSIX_PLATFORM_H__
+#define POSIX_PLATFORM_H__
 
-hal_bool HAL_Init(void)
-{
-   hal_bool res = HAL_FALSE;
+#if defined(__unix__) || defined(__linux__) || defined(__APPLE__)
 
-   // initialize platform HAL
-#if defined(_WIN32)
-   Win32_InitHAL();
-#elif defined(__unix__) || defined(__linux__) || defined(__APPLE__)
-   POSIX_InitHAL();
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-   // initialize media layer HAL
-#ifdef USE_SDL2
-   SDL2_InitHAL();
-   res = hal_medialayer.init();
-#endif
+void POSIX_InitHAL(void);
 
-   return res;
+#ifdef __cplusplus
 }
+#endif
+
+#endif // UNIX/LINUX/APPLE
+
+#endif // POSIX_PLATFORM_H__
 
 // EOF
-
 

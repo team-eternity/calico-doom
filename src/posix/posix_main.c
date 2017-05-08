@@ -1,11 +1,11 @@
 /*
   CALICO
   
-  HAL Initialization
+  POSIX Main Routine
   
   The MIT License (MIT)
   
-  Copyright (C) 2016 James Haley
+  Copyright (c) 2017 James Haley
   
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -26,32 +26,17 @@
   SOFTWARE.
 */
 
-#include "hal_types.h"
-#include "hal_ml.h"
-#include "../sdl/sdl_hal.h"
-#include "../posix/posix_platform.h"
-#include "../win32/win32_platform.h"
+#if defined(__unix__) || defined(__linux__) || defined(__APPLE__)
 
-hal_bool HAL_Init(void)
+extern void Jag68k_main(int argc, const char *const *argv);
+
+int main(int argc, const char *const *argv)
 {
-   hal_bool res = HAL_FALSE;
-
-   // initialize platform HAL
-#if defined(_WIN32)
-   Win32_InitHAL();
-#elif defined(__unix__) || defined(__linux__) || defined(__APPLE__)
-   POSIX_InitHAL();
-#endif
-
-   // initialize media layer HAL
-#ifdef USE_SDL2
-   SDL2_InitHAL();
-   res = hal_medialayer.init();
-#endif
-
-   return res;
+   Jag68k_main(argc, argv);
+   return 0;
 }
 
-// EOF
+#endif
 
+// EOF
 
