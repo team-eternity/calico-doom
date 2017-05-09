@@ -65,6 +65,14 @@ typedef unsigned char byte;
 #define CALICO_HAS_PACKING
 #endif
 
+//
+// Is 64-bit processor?
+// Add your own processor define here if it's not covered.
+//
+#if defined(__x86_64__) || defined(__LP64__) || defined(_M_AMD64)
+#define CALICO_IS_X64
+#endif
+
 #endif
 
 // EOF

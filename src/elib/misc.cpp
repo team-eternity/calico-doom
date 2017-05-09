@@ -39,7 +39,7 @@
 //
 // Portable vsnprintf
 //
-int pvsnprintf(char *buf, size_t buf_len, const char *s, va_list args)
+size_t pvsnprintf(char *buf, size_t buf_len, const char *s, va_list args)
 {
    if(buf_len < 1)
    {
@@ -49,15 +49,18 @@ int pvsnprintf(char *buf, size_t buf_len, const char *s, va_list args)
    // Windows (and other OSes?) has a vsnprintf() that doesn't always
    // append a trailing \0. So we must do it, and write into a buffer
    // that is one byte shorter; otherwise this function is unsafe.
-   int result = vsnprintf(buf, buf_len, s, args);
+   int    sresult = vsnprintf(buf, buf_len, s, args);
+   size_t result;
    
    // If truncated, change the final char in the buffer to a \0.
    // A negative result indicates a truncated buffer on Windows.
-   if(result < 0 || (size_t)result >= buf_len)
+   if(sresult < 0 || static_cast<size_t>(sresult) >= buf_len)
    {
       buf[buf_len - 1] = '\0';
       result = buf_len - 1;
    }
+   else
+      result = static_cast<size_t>(sresult);
 
    return result;
 }
@@ -65,10 +68,10 @@ int pvsnprintf(char *buf, size_t buf_len, const char *s, va_list args)
 //
 // Portable snprintf
 //
-int psnprintf(char *buf, size_t buf_len, const char *s, ...)
+size_t psnprintf(char *buf, size_t buf_len, const char *s, ...)
 {
    va_list args;
-   int result;
+   size_t result;
 
    va_start(args, s);
    result = pvsnprintf(buf, buf_len, s, args);

@@ -185,7 +185,7 @@ void G_DeathMatchSpawnPlayer(int playernum)
    int i, j; 
    int selections;
 
-   selections = deathmatch_p - deathmatchstarts;
+   selections = (int)(deathmatch_p - deathmatchstarts);
    if(selections < 4)
       I_Error("Only %i deathmatch spots, 4 required", selections);
 

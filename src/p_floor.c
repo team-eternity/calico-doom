@@ -379,11 +379,11 @@ int EV_BuildStairs(line_t *line)
 
       texture = sec->floorpic;
 
-      /* */
-      /* Find next sector to raise */
-      /* 1.	Find 2-sided line with same sector side[0] */
-      /* 2.	Other side is the next sector to raise */
-      /* */
+      //
+      // Find next sector to raise
+      // 1. Find 2-sided line with same sector side[0]
+      // 2. Other side is the next sector to raise
+      //
       do
       {
          ok = 0;
@@ -391,20 +391,20 @@ int EV_BuildStairs(line_t *line)
          {
             if(!((sec->lines[i])->flags & ML_TWOSIDED))
                continue;
-					
+
             tsec = (sec->lines[i])->frontsector;
-            newsecnum = tsec-sectors;
+            newsecnum = (int)(tsec-sectors);
             if (secnum != newsecnum)
                continue;
             tsec = (sec->lines[i])->backsector;
-            newsecnum = tsec - sectors;
+            newsecnum = (int)(tsec - sectors);
             if (tsec->floorpic != texture)
                continue;
-					
+
             height += 8*FRACUNIT;
             if (tsec->specialdata)
                continue;
-					
+
             sec = tsec;
             secnum = newsecnum;
             floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC, 0);

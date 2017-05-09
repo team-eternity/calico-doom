@@ -1140,10 +1140,10 @@ qstring &qstring::makeQuoted()
 // padding directives, as they will be ignored, and the resulting output may
 // then be truncated to qstr->size - 1.
 //
-int qstring::printf(size_t maxlen, const char *fmt, ...)
+size_t qstring::printf(size_t maxlen, const char *fmt, ...)
 {
    va_list va2;
-   int returnval;
+   size_t returnval;
    size_t fmtsize = strlen(fmt) + 1;
 
    if(maxlen)

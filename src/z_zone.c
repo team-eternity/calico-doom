@@ -37,7 +37,7 @@ memzone_t *Z_InitZone(byte *base, int size)
 
    zone->size = size;
    zone->rover = &zone->blocklist;
-   zone->blocklist.size = size - 8;
+   zone->blocklist.size = size - (int)((byte *)&zone->blocklist - (byte *)zone);
    zone->blocklist.user = NULL;
    zone->blocklist.tag = 0;
    zone->blocklist.id = ZONEID;
@@ -60,11 +60,17 @@ void Z_Init(void)
 {
    byte *mem;
    int   size;
+   int   chunk = 0x80000;
 
    mem = I_ZoneBase(&size);
 
-   mainzone = Z_InitZone(mem, 0x80000);
-   refzone  = Z_InitZone(mem + 0x80000, size - 0x80000);
+#if defined(CALICO_IS_X64)
+   // use double chunk size on x64
+   chunk *= 2;
+#endif
+
+   mainzone = Z_InitZone(mem, chunk);
+   refzone  = Z_InitZone(mem + chunk, size - chunk);
 }
 
 /*
@@ -136,7 +142,7 @@ backtostart:
             base = &mainzone->blocklist;
          }
 
-         if(base == start)	// scaned all the way around the list
+         if(base == start) // scaned all the way around the list
             I_Error("Z_Malloc: failed on %i", size);
          continue;
       }
@@ -264,7 +270,7 @@ void Z_ChangeTag(void *ptr, int tag)
    block = (memblock_t *)((byte *)ptr - sizeof(memblock_t));
    if(block->id != ZONEID)
       I_Error("Z_ChangeTag: freed a pointer without ZONEID");
-   if(tag >= PU_PURGELEVEL && (int)block->user < 0x100) // CALICO_FIXME: non-portable comparison
+   if(tag >= PU_PURGELEVEL && (intptr_t)block->user < 0x100) // CALICO_FIXME: non-portable comparison
       I_Error("Z_ChangeTag: an owner is required for purgable blocks");
    block->tag = tag;
 }

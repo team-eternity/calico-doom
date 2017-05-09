@@ -179,7 +179,7 @@ int W_CheckNumForName(const char *name)
    while(lump_p-- != lumpinfo)
    {
       if(!W_strncasecmp(lump_p->name, name8, 8))
-         return lump_p - lumpinfo;
+         return (int)(lump_p - lumpinfo);
    }
 
    return -1;

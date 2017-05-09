@@ -267,8 +267,8 @@ boolean PS_CheckSight(mobj_t *t1, mobj_t *t2)
    int pnum, bytenum, bitnum;
 
    // First check for trivial rejection
-   s1 = (t1->subsector->sector - sectors);
-   s2 = (t2->subsector->sector - sectors);
+   s1 = (int)(t1->subsector->sector - sectors);
+   s2 = (int)(t2->subsector->sector - sectors);
    pnum = s1*numsectors + s2;
    bytenum = pnum>>3;
    bitnum = 1 << (pnum&7);

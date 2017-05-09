@@ -386,6 +386,11 @@ byte *I_ZoneBase(int *size)
    static byte *zonebase;
    
    *size = ENDHEAP - STARTHEAP; // leave 64k for stack
+
+#if defined(CALICO_IS_X64)
+   // allocate double heap size on x64
+   *size *= 2;
+#endif
    
    // CALICO: allocate from C heap
    if(!zonebase)

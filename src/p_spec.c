@@ -750,7 +750,7 @@ int EV_DoDonut(line_t *line)
          floor->texture = s3->floorpic;
          floor->newspecial = 0;
          floor->floordestheight = s3->floorheight;
-			
+
          /* */
          /* Spawn lowering donut-hole */
          /* */

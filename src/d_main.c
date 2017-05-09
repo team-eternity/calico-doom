@@ -41,19 +41,19 @@ int D_abs(int x)
 
 void D_memset(void *dest, int val, int count)
 {
-   byte	*p;
-   int		*lp;
+   byte *p;
+   int  *lp;
 
-   /* round up to nearest word */
+   // round up to nearest word
    p = dest;
-   while((int)p & WORDMASK)
+   while((intptr_t)p & WORDMASK)
    {
       if (--count < 0)
          return;
       *p++ = val;
    }
-	
-   /* write 32 bytes at a time */
+
+   // write 32 bytes at a time
    lp = (int *)p;
    val = (val<<24) | (val<<16) | (val<<8) | val;
    while (count >= 32)

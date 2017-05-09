@@ -34,7 +34,7 @@ void P_RecursiveSound(sector_t *sec, int soundblocks)
    sector_t *front, *back;
 
    na_sec    = sec; /* DEBUG */
-   na_secnum = sec-sectors;
+   na_secnum = (int)(sec-sectors);
 
    /* wake up all monsters in this sector */
    if(sec->validcount == validcount && sec->soundtraversed <= soundblocks+1)

@@ -37,8 +37,8 @@ extern "C" {
 // Portable snprintf
 //
 
-int pvsnprintf(char *buf, size_t buf_len, const char *s, va_list args);
-int psnprintf(char *buf, size_t buf_len, const char *s, ...);
+size_t pvsnprintf(char *buf, size_t buf_len, const char *s, va_list args);
+size_t psnprintf(char *buf, size_t buf_len, const char *s, ...);
 
 //
 // File IO Utils
