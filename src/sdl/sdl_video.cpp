@@ -69,8 +69,8 @@ static int aspectDenom     = 7;
 static cfgrange_t<int> swRange = { 320, 32768 };
 static cfgrange_t<int> shRange = { 224, 32768 };
 static cfgrange_t<int> fsRange = { -1,  1     };
-static cfgrange_t<int> anRange = {  3,  32    };
-static cfgrange_t<int> adRange = {  2,  32    };
+static cfgrange_t<int> anRange = {  3,  100   };
+static cfgrange_t<int> adRange = {  2,  100   };
 
 static CfgItem cfgScreenWidth ("screenwidth",  &screenwidth,  &swRange);
 static CfgItem cfgScreenHeight("screenheight", &screenheight, &shRange);
