@@ -95,7 +95,8 @@ int M_Ticker(void)
    buttons = ticbuttons[consoleplayer];
 
    // exit menu if button press
-   if(ticon > 10 && (buttons & (JP_A|JP_B|JP_C)))
+   // CALICO: added extra custom input actions
+   if(ticon > 10 && (buttons & (JP_A|JP_B|JP_C|JP_ATTACK|JP_USE|JP_STRAFE|JP_SPEED)))
    {
       startmap   = playermap;       // set map number
       startskill = playerskill;     // set skill level

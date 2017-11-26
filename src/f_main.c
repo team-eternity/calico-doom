@@ -332,9 +332,9 @@ int F_Ticker(void)
       if(textindex == (3*15)/TEXTTIME)
          textprint = true;
 
-      if((((buttons & BT_A) && !(oldbuttons & BT_A)) || 
-          ((buttons & BT_B) && !(oldbuttons & BT_B)) || 
-          ((buttons & BT_C) && !(oldbuttons & BT_C))) &&
+      if((((buttons & (BT_A|JP_SPEED)) && !(oldbuttons & (BT_A|JP_SPEED))) || // CALICO: allow dedicated actions
+          ((buttons & (BT_B|JP_ATTACK)) && !(oldbuttons & (BT_B|JP_ATTACK))) || 
+          ((buttons & (BT_C|JP_STRAFE|JP_USE)) && !(oldbuttons & (BT_C|JP_STRAFE|JP_USE)))) &&
          textprint == true)
       {
          status = fin_charcast;
@@ -345,9 +345,9 @@ int F_Ticker(void)
 
    if(!castdeath)
    {
-      if(((buttons & BT_A) && !(oldbuttons & BT_A)) || 
-         ((buttons & BT_B) && !(oldbuttons & BT_B)) || 
-         ((buttons & BT_C) && !(oldbuttons & BT_C)))
+      if(((buttons & (BT_A|JP_SPEED)) && !(oldbuttons & (BT_A|JP_SPEED))) || // CALICO: allow dedicated actions
+         ((buttons & (BT_B|JP_ATTACK)) && !(oldbuttons & (BT_B|JP_ATTACK))) || 
+         ((buttons & (BT_C|JP_STRAFE|JP_USE)) && !(oldbuttons & (BT_C|JP_STRAFE|JP_USE))))
       {
          // go into death frame
          castdeath = true;

@@ -1,6 +1,7 @@
 /* P_user.c */
 
 #include "doomdef.h"
+#include "g_options.h"
 #include "p_local.h"
 #include "st_main.h"
 
@@ -9,7 +10,7 @@ fixed_t sidemove[2]    = { 0x38000, 0x58000 };
 
 #define SLOWTURNTICS 10
 
-fixed_t	angleturn[] =
+fixed_t angleturn[] =
 {
    300,300,500,500,600,700,800,900,900,1000
 };
@@ -232,23 +233,23 @@ void P_BuildMove(player_t *player)
 { 
    boolean strafe; 
    int     speed; 
-   int     buttons, oldbuttons; 
-   mobj_t *mo;	 
+   int     buttons, oldbuttons;
+   mobj_t *mo;
 
    buttons    = ticbuttons[playernum];
    oldbuttons = oldticbuttons[playernum];
 
-   strafe = (buttons & BT_STRAFE) > 0; 
-   speed  = (buttons & BT_SPEED) > 0;
-	
-   /*  */
-   /* use two stage accelerative turning on the joypad  */
-   /*  */
+   strafe = (buttons & (BT_STRAFE | JP_STRAFE)) > 0; // CALICO: added dedicated strafe action
+   speed  = gGameSettings.autorun ^ ((buttons & (BT_SPEED | JP_SPEED)) > 0);  // CALICO: added autorun option
+
+   //
+   // use two stage accelerative turning on the joypad
+   //
    if((buttons & BT_LEFT) && (oldbuttons & BT_LEFT))
       player->turnheld++; 
    else if((buttons & BT_RIGHT) && (oldbuttons & BT_RIGHT))
       player->turnheld++; 
-   else 
+   else
       player->turnheld = 0; 
 
    if(player->turnheld >= SLOWTURNTICS)
@@ -256,30 +257,38 @@ void P_BuildMove(player_t *player)
  
    player->forwardmove = player->sidemove = player->angleturn = 0;
 
-   if(strafe) 
-   { 
+   if(strafe)
+   {
       if(buttons & BT_RIGHT) 
          player->sidemove = sidemove[speed]; 
       if(buttons & BT_LEFT) 
          player->sidemove = -sidemove[speed]; 
-   } 
-   else 
-   { 
-      if(speed && !(buttons&(BT_UP|BT_DOWN)))
+   }
+   else
+   {
+      // CALICO: allow finer control when using autorun, as this is way too aggressive for untoggled use
+      if(speed && !(buttons & (BT_UP | BT_DOWN)) && !gGameSettings.autorun)
       {
-         if(buttons & BT_RIGHT) 
-            player->angleturn = -((fastangleturn[player->turnheld]*vblsinframe)<<15); 
-         if(buttons & BT_LEFT) 
-            player->angleturn = (fastangleturn[player->turnheld]*vblsinframe)<<15; 
+         if(buttons & BT_RIGHT)
+            player->angleturn = -((fastangleturn[player->turnheld] * vblsinframe) << 15);
+         if(buttons & BT_LEFT)
+            player->angleturn = (fastangleturn[player->turnheld] * vblsinframe) << 15;
       }
       else
       {
+         fixed_t add = (speed && gGameSettings.autorun) ? 200 : 0; // CALICO
          if(buttons & BT_RIGHT) 
-            player->angleturn = -angleturn[player->turnheld]<<17; 
+            player->angleturn = -(angleturn[player->turnheld] + add) << 17;
          if(buttons & BT_LEFT) 
-            player->angleturn = angleturn[player->turnheld]<<17; 
+            player->angleturn = (angleturn[player->turnheld] + add) << 17;
       }
-   } 
+   }
+
+   // CALICO: support dedicated strafe left and right actions
+   if(buttons & JP_SRIGHT)
+      player->sidemove = sidemove[speed];
+   if(buttons & JP_SLEFT)
+      player->sidemove = -sidemove[speed];
 
    if(buttons & BT_UP) 
       player->forwardmove = forwardmove[speed]; 
@@ -287,14 +296,14 @@ void P_BuildMove(player_t *player)
       player->forwardmove = -forwardmove[speed];
 
 
-   /* */
-   /* if slowed down to a stop, change to a standing frame */
-   /* */
+   //
+   // if slowed down to a stop, change to a standing frame
+   //
    mo = player->mo;
 
-   if(!mo->momx && !mo->momy && player->forwardmove== 0 && player->sidemove == 0 )
+   if(!mo->momx && !mo->momy && player->forwardmove == 0 && player->sidemove == 0 )
    {
-      /* if in a walking frame, stop moving */
+      // if in a walking frame, stop moving
       if(mo->state == &states[S_PLAY_RUN1] || 
          mo->state == &states[S_PLAY_RUN2] ||
          mo->state == &states[S_PLAY_RUN3] ||
@@ -475,8 +484,26 @@ void P_DeathThink(player_t *player)
    else if(player->damagecount)
       player->damagecount--;
 
-   if((ticbuttons[playernum] & BT_USE) && player->viewheight <= 8*FRACUNIT)
+   if((ticbuttons[playernum] & (BT_USE|JP_USE)) && player->viewheight <= 8*FRACUNIT) // CALICO: allow ded. use action also
       player->playerstate = PST_REBORN;
+}
+
+//
+// CALICO: Returns false if:
+// * player does not own the weapon in question -or-
+// * the weapon uses ammo and does not have sufficient ammo
+// Returns true otherwise.
+//
+boolean P_CanFireWeapon(player_t *player, int weaponnum)
+{
+   if(!player->weaponowned[weaponnum])
+      return false;
+
+   if(weaponinfo[weaponnum].ammo == am_noammo)
+      return true;
+
+   int neededAmmo = (weaponnum == wp_bfg) ? 40 : 1;
+   return player->ammo[weaponinfo[weaponnum].ammo] >= neededAmmo;
 }
 
 /*
@@ -500,10 +527,10 @@ void P_PlayerThink(player_t *player)
 
    ticphase = 21;
    P_BuildMove(player);
-	
-   /* */
-   /* chain saw run forward */
-   /* */
+
+   //
+   // chain saw run forward
+   //
    if(player->mo->flags & MF_JUSTATTACKED)
    {
       player->angleturn = 0;
@@ -511,16 +538,16 @@ void P_PlayerThink(player_t *player)
       player->sidemove = 0;
       player->mo->flags &= ~MF_JUSTATTACKED;
    }
-	
+
    if(player->playerstate == PST_DEAD)
    {
       P_DeathThink(player);
       return;
    }
-		
-   /* */
-   /* move around */
-   /* reactiontime is used to prevent movement for a bit after a teleport */
+
+   //
+   // move around
+   // reactiontime is used to prevent movement for a bit after a teleport
    ticphase = 22;
    if(player->mo->reactiontime)
       player->mo->reactiontime--;
@@ -530,9 +557,9 @@ void P_PlayerThink(player_t *player)
    if(player->mo->subsector->sector->special)
       P_PlayerInSpecialSector(player);
 
-   /* */
-   /* check for weapon change */
-   /* */
+   //
+   // check for weapon change
+   //
    ticphase = 23;
    if(player->pendingweapon == wp_nochange)
    {
@@ -556,18 +583,43 @@ void P_PlayerThink(player_t *player)
          player->pendingweapon = wp_plasma;
       if((buttons & JP_7) && player->weaponowned[wp_bfg])
          player->pendingweapon = wp_bfg;
+
+      // CALICO: added support for explicit next weapon and previous weapon actions
+      if(buttons & JP_PWEAPN)
+      {
+         int wp = player->readyweapon;
+         do
+         {
+            if(--wp < 0)
+               wp = NUMWEAPONS - 1;
+         }
+         while(wp != player->readyweapon && !P_CanFireWeapon(player, wp));
+         player->pendingweapon = wp;
+      }
+      else if(buttons & JP_NWEAPN)
+      {
+         int wp = player->readyweapon;
+         do
+         {
+            if(++wp == NUMWEAPONS)
+               wp = 0;
+         }
+         while(wp != player->readyweapon && !P_CanFireWeapon(player, wp));
+         player->pendingweapon = wp;
+      }
+
       if(player->pendingweapon == player->readyweapon)
          player->pendingweapon = wp_nochange;
    }
-	
-   /* */
-   /* check for use */
-   /* */
-   if(buttons & BT_USE)
+
+   //
+   // check for use
+   //
+   if(buttons & (BT_USE | JP_USE)) // CALICO: added dedicated use action
    {
       if(!player->usedown)
       {
-         P_UseLines (player);
+         P_UseLines(player);
          player->usedown = true;
       }
    }
@@ -575,29 +627,28 @@ void P_PlayerThink(player_t *player)
       player->usedown = false;
 
    ticphase = 24;
-   if(buttons & BT_ATTACK)
+   if(buttons & (BT_ATTACK | JP_ATTACK)) // CALICO: added dedicated attack action
    {
       player->attackdown++;
       if(player->attackdown > 30 && playernum == consoleplayer &&
          (player->readyweapon == wp_chaingun || player->readyweapon == wp_plasma))
-         stbar.specialFace = f_mowdown;			
+         stbar.specialFace = f_mowdown;
    }
    else
       player->attackdown = 0;
-			
-   /* */
-   /* cycle psprites */
-   /* */
+
+   //
+   // cycle psprites
+   //
    ticphase = 25;
    P_MovePsprites(player);
    ticphase = 26;
-	
-	
-   /* */
-   /* counters */
-   /* */
+
+   //
+   // counters
+   //
    if(player->powers[pw_strength])
-      player->powers[pw_strength]++; /* strength counts up to diminish fade */
+      player->powers[pw_strength]++; // strength counts up to diminish fade
 
    if(player->powers[pw_invulnerability])
       player->powers[pw_invulnerability]--;

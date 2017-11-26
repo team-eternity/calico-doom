@@ -338,18 +338,10 @@ int IN_Ticker(void)
       buttons = ticbuttons[i];
       oldbuttons = oldticbuttons[i];
 
+      // CALICO: rewritten to allow for extended input options to trigger
       // exit menu if button press
-      if((buttons & JP_A) && !(oldbuttons & JP_A))
-      {
-         earlyexit = true;
-         return 1; // done with intermission
-      }
-      if((buttons & JP_B) && !(oldbuttons & JP_B))
-      {
-         earlyexit = true;
-         return 1; // done with intermission
-      }
-      if((buttons & JP_C) && !(oldbuttons & JP_C))
+      if((buttons & (JP_A|JP_B|JP_C|JP_ATTACK|JP_USE|JP_STRAFE|JP_SPEED)) != 
+         (oldbuttons & (JP_A|JP_B|JP_C|JP_ATTACK|JP_USE|JP_STRAFE|JP_SPEED)))
       {
          earlyexit = true;
          return 1; // done with intermission

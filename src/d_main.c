@@ -4,7 +4,8 @@
 
 #include "hal/hal_input.h"
 #include "hal/hal_timer.h"
-#include "doomdef.h" 
+#include "doomdef.h"
+#include "g_options.h"
 #include "m_argv.h"
  
 unsigned int BT_ATTACK = BT_B;
@@ -399,11 +400,11 @@ int TIC_Abortable(void)
       Jag68k_main(myargc, myargv);
    }
 
-   if((ticbuttons[0] & BT_A) && !(oldticbuttons[0] & BT_A))
+   if((ticbuttons[0] & (BT_A|JP_SPEED)) && !(oldticbuttons[0] & (BT_A|JP_SPEED))) // CALICO: allow dedicated actions also
       return ga_exitdemo;
-   if((ticbuttons[0] & BT_B) && !(oldticbuttons[0] & BT_B))
+   if((ticbuttons[0] & (BT_B|JP_ATTACK)) && !(oldticbuttons[0] & (BT_B|JP_ATTACK)))
       return ga_exitdemo;
-   if((ticbuttons[0] & BT_C) && !(oldticbuttons[0] & BT_C))
+   if((ticbuttons[0] & (BT_C|JP_STRAFE|JP_USE)) && !(oldticbuttons[0] & (BT_C|JP_STRAFE|JP_USE)))
       return ga_exitdemo;
    return 0;
 }
@@ -454,11 +455,11 @@ int TIC_Credits(void)
    if(ticon >= 10*15)
       return 1; /* go on to next demo */
 
-   if((ticbuttons[0] & BT_A) && !(oldticbuttons[0] & BT_A))
+   if((ticbuttons[0] & (BT_A|JP_SPEED)) && !(oldticbuttons[0] & (BT_A|JP_SPEED))) // CALICO: allow dedicated actions also
       return ga_exitdemo;
-   if((ticbuttons[0] & BT_B) && !(oldticbuttons[0] & BT_B))
+   if((ticbuttons[0] & (BT_B|JP_ATTACK)) && !(oldticbuttons[0] & (BT_B|JP_ATTACK)))
       return ga_exitdemo;
-   if((ticbuttons[0] & BT_C) && !(oldticbuttons[0] & BT_C))
+   if((ticbuttons[0] & (BT_C|JP_STRAFE|JP_USE)) && !(oldticbuttons[0] & (BT_C|JP_STRAFE|JP_USE)))
       return ga_exitdemo;
    return 0;
 }
@@ -514,6 +515,7 @@ reselect:
          goto reselect; /* aborted net startup */
    }
 
+   G_OptionsNewGame(); // CALICO: reload game options from config
    G_InitNew(startskill, startmap, starttype);
    G_RunGame();
 }

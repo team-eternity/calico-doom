@@ -367,7 +367,7 @@ void A_WeaponReady (player_t *player, pspdef_t *psp)
    /* check for fire */
    /* */
    /* the missile launcher and bfg do not auto fire */
-   if(ticbuttons[playernum] & BT_ATTACK)
+   if(ticbuttons[playernum] & (BT_ATTACK|JP_ATTACK)) // CALICO: also allow JP_ATTACK
    {
       P_FireWeapon (player);
       return;
@@ -397,7 +397,7 @@ void A_ReFire (player_t *player, pspdef_t *psp)
    /* */
    /* check for fire (if a weaponchange is pending, let it go through instead) */
    /* */
-   if((ticbuttons[playernum] & BT_ATTACK) && 
+   if((ticbuttons[playernum] & (BT_ATTACK|JP_ATTACK)) && // CALICO: also allow JP_ATTACK
       player->pendingweapon == wp_nochange && player->health)
    {
       player->refire++;
@@ -826,12 +826,12 @@ void P_MovePsprites (player_t *player)
          if((state = psp->state) != 0) /* a null state means not active */
          {
             /* drop tic count and possibly change state */
-            if(psp->tics != -1)	/* a -1 tic count never changes */
+            if(psp->tics != -1) /* a -1 tic count never changes */
             {
                psp->tics--;
                if(!psp->tics)
                   P_SetPsprite (player, i, psp->state->nextstate);
-            }				
+            }
          }
       }
    }

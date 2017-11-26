@@ -219,7 +219,7 @@ void AM_Control(player_t *player)
    pause++;         // PAUSE BETWEEN SCALINGS
 
    step = STEPVALUE;
-   if(buttons & BT_A)
+   if(buttons & (BT_A|JP_SPEED)) // CALICO: also allow speed action
       step *= 2;
 
    cheatcode = AM_CheckCheat(buttons,oldbuttons);
@@ -234,16 +234,16 @@ void AM_Control(player_t *player)
       break;
    }
 
-   if(buttons & BT_C) // IF 'C' IS HELD DOWN, MOVE AROUND
+   if(buttons & (BT_C|JP_STRAFE|JP_USE)) // IF 'C' IS HELD DOWN, MOVE AROUND
    {
-      ticbuttons[playernum] &= ~BT_C;
-      oldticbuttons[playernum] &= ~BT_C;
+      ticbuttons[playernum] &= ~(BT_C|JP_STRAFE|JP_USE); // CALICO: also allow strafe/use actions
+      oldticbuttons[playernum] &= ~(BT_C|JP_STRAFE|JP_USE);
       return;
    }
 
    if(buttons & BT_RIGHT)
    {
-      if(buttons & BT_B)
+      if(buttons & (BT_B|JP_ATTACK)) // CALICO: also allow attack action
       {
          if(pause > 5)
          {
@@ -259,7 +259,7 @@ void AM_Control(player_t *player)
 
    if(buttons & BT_LEFT)
    {
-      if(buttons & BT_B)
+      if(buttons & (BT_B|JP_ATTACK))
       {
          if(pause > 5)
          {
@@ -275,7 +275,7 @@ void AM_Control(player_t *player)
 
    if(buttons & BT_UP)
    {
-      if(buttons & BT_B)
+      if(buttons & (BT_B|JP_ATTACK))
       {
          if(pause > 5)
          {
@@ -291,7 +291,7 @@ void AM_Control(player_t *player)
 
    if(buttons & BT_DOWN)
    {
-      if(buttons & BT_B)
+      if(buttons & (BT_B|JP_ATTACK))
       {
          if(pause > 5)
          {
@@ -305,7 +305,7 @@ void AM_Control(player_t *player)
          player->automapy-=step;
    }
 
-   ticbuttons[playernum] &= ~(BT_B|BT_LEFT|BT_RIGHT|BT_UP|BT_DOWN);
+   ticbuttons[playernum] &= ~(BT_B|BT_LEFT|BT_RIGHT|BT_UP|BT_DOWN|JP_ATTACK|JP_STRAFE|JP_SPEED|JP_USE);
 }
 
 /*

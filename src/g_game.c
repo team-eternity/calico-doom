@@ -2,6 +2,7 @@
 
 #include "hal/hal_input.h"
 #include "doomdef.h" 
+#include "g_options.h"
 #include "p_local.h" 
  
 void G_PlayerReborn(int player); 
@@ -60,7 +61,7 @@ void G_DoLoadLevel(void)
 
    skytexturep = &textures[skytexture];
 
-   P_SetupLevel(gamemap, gameskill);   
+   P_SetupLevel(gamemap, gameskill);
    displayplayer = consoleplayer; // view the guy you are playing
    gameaction = ga_nothing; 
 
@@ -233,7 +234,7 @@ void G_DoReborn(int playernum)
       G_DeathMatchSpawnPlayer (playernum); 
       return; 
    } 
-		
+
    if(G_CheckSpot(playernum, &playerstarts[playernum])) 
    { 
       P_SpawnPlayer(&playerstarts[playernum]); 
@@ -351,7 +352,7 @@ void G_InitNew(skill_t skill, int map, gametype_t gametype)
 =
 = G_RunGame
 =
-= The game should allready have been initialized or laoded
+= The game should allready have been initialized or loaded
 =================
 */
 
@@ -362,7 +363,7 @@ void G_RunGame(void)
    while(1)
    {
       // load a level
-      G_DoLoadLevel();   
+      G_DoLoadLevel();
 
       // run a level until death or completion
       hal_appstate.setGrabState(HAL_TRUE); // CALICO: grab input
@@ -391,11 +392,11 @@ void G_RunGame(void)
          switch(gamemap)
          {
          case 24: nextmap = 4; break;
-         case 23: nextmap = 23; break;	// don't add secret level to eeprom
+         case 23: nextmap = 23; break;    // don't add secret level to eeprom
          default: nextmap = gamemap+1; break;
          }
          if(nextmap > maxlevel)
-         {	
+         {
             // allow higher menu selection now
             void WriteEEProm(void);
             maxlevel = nextmap;
@@ -430,6 +431,7 @@ int G_PlayDemoPtr(int *demo)
 
    demo_p = demo;
 
+   G_OptionsStartDemo(); // CALICO: set demo settings
    G_InitNew(skill, map, gt_single);
    G_DoLoadLevel();   
    demoplayback = true;
@@ -457,6 +459,7 @@ void G_RecordDemo(void)
    *demo_p++ = BIGLONG(startskill);
    *demo_p++ = BIGLONG(startmap);
 
+   G_OptionsStartDemo(); // CALICO: set demo settings
    G_InitNew(startskill, startmap, gt_single);
    G_DoLoadLevel();  
    demorecording = true; 
