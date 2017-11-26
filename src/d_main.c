@@ -1,5 +1,7 @@
 /* D_main.c  */
 
+#include <stdint.h>
+
 #include "hal/hal_input.h"
 #include "hal/hal_timer.h"
 #include "doomdef.h" 

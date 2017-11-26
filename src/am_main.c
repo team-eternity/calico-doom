@@ -193,7 +193,7 @@ void DrawLine(pixel_t color, int x1, int y1, int x2, int y2)
 
 void AM_Control(player_t *player)
 {
-   int     buttons, oldbuttons, step;
+   int     buttons, oldbuttons, step, tmp;
    cheat_e cheatcode;
 
    buttons    = ticbuttons[playernum];
@@ -214,8 +214,9 @@ void AM_Control(player_t *player)
    oldplayerx = player->automapx;
    oldplayery = player->automapy;
 
-   blink = (blink++)&7; // BLINK PLAYER'S BOX 
-   pause++;             // PAUSE BETWEEN SCALINGS
+   tmp = blink & 7; // CALICO: rm undefined behavior (blink on both sides of expr)
+   blink = ++tmp;   // BLINK PLAYER'S BOX 
+   pause++;         // PAUSE BETWEEN SCALINGS
 
    step = STEPVALUE;
    if(buttons & BT_A)

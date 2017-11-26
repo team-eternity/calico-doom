@@ -1,5 +1,6 @@
 /* comnjag.c */
 
+#include <stdint.h>
 #include "doomdef.h"
 
 void C_Init(void)
