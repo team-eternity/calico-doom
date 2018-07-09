@@ -1085,7 +1085,8 @@ void PutSerialChar(int data)
 #endif
 }
 
-void wait(int tics)
+// CALICO: renamed I_Wait to avoid POSIX routine conflict
+void I_Wait(int tics)
 {
    int start;
 
@@ -1120,7 +1121,7 @@ void Player0Setup(void)
          return;    // abort
       }
 
-      wait(1);
+      I_Wait(1);
       val = GetSerialChar();
       PrintHex(20,5,val);
       if(val == 0x22)
@@ -1206,12 +1207,12 @@ void I_NetSetup(void)
 
    GetSerialChar();
    GetSerialChar();
-   wait(1);
+   I_Wait(1);
    GetSerialChar();
    GetSerialChar();
 
    // wait a bit
-   wait(4);
+   I_Wait(4);
 
    // if a character is allready waiting, we are player 1
    listen1 = GetSerialChar();
@@ -1223,7 +1224,7 @@ void I_NetSetup(void)
       Player1Setup();
 
    // wait a while and flush out the receive queue
-   wait(5);
+   I_Wait(5);
 
    GetSerialChar();
    GetSerialChar();
@@ -1290,7 +1291,7 @@ unsigned I_NetTransfer(unsigned int buttons)
       DrawPlaque(pl, "neterror");
       Z_Free (pl);
 
-      wait(200);
+      I_Wait(200);
       goto reconnect;
    }
 
@@ -1303,7 +1304,7 @@ reconnect:
    S_Clear();
 
    if(consoleplayer)
-      wait(15); // let player 0 wait again
+      I_Wait(15); // let player 0 wait again
 
    I_NetSetup();
    if(starttype == gt_single)
