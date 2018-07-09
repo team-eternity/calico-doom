@@ -55,6 +55,9 @@
 // Memory handling
 #include "zone.h"
 
+// Global config
+#define ELIB_APPNAME "Calico"
+
 // String case comparison
 #if defined(_MSC_VER) && !defined(strcasecmp)
 #define strcasecmp _stricmp

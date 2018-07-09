@@ -105,15 +105,6 @@ static void Win32_FatalError(const char *msg, ...)
 }
 
 //
-// Obtain the application's base write directory.
-// For Windows, this is the application directory.
-//
-static const char *Win32_GetWriteDirectory(void)
-{
-   return ".";
-}
-
-//
 // Set the main application window icon. This implementation uses a native
 // Win32 icon resource.
 //
@@ -136,11 +127,10 @@ static void Win32_SetIcon(void)
 //
 void Win32_InitHAL(void)
 {
-   hal_platform.debugMsg          = Win32_DebugMsg;
-   hal_platform.exitWithMsg       = Win32_ExitWithMsg;
-   hal_platform.fatalError        = Win32_FatalError;
-   hal_platform.getWriteDirectory = Win32_GetWriteDirectory;
-   hal_platform.setIcon           = Win32_SetIcon;
+   hal_platform.debugMsg    = Win32_DebugMsg;
+   hal_platform.exitWithMsg = Win32_ExitWithMsg;
+   hal_platform.fatalError  = Win32_FatalError;
+   hal_platform.setIcon     = Win32_SetIcon;
 }
 
 #endif

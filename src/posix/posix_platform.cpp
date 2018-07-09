@@ -118,47 +118,6 @@ static bool POSIX_CreateDirectory(const char *name)
    return !mkdir(name, S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
 }
 
-//
-// Get the application write directory, creating it if it does not exist.
-//
-static const char *POSIX_GetWriteDirectory()
-{
-   static qstring writeDir;
-
-   if(writeDir.empty())
-   {
-#if defined(__APPLE__)
-      // MacOS X is a bit different, of course.
-      writeDir = "~/Library/Application Support/net.mancubus.eternity.calico-doom";
-      POSIX_CreateDirectory(writeDir.constPtr());      
-#else
-      // Try XDG standard location first; fallback to HOME otherwise.
-      const char *s = nullptr;
-      if((s = getenv("XDG_CONFIG_HOME")) && *s)
-      {
-         writeDir = s;
-      }
-      else if((s = getenv("HOME")) && *s)
-      {
-         writeDir = s;
-         writeDir.pathConcatenate("/.config");
-         POSIX_CreateDirectory(writeDir.constPtr());
-      }
-      if(s)
-      {
-         writeDir.pathConcatenate("/calico-doom");
-         POSIX_CreateDirectory(writeDir.constPtr());
-      }
-#endif
-   
-      struct stat sbuf;
-      if(stat(writeDir.constPtr(), &sbuf) || !S_ISDIR(sbuf.st_mode))
-         POSIX_FatalError("Cannot locate a writable directory for save files; please reinstall the game.");
-   }
-
-   return writeDir.constPtr();
-}
-
 static void POSIX_SetIcon()
 {
    // FIXME: Not implemented
@@ -169,11 +128,10 @@ static void POSIX_SetIcon()
 //
 void POSIX_InitHAL(void)
 {
-   hal_platform.debugMsg          = POSIX_DebugMsg;
-   hal_platform.exitWithMsg       = POSIX_ExitWithMsg;
-   hal_platform.fatalError        = POSIX_FatalError;
-   hal_platform.getWriteDirectory = POSIX_GetWriteDirectory;
-   hal_platform.setIcon           = POSIX_SetIcon;
+   hal_platform.debugMsg    = POSIX_DebugMsg;
+   hal_platform.exitWithMsg = POSIX_ExitWithMsg;
+   hal_platform.fatalError  = POSIX_FatalError;
+   hal_platform.setIcon     = POSIX_SetIcon;
 }
 
 #endif

@@ -47,11 +47,12 @@
 void SDL2_InitHAL(void)
 {
    // Basic interface
-   hal_medialayer.init      = SDL2_Init;
-   hal_medialayer.exit      = SDL2_Exit;
-   hal_medialayer.error     = SDL2_Error;
-   hal_medialayer.msgbox    = SDL2_MsgBox;
-   hal_medialayer.isExiting = SDL2_IsExiting;
+   hal_medialayer.init              = SDL2_Init;
+   hal_medialayer.exit              = SDL2_Exit;
+   hal_medialayer.error             = SDL2_Error;
+   hal_medialayer.msgbox            = SDL2_MsgBox;
+   hal_medialayer.isExiting         = SDL2_IsExiting;
+   hal_medialayer.getWriteDirectory = SDL2_GetWriteDirectory;
 
    // Video functions
    hal_video.initVideo            = SDL2_InitVideo;

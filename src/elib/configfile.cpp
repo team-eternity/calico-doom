@@ -30,6 +30,7 @@
 #include <map>
 
 #include "../hal/hal_platform.h"
+#include "../hal/hal_ml.h"
 #include "atexit.h"
 #include "configfile.h"
 #include "parser.h"
@@ -318,7 +319,7 @@ bool CfgFileParser::doStateExpectValue(Tokenizer &token)
 
 void Cfg_LoadFile(void)
 {
-   qstring fn(hal_platform.getWriteDirectory());
+   qstring fn(hal_medialayer.getWriteDirectory(ELIB_APPNAME));
    fn.pathConcatenate("calico.cfg");
    CfgFileParser parser(fn.constPtr());
    parser.parseFile();
@@ -353,8 +354,8 @@ void Cfg_WriteFile(void)
    FILE *f     = nullptr;
    bool  error = false;
    std::map<qstring, CfgItem *> items;
-   qstring tmpName(hal_platform.getWriteDirectory());
-   qstring dstName(hal_platform.getWriteDirectory());
+   qstring tmpName(hal_medialayer.getWriteDirectory(ELIB_APPNAME));
+   qstring dstName(hal_medialayer.getWriteDirectory(ELIB_APPNAME));
 
    tmpName.pathConcatenate("temp.cfg");
    dstName.pathConcatenate("calico.cfg");

@@ -32,6 +32,7 @@
 #include "SDL.h"
 #include "../elib/atexit.h"
 #include "../hal/hal_ml.h"
+#include "../hal/hal_platform.h"
 #include "../hal/hal_video.h"
 #include "../sdl/sdl_video.h"
 
@@ -94,6 +95,23 @@ void SDL2_Error(void)
 hal_bool SDL2_IsExiting(void)
 {
    return isExiting;
+}
+
+//
+// Get a suitable write location for the application
+//
+const char *SDL2_GetWriteDirectory(const char *app)
+{
+   static char *pszPath = NULL;
+
+   if(!pszPath)
+   {
+      pszPath = SDL_GetPrefPath("Team Eternity", app);
+      if(!pszPath)
+         pszPath = "./"; // probably will not work.
+   }
+
+   return pszPath;
 }
 
 #endif
