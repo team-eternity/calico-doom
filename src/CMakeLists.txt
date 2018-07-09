@@ -6,6 +6,7 @@ set(CALICO_SOURCES
                     doomdef.h
     f_main.c
     g_game.c
+    g_options.cpp   g_options.h
     info.c
     info.h
     in_main.c
