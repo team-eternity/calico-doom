@@ -1,5 +1,6 @@
 /* Z_zone.c */
 
+#include <stdint.h>
 #include "doomdef.h"
 
 /* 
