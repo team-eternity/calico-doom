@@ -26,6 +26,7 @@
   SOFTWARE.
 */
 
+#include <errno.h>
 #include "elib.h"
 #include "../hal/hal_platform.h"
 #include "misc.h"
