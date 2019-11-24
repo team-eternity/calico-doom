@@ -30,7 +30,7 @@
 #define ELIB_H__
 
 // C++ standard library
-#ifdef __cplusplus
+#if defined(__cplusplus)
 #include <cmath>
 #include <cstdarg>
 #include <cstdio>
@@ -54,6 +54,11 @@
 
 // Memory handling
 #include "zone.h"
+
+#if defined(__cplusplus)
+// Smart pointer types
+#include "esmartptr.h"
+#endif
 
 // Global config
 #define ELIB_APPNAME "Calico"
