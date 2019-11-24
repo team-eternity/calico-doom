@@ -64,10 +64,6 @@ static PFNGLBUFFERDATAARBPROC    pglBufferDataARB    = nullptr;
 static PFNGLMAPBUFFERARBPROC     pglMapBufferARB     = nullptr;
 static PFNGLUNMAPBUFFERARBPROC   pglUnmapBufferARB   = nullptr;
 
-#define GETPROC(ptr, name) \
-   ptr = reinterpret_cast<decltype(ptr)>(hal_video.getGLProcAddress(name)); \
-   extension_ok = (extension_ok && ptr != nullptr)
-
 //
 // Must reload extension pointers if game video mode changes
 //

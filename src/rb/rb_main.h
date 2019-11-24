@@ -162,6 +162,10 @@ void RB_SetCull(rbCullType_e type);
 void RB_SetReadBuffer(rbBufferType_e state);
 void RB_SetScissorRect(const rbScissor_t &rect);
 
+#define GETPROC(ptr, name) \
+   ptr = reinterpret_cast<decltype(ptr)>(hal_video.getGLProcAddress(name)); \
+   extension_ok = (extension_ok && ptr != nullptr)
+
 #endif
 
 // EOF
