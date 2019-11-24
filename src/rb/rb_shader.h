@@ -39,6 +39,14 @@ public:
     };
 
     rbShader(type_e type) : m_type(type) {}
+    rbShader(const rbShader &other) = delete;
+    rbShader(rbShader &&other)
+        : m_type(other.m_type), m_shaderID(other.m_shaderID)
+    {
+        other.abandonShader();
+    }
+
+    ~rbShader();
 
     bool loadFromSource(const char *src);
     bool loadFromFile(const char *filename);
@@ -46,20 +54,39 @@ public:
     type_e       getType()     const { return m_type;     }
     unsigned int getShaderID() const { return m_shaderID; }
 
+    rbShader &operator = (const rbShader &other) = delete;
+    rbShader &operator = (rbShader &&other)
+    {
+        deleteShader();
+        m_type     = other.m_type;
+        m_shaderID = other.m_shaderID;
+        other.abandonShader();
+        return *this;
+    }
+
 protected:
+    friend class rbProgram;
+
     type_e       m_type;
     unsigned int m_shaderID = 0;
 
+    void deleteShader();
+    void abandonShader();
     void outputLogInfo() const;
 };
 
 class rbProgram
 {
 public:
+    rbProgram() 
+        : m_vtxShader(rbShader::TYPE_VERTEX), m_frgShader(rbShader::TYPE_FRAGMENT) 
+    {
+    }
+
     ~rbProgram();
 
-    bool attachVertexShader(const rbShader &shader);
-    bool attachFragmentShader(const rbShader &shader);
+    bool attachVertexShader(rbShader &&shader);
+    bool attachFragmentShader(rbShader &&shader);
     bool link();
 
     bool bind() const;
@@ -68,9 +95,10 @@ public:
     unsigned int getProgramID() const { return m_programID; }
 
 protected:
-    unsigned int m_programID   = 0;
-    unsigned int m_vtxShaderID = 0;
-    unsigned int m_frgShaderID = 0;
+    unsigned int m_programID = 0;
+
+    rbShader m_vtxShader;
+    rbShader m_frgShader;
 
     void deleteProgram();
     void abandonProgram();

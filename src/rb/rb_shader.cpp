@@ -63,6 +63,37 @@ static PFNGLUSEPROGRAMPROC        rbglUseProgram;
 //
 
 //
+// Destructor
+//
+rbShader::~rbShader()
+{
+    if(hal_medialayer.isExiting())
+        return;
+
+    deleteShader();
+}
+
+//
+// Delete the shader object
+//
+void rbShader::deleteShader()
+{
+    if(rbglIsShader(m_shaderID))
+    {
+        rbglDeleteShader(m_shaderID);
+        m_shaderID = 0;
+    }
+}
+
+//
+// Forget the attached shader name
+//
+void rbShader::abandonShader()
+{
+    m_shaderID = 0;
+}
+
+//
 // Output shader log info
 //
 void rbShader::outputLogInfo() const
@@ -118,8 +149,7 @@ bool rbShader::loadFromSource(const char *src)
     if(compiled != GL_TRUE)
     {
         hal_platform.debugMsg("rbShader::loadFromSource: unable to compile shader %u\n\nSource:\n%s\n", m_shaderID, src);
-        rbglDeleteShader(m_shaderID);
-        m_shaderID = 0;
+        deleteShader();
         return false;
     }
 
@@ -163,10 +193,13 @@ rbProgram::~rbProgram()
 //
 void rbProgram::deleteProgram()
 {
+    m_vtxShader.deleteShader();
+    m_frgShader.deleteShader();
+
     if(rbglIsProgram(m_programID))
     {
         rbglDeleteProgram(m_programID);
-        m_programID = m_vtxShaderID = m_frgShaderID = 0;
+        m_programID = 0;
     }
 }
 
@@ -175,7 +208,10 @@ void rbProgram::deleteProgram()
 //
 void rbProgram::abandonProgram()
 {
-    m_programID = m_vtxShaderID = m_frgShaderID = 0;
+    m_vtxShader.abandonShader();
+    m_frgShader.abandonShader();
+
+    m_programID = 0;
 }
 
 //
@@ -205,7 +241,7 @@ void rbProgram::outputLogInfo() const
 //
 // Attach a vertex shader to the program object
 //
-bool rbProgram::attachVertexShader(const rbShader &shader)
+bool rbProgram::attachVertexShader(rbShader &&shader)
 {
     unsigned int shaderID = shader.getShaderID();
 
@@ -216,14 +252,14 @@ bool rbProgram::attachVertexShader(const rbShader &shader)
     }
 
     rbglAttachShader(m_programID, shaderID);
-    m_vtxShaderID = shaderID;
+    m_vtxShader = std::move(shader);
     return true;
 }
 
 //
 // Attach a fragment shader to the program object
 //
-bool rbProgram::attachFragmentShader(const rbShader &shader)
+bool rbProgram::attachFragmentShader(rbShader &&shader)
 {
     unsigned int shaderID = shader.getShaderID();
 
@@ -234,7 +270,7 @@ bool rbProgram::attachFragmentShader(const rbShader &shader)
     }
 
     rbglAttachShader(m_programID, shaderID);
-    m_frgShaderID = shaderID;
+    m_frgShader = std::move(shader);
     return true;
 }
 
@@ -249,15 +285,15 @@ bool rbProgram::link()
         return false;
     }
 
-    if(!rbglIsShader(m_vtxShaderID))
+    if(!rbglIsShader(m_vtxShader.getShaderID()))
     {
-        hal_platform.debugMsg("rbProgram::link: %u has invalid vertex shader %u attached\n", m_programID, m_vtxShaderID);
+        hal_platform.debugMsg("rbProgram::link: %u has invalid vertex shader %u attached\n", m_programID, m_vtxShader.getShaderID());
         return false;
     }
 
-    if(!rbglIsShader(m_frgShaderID))
+    if(!rbglIsShader(m_frgShader.getShaderID()))
     {
-        hal_platform.debugMsg("rbProgram::link: %u has invalid fragment shader %u attached\n", m_programID, m_frgShaderID);
+        hal_platform.debugMsg("rbProgram::link: %u has invalid fragment shader %u attached\n", m_programID, m_frgShader.getShaderID());
         return false;
     }
 
@@ -269,17 +305,16 @@ bool rbProgram::link()
     {
         hal_platform.debugMsg("rbProgram::link: Error linking program %u\n", m_programID);
         outputLogInfo();
-        rbglDeleteShader(m_vtxShaderID);
-        rbglDeleteShader(m_frgShaderID);
-        rbglDeleteProgram(m_programID);
-        m_programID = m_vtxShaderID = m_frgShaderID = 0;
+
+        m_vtxShader.deleteShader();
+        m_frgShader.deleteShader();
+        deleteProgram();
         return false;
     }
 
     // done with shader handles
-    rbglDeleteShader(m_vtxShaderID);
-    rbglDeleteShader(m_frgShaderID);
-    m_vtxShaderID = m_frgShaderID = 0;
+    m_vtxShader.deleteShader();
+    m_frgShader.deleteShader();
 
     return true;
 }
