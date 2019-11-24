@@ -85,7 +85,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;USE_SDL2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SDL2)\include;$(SDL2MIXER)\include;$(SDL2NET)\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL2)\include;$(SDL2MIXER)\include;$(SDL2NET)\include;../src/glm-0.9.9.6</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -201,6 +201,7 @@
     <ClCompile Include="..\src\p_user.c" />
     <ClCompile Include="..\src\rb\rb_draw.cpp" />
     <ClCompile Include="..\src\rb\rb_main.cpp" />
+    <ClCompile Include="..\src\rb\rb_shader.cpp" />
     <ClCompile Include="..\src\rb\rb_texture.cpp" />
     <ClCompile Include="..\src\rb\valloc.cpp" />
     <ClCompile Include="..\src\r_data.c" />
@@ -243,12 +244,36 @@
     <ClInclude Include="..\src\elib\configfile.h" />
     <ClInclude Include="..\src\elib\dllist.h" />
     <ClInclude Include="..\src\elib\elib.h" />
+    <ClInclude Include="..\src\elib\esmartptr.h" />
     <ClInclude Include="..\src\elib\misc.h" />
     <ClInclude Include="..\src\elib\m_ctype.h" />
     <ClInclude Include="..\src\elib\parser.h" />
     <ClInclude Include="..\src\elib\qstring.h" />
     <ClInclude Include="..\src\elib\swap.h" />
     <ClInclude Include="..\src\elib\zone.h" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\common.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\exponential.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\ext.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\fwd.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\geometric.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\glm.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\integer.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat2x2.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat2x3.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat2x4.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat3x2.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat3x3.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat3x4.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat4x2.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat4x3.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat4x4.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\matrix.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\packing.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\trigonometric.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\vec2.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\vec3.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\vec4.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\vector_relational.hpp" />
     <ClInclude Include="..\src\gl\gl_render.h" />
     <ClInclude Include="..\src\gl\resource.h" />
     <ClInclude Include="..\src\g_options.h" />
@@ -271,6 +296,7 @@
     <ClInclude Include="..\src\rb\rb_common.h" />
     <ClInclude Include="..\src\rb\rb_draw.h" />
     <ClInclude Include="..\src\rb\rb_main.h" />
+    <ClInclude Include="..\src\rb\rb_shader.h" />
     <ClInclude Include="..\src\rb\rb_texture.h" />
     <ClInclude Include="..\src\rb\rb_types.h" />
     <ClInclude Include="..\src\rb\valloc.h" />

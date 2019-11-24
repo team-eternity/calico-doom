@@ -49,6 +49,9 @@
     <Filter Include="Header Files\gl">
       <UniqueIdentifier>{690e0459-1128-45c1-823a-c0fffe9189ca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\glm">
+      <UniqueIdentifier>{6dfc806f-5dd9-4a1e-8605-039fd83b3794}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\am_main.c">
@@ -306,6 +309,9 @@
     <ClCompile Include="..\src\g_options.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\rb\rb_shader.cpp">
+      <Filter>Source Files\rb</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\doomdata.h">
@@ -472,6 +478,81 @@
     </ClInclude>
     <ClInclude Include="..\src\g_options.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\common.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\exponential.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\ext.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\fwd.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\geometric.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\glm.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\integer.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat2x2.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat2x3.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat2x4.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat3x2.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat3x3.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat3x4.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat4x2.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat4x3.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\mat4x4.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\matrix.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\packing.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\trigonometric.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\vec2.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\vec3.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\vec4.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\vector_relational.hpp">
+      <Filter>Header Files\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\rb_shader.h">
+      <Filter>Header Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\esmartptr.h">
+      <Filter>Header Files\elib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
