@@ -38,6 +38,7 @@ void        SDL2_Exit(void);
 void        SDL2_Error(void);
 int         SDL2_MsgBox(const char *title, const char *msg, hal_bool isError);
 hal_bool    SDL2_IsExiting(void);
+const char *SDL2_GetBaseDirectory(void);
 const char *SDL2_GetWriteDirectory(const char *app);
 
 #endif

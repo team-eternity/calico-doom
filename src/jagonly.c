@@ -9,7 +9,7 @@
 #include "hal/hal_platform.h"
 #include "hal/hal_timer.h"
 #include "hal/hal_video.h"
-#include "gl/gl_render.h"
+#include "renderintr/ri_interface.h"
 #include "rb/rb_common.h"
 #include "doomdef.h"
 #include "jagcry.h"
@@ -113,8 +113,8 @@ void Jag68k_main(int argc, const char *const *argv)
       debugscreenstate = true;
 
    debugscreenactive = debugscreenstate;
-   debugscreenrez = GL_NewTextureResource("debugscreen", NULL, 256, 224, RES_FRAMEBUFFER, 0);
-   debugscreen    = GL_GetTextureResourceStore(debugscreenrez);
+   debugscreenrez = g_renderer->NewTextureResource("debugscreen", NULL, 256, 224, RES_FRAMEBUFFER, 0);
+   debugscreen    = g_renderer->GetTextureResourceStore(debugscreenrez);
 
    // CALICO: Jag-specific
 #if 0
@@ -221,7 +221,7 @@ void I_Print8(int x, int y, char *string)
    // CALICO: also output as a debug message
    hal_platform.debugMsg(string);
    
-   GL_TextureResourceSetUpdated(debugscreenrez);
+   g_renderer->TextureResourceSetUpdated(debugscreenrez);
    if(y > 224/8)
       return;
 
@@ -305,7 +305,7 @@ void I_DrawSbar(void)
    height = (unsigned int)(BIGSHORT(sbar->height));
 
    if(!sbarrez)
-      sbarrez = GL_NewTextureResource("STBAR", sbar->data, width, height, RES_8BIT, 0);
+      sbarrez = g_renderer->NewTextureResource("STBAR", sbar->data, width, height, RES_8BIT, 0);
 
    // CALICO_TODO: network patch
 #if 0
@@ -472,9 +472,9 @@ static uint32_t *framebuffer160_p, *framebuffer320_p;
 //
 static void I_GetFramebuffer(void)
 {
-   GL_InitFramebufferTextures();
-   framebuffer160_p = GL_GetFramebuffer(FB_160);
-   framebuffer320_p = GL_GetFramebuffer(FB_320);
+   g_renderer->InitFramebufferTextures();
+   framebuffer160_p = g_renderer->GetFramebuffer(FB_160);
+   framebuffer320_p = g_renderer->GetFramebuffer(FB_320);
 }
 
 extern pixel_t shadepixel;
@@ -685,13 +685,13 @@ int lasttics;
 //
 void I_Update(void) 
 {
-   GL_UpdateFramebuffer(FB_160);
-   GL_AddFramebuffer(FB_160);
-   GL_AddDrawCommand(sbarrez, 0, 2 + SCREENHEIGHT + 1, 320, 40);
-   GL_AddDrawCommand(sbartop, 0, 2 + SCREENHEIGHT + 1, 320, 40);
+   g_renderer->UpdateFramebuffer(FB_160);
+   g_renderer->AddFramebuffer(FB_160);
+   g_renderer->AddDrawCommand(sbarrez, 0, 2 + SCREENHEIGHT + 1, 320, 40);
+   g_renderer->AddDrawCommand(sbartop, 0, 2 + SCREENHEIGHT + 1, 320, 40);
    if(debugscreenactive)
-      GL_AddDrawCommand(debugscreenrez, 0, 0, 256, 224);
-   GL_RenderFrame();
+      g_renderer->AddDrawCommand(debugscreenrez, 0, 0, 256, 224);
+   g_renderer->RenderFrame();
 }
 
 static byte tempbuffer[0x10000];
@@ -725,8 +725,8 @@ void DoubleBufferSetup(void)
    while(!I_RefreshCompleted())
       ;
 
-   GL_ClearFramebuffer(FB_320, RB_COLOR_CLEAR);
-   GL_ClearTextureResource(debugscreenrez, RB_COLOR_CLEAR);
+   g_renderer->ClearFramebuffer(FB_320, RB_COLOR_CLEAR);
+   g_renderer->ClearTextureResource(debugscreenrez, RB_COLOR_CLEAR);
 
    cy = 4;
 }
@@ -761,13 +761,13 @@ void EraseBlock(int x, int y, int width, int height, void *destResource)
 
    if(destResource)
    {
-      base = GL_GetTextureResourceStore(destResource);
-      GL_TextureResourceSetUpdated(destResource);
+      base = g_renderer->GetTextureResourceStore(destResource);
+      g_renderer->TextureResourceSetUpdated(destResource);
    }
    else
    {
       base = framebuffer320_p;
-      GL_FramebufferSetUpdated(FB_320);
+      g_renderer->FramebufferSetUpdated(FB_320);
       y += 8;
    }
 
@@ -824,13 +824,13 @@ void DrawJagobj(jagobj_t *jo, int x, int y, void *destResource)
 
    if(destResource)
    {
-      base = GL_GetTextureResourceStore(destResource);
-      GL_TextureResourceSetUpdated(destResource);
+      base = g_renderer->GetTextureResourceStore(destResource);
+      g_renderer->TextureResourceSetUpdated(destResource);
    }
    else
    {
       base = framebuffer320_p;
-      GL_FramebufferSetUpdated(FB_320);
+      g_renderer->FramebufferSetUpdated(FB_320);
       y += 8;
    }
 
@@ -862,7 +862,7 @@ void DoubleBufferObjList(void);
 void UpdateBuffer(void)
 {
    DoubleBufferObjList();
-   GL_RenderFrame();
+   g_renderer->RenderFrame();
 }
 
 //
@@ -888,7 +888,7 @@ void DrawMTitle(void)
       if(!shift)
          shift = 40;
 
-      m_titleres = GL_NewTextureResource("M_TITLE", data, width, height, RES_8BIT_PACKED, shift);
+      m_titleres = g_renderer->NewTextureResource("M_TITLE", data, width, height, RES_8BIT_PACKED, shift);
    }
 
    // setup to center the full picture
@@ -904,7 +904,7 @@ void DrawMTitle(void)
       sy += 10;
    }
 
-   GL_AddDrawCommand(m_titleres, sx, sy, width, height);
+   g_renderer->AddDrawCommand(m_titleres, sx, sy, width, height);
 }
 
 //
@@ -913,10 +913,10 @@ void DrawMTitle(void)
 void DoubleBufferObjList(void)
 {
    DrawMTitle();
-   GL_UpdateFramebuffer(FB_320);
-   GL_AddFramebuffer(FB_320);
+   g_renderer->UpdateFramebuffer(FB_320);
+   g_renderer->AddFramebuffer(FB_320);
    if(debugscreenactive)
-      GL_AddDrawCommand(debugscreenrez, 0, 0, 256, 224);
+      g_renderer->AddDrawCommand(debugscreenrez, 0, 0, 256, 224);
 }
 
 //=============================================================================

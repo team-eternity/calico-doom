@@ -38,6 +38,7 @@ typedef struct hal_medialayer_s
    void        (*error)(void);
    int         (*msgbox)(const char *title, const char *msg, hal_bool isError);
    hal_bool    (*isExiting)(void);
+   const char *(*getBaseDirectory)(void);
    const char *(*getWriteDirectory)(const char *app);
 } hal_medialayer_t;
 

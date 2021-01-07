@@ -151,7 +151,7 @@ struct rbState_t
 
 extern rbState_t rbState;
 
-void RB_InitDefaultState();
+void RB_InitDefaultState(int version);
 
 rbTexture *RB_GetWhiteTexture();
 

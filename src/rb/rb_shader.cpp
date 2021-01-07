@@ -43,20 +43,25 @@
 #include "rb_main.h"
 #include "rb_shader.h"
 
-static PFNGLATTACHSHADERPROC      rbglAttachShader;
-static PFNGLCOMPILESHADERPROC     rbglCompileShader;
-static PFNGLCREATESHADERPROC      rbglCreateShader;
-static PFNGLDELETEPROGRAMPROC     rbglDeleteProgram;
-static PFNGLDELETESHADERPROC      rbglDeleteShader;
-static PFNGLGETPROGRAMINFOLOGPROC rbglGetProgramInfoLog;
-static PFNGLGETPROGRAMIVPROC      rbglGetProgramiv;
-static PFNGLGETSHADERINFOLOGPROC  rbglGetShaderInfoLog;
-static PFNGLGETSHADERIVPROC       rbglGetShaderiv;
-static PFNGLISPROGRAMPROC         rbglIsProgram;
-static PFNGLISSHADERPROC          rbglIsShader;
-static PFNGLLINKPROGRAMPROC       rbglLinkProgram;
-static PFNGLSHADERSOURCEPROC      rbglShaderSource;
-static PFNGLUSEPROGRAMPROC        rbglUseProgram;
+static PFNGLATTACHSHADERPROC       rbglAttachShader;
+static PFNGLBINDATTRIBLOCATIONPROC rbglBindAttribLocation;
+static PFNGLCOMPILESHADERPROC      rbglCompileShader;
+static PFNGLCREATESHADERPROC       rbglCreateShader;
+static PFNGLCREATEPROGRAMPROC      rbglCreateProgram;
+static PFNGLDELETEPROGRAMPROC      rbglDeleteProgram;
+static PFNGLDELETESHADERPROC       rbglDeleteShader;
+static PFNGLGETATTRIBLOCATIONPROC  rbglGetAttribLocation;
+static PFNGLGETPROGRAMINFOLOGPROC  rbglGetProgramInfoLog;
+static PFNGLGETPROGRAMIVPROC       rbglGetProgramiv;
+static PFNGLGETSHADERINFOLOGPROC   rbglGetShaderInfoLog;
+static PFNGLGETSHADERIVPROC        rbglGetShaderiv;
+static PFNGLGETUNIFORMLOCATIONPROC rbglGetUniformLocation;
+static PFNGLISPROGRAMPROC          rbglIsProgram;
+static PFNGLISSHADERPROC           rbglIsShader;
+static PFNGLLINKPROGRAMPROC        rbglLinkProgram;
+static PFNGLSHADERSOURCEPROC       rbglShaderSource;
+static PFNGLUNIFORMMATRIX4FVPROC   rbglUniformMatrix4fv;
+static PFNGLUSEPROGRAMPROC         rbglUseProgram;
 
 //=============================================================================
 // rbShader
@@ -67,10 +72,8 @@ static PFNGLUSEPROGRAMPROC        rbglUseProgram;
 //
 rbShader::~rbShader()
 {
-    if(hal_medialayer.isExiting())
-        return;
-
-    deleteShader();
+    if(!hal_medialayer.isExiting())
+        deleteShader();
 }
 
 //
@@ -100,7 +103,7 @@ void rbShader::outputLogInfo() const
 {
     if(rbglIsShader(m_shaderID))
     {
-        int maxLen = 0;
+        GLint maxLen = 0;
         rbglGetShaderiv(m_shaderID, GL_INFO_LOG_LENGTH, &maxLen);
 
         std::unique_ptr<char []> upBuffer { new char [maxLen] };
@@ -175,17 +178,27 @@ bool rbShader::loadFromFile(const char *filename)
 // rbProgram
 //
 
+static int currentProgramID;
+
 //
 // Destructor
 //
 rbProgram::~rbProgram()
 {
-   // there's no need to destroy GL entities when the game is exiting;
-   // the destruction of the context will take them with it.
-   if(hal_medialayer.isExiting())
-      return;
+    // there's no need to destroy GL entities when the game is exiting;
+    // the destruction of the context will take them with it.
+    if(!hal_medialayer.isExiting())
+        deleteProgram();
+}
 
-   deleteProgram();
+//
+// Create a program
+//
+void rbProgram::createProgram()
+{
+    m_programID = rbglCreateProgram();
+    m_attributeLocations.clear();
+    m_uniformLocations.clear();
 }
 
 //
@@ -195,12 +208,14 @@ void rbProgram::deleteProgram()
 {
     m_vtxShader.deleteShader();
     m_frgShader.deleteShader();
+    m_attributeLocations.clear();
+    m_uniformLocations.clear();
 
     if(rbglIsProgram(m_programID))
-    {
         rbglDeleteProgram(m_programID);
-        m_programID = 0;
-    }
+    if(currentProgramID == m_programID)
+        currentProgramID = 0;
+    m_programID = 0;
 }
 
 //
@@ -210,6 +225,11 @@ void rbProgram::abandonProgram()
 {
     m_vtxShader.abandonShader();
     m_frgShader.abandonShader();
+    m_attributeLocations.clear();
+    m_uniformLocations.clear();
+
+    if(currentProgramID == m_programID)
+        currentProgramID = 0;
 
     m_programID = 0;
 }
@@ -275,6 +295,46 @@ bool rbProgram::attachFragmentShader(rbShader &&shader)
 }
 
 //
+// Bind an attribute location
+//
+bool rbProgram::bindAttribLocation(int idx, const char *name)
+{
+    if(!rbglIsProgram(m_programID))
+    {
+        hal_platform.debugMsg("rbProgram::bindAttribLocation: %u is not a program\n", m_programID);
+        return false;
+    }
+
+    if(m_linked)
+    {
+        hal_platform.debugMsg("rbProgram::bindAttribLocation: Shader program %u already linked\n", m_programID);
+        return false;
+    }
+
+    qstring qstrName { name };
+    const AttribLocationMap::const_iterator citr = m_attributeLocations.find(qstrName);
+    if(citr != m_attributeLocations.cend())
+    {
+        if(idx == citr->second)
+            return true; // already mapped at same location; ignore (though, wtf are you doing?)
+        else
+        {
+            hal_platform.debugMsg(
+                "rbProgram::bindAttribLocation: attribute %s intended for index %d already bound to index %d\n",
+                name, idx, citr->second
+            );
+            return false; // this is not good
+        }
+    }
+    else
+    {
+        rbglBindAttribLocation(m_programID, static_cast<GLuint>(idx), name);
+        m_attributeLocations[std::move(qstrName)] = idx;
+        return true;
+    }
+}
+
+//
 // Link the shader program
 //
 bool rbProgram::link()
@@ -297,6 +357,8 @@ bool rbProgram::link()
         return false;
     }
 
+    m_linked = false;
+
     rbglLinkProgram(m_programID);
 
     GLint programSuccess = GL_TRUE;
@@ -316,6 +378,8 @@ bool rbProgram::link()
     m_vtxShader.deleteShader();
     m_frgShader.deleteShader();
 
+    m_linked = true;
+
     return true;
 }
 
@@ -327,6 +391,11 @@ bool rbProgram::bind() const
     if(!rbglIsProgram(m_programID))
         return false;
 
+    if(currentProgramID == m_programID)
+        return true; // already in use
+
+    glGetError();
+
     rbglUseProgram(m_programID);
 
     GLenum error = glGetError();
@@ -337,6 +406,7 @@ bool rbProgram::bind() const
         return false;
     }
 
+    currentProgramID = m_programID;
     return true;
 }
 
@@ -345,7 +415,82 @@ bool rbProgram::bind() const
 //
 void rbProgram::unbind() const
 {
+    currentProgramID = 0;
     rbglUseProgram(0);
+}
+
+//
+// Look up an attribute location, with caching
+//
+int rbProgram::getAttribLocation(const char *name)
+{
+    if(!m_linked)
+    {
+        hal_platform.debugMsg("rbProgram::getAttribLocation: Shader program %u has not been linked\n", m_programID);
+        return -1;
+    }
+
+    qstring qstrName { name };
+    const AttribLocationMap::const_iterator citr = m_attributeLocations.find(qstrName);
+    if(citr != m_attributeLocations.cend())
+    {
+        return citr->second; 
+    }
+    else
+    {
+        int id = rbglGetAttribLocation(m_programID, name);
+        if(id >= 0)
+        {
+            m_attributeLocations[std::move(qstrName)] = id;
+            return id;
+        }
+        else
+        {
+            hal_platform.debugMsg("rbProgram::getAttribLocation: Invalid name '%s' for program %u\n", name, m_programID);
+            return -1;
+        }
+    }
+}
+
+//
+// Look up a uniform location, with caching
+//
+int rbProgram::getUniformLocation(const char *name)
+{
+    if(!m_linked)
+    {
+        hal_platform.debugMsg("rbProgram::getUniformLocation: Shader program %u has not been linked\n", m_programID);
+        return -1;
+    }
+
+    qstring qstrName { name };
+    UniformLocationMap::const_iterator citr;
+    if((citr = m_uniformLocations.find(qstrName)) != m_uniformLocations.cend())
+    {
+        return citr->second; 
+    }
+    else
+    {
+        int id = rbglGetUniformLocation(m_programID, name);
+        if(id >= 0)
+        {
+            m_uniformLocations[std::move(qstrName)] = id;
+            return id;
+        }
+        else
+        {
+            hal_platform.debugMsg("rbProgram::getUniformLocation: Invalid name '%s' for program %u\n", name, m_programID);
+            return -1;
+        }
+    }
+}
+
+//
+// Set a uniform matrix value
+//
+void rbProgram::UniformMatrix4fv(int location, int size, bool transpose, const float *value)
+{
+    rbglUniformMatrix4fv(location, size, transpose, value);
 }
 
 //
@@ -355,19 +500,25 @@ bool RB_InitShaderSupport()
 {
     bool extension_ok = true;
 
-    GETPROC(rbglAttachShader,      "glAttachShader"     );
-    GETPROC(rbglCompileShader,     "glCompileShader"    );
-    GETPROC(rbglCreateShader,      "glCreateShader"     );
-    GETPROC(rbglDeleteProgram,     "glDeleteProgram"    );
-    GETPROC(rbglGetProgramInfoLog, "glGetProgramInfoLog");
-    GETPROC(rbglGetProgramiv,      "glGetProgramiv"     );
-    GETPROC(rbglGetShaderInfoLog,  "glGetShaderInfoLog" );
-    GETPROC(rbglGetShaderiv,       "glGetShaderiv"      );
-    GETPROC(rbglIsProgram,         "glIsProgram"        );
-    GETPROC(rbglIsShader,          "glIsShader"         );
-    GETPROC(rbglLinkProgram,       "glLinkProgram"      );
-    GETPROC(rbglShaderSource,      "glShaderSource"     );
-    GETPROC(rbglUseProgram,        "glUseProgram"       );
+    GETPROC(rbglAttachShader,       "glAttachShader"      );
+    GETPROC(rbglBindAttribLocation, "glBindAttribLocation");
+    GETPROC(rbglCompileShader,      "glCompileShader"     );
+    GETPROC(rbglCreateProgram,      "glCreateProgram"     );
+    GETPROC(rbglCreateShader,       "glCreateShader"      );
+    GETPROC(rbglDeleteProgram,      "glDeleteProgram"     );
+    GETPROC(rbglDeleteShader,       "glDeleteShader"      );
+    GETPROC(rbglGetAttribLocation,  "glGetAttribLocation" );
+    GETPROC(rbglGetProgramInfoLog,  "glGetProgramInfoLog" );
+    GETPROC(rbglGetProgramiv,       "glGetProgramiv"      );
+    GETPROC(rbglGetShaderInfoLog,   "glGetShaderInfoLog"  );
+    GETPROC(rbglGetShaderiv,        "glGetShaderiv"       );
+    GETPROC(rbglGetUniformLocation, "glGetUniformLocation");
+    GETPROC(rbglIsProgram,          "glIsProgram"         );
+    GETPROC(rbglIsShader,           "glIsShader"          );
+    GETPROC(rbglLinkProgram,        "glLinkProgram"       );
+    GETPROC(rbglShaderSource,       "glShaderSource"      );
+    GETPROC(rbglUniformMatrix4fv,   "glUniformMatrix4fv"  );
+    GETPROC(rbglUseProgram,         "glUseProgram"        );
 
     return extension_ok;
 }

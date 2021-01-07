@@ -107,6 +107,8 @@ public:
    texFilterMode_t getFilterMode() const { return filterMode; }
    texColorMode_t  getColorMode()  const { return colorMode;  }
    dtexture        getTextureID()  const { return texid;      }
+
+   static int GLVersion;
 };
 
 extern bool rb_linear_filtering;

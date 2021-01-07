@@ -1,6 +1,6 @@
 /* st_main.c -- status bar */
 
-#include "gl/gl_render.h"
+#include "renderintr/ri_interface.h"
 #include "doomdef.h"
 #include "st_main.h"
 
@@ -69,7 +69,7 @@ void ST_Init(void)
 
    // CALICO: create a texture resource for the status bar overlay
    if(!sbartop)
-      sbartop = GL_NewTextureResource("sbartop", NULL, 320, 40, RES_FRAMEBUFFER, 0);
+      sbartop = g_renderer->NewTextureResource("sbartop", NULL, 320, 40, RES_FRAMEBUFFER, 0);
 }
 
 //==================================================

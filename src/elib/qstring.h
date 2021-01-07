@@ -48,7 +48,7 @@ public:
    static const size_t basesize;
 
    // Constructors / Destructor
-   qstring(size_t startSize = 0) 
+   qstring(size_t startSize = 0) noexcept
       : index(0), size(16)
    {
       buffer = local;
@@ -57,7 +57,7 @@ public:
          initCreateSize(startSize);
    }
 
-   qstring(const qstring &other) 
+   qstring(const qstring &other) noexcept 
       : index(0), size(16)
    {
       buffer = local;
@@ -65,7 +65,7 @@ public:
       copy(other);
    }
 
-   explicit qstring(const char *cstr)
+   explicit qstring(const char *cstr) noexcept
       : index(0), size(16)
    {
       buffer = local;

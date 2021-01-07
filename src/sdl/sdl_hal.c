@@ -52,6 +52,7 @@ void SDL2_InitHAL(void)
    hal_medialayer.error             = SDL2_Error;
    hal_medialayer.msgbox            = SDL2_MsgBox;
    hal_medialayer.isExiting         = SDL2_IsExiting;
+   hal_medialayer.getBaseDirectory  = SDL2_GetBaseDirectory;
    hal_medialayer.getWriteDirectory = SDL2_GetWriteDirectory;
 
    // Video functions

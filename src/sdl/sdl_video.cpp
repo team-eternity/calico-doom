@@ -37,10 +37,11 @@
 #include "../hal/hal_input.h"
 #include "../hal/hal_platform.h"
 #include "../hal/hal_video.h"
-#include "../rb/rb_draw.h"
 #include "../rb/rb_main.h"
-#include "../rb/rb_texture.h"
 #include "../rb/valloc.h"
+#include "../renderintr/ri_interface.h"
+#include "../gl/gl_render.h"
+#include "../gl4/gl4_render.h"
 
 //=============================================================================
 //
@@ -58,13 +59,23 @@ SDL_GLContext  glcontext;
 // Configuration options
 //
 
+enum renderer_e
+{
+    RENDERER_GL1_1, // GL 1.1 renderer
+    RENDERER_GL4,   // GL 4 renderer
+
+    RENDERER_MIN = RENDERER_GL1_1,
+    RENDERER_MAX = RENDERER_GL4
+};
+
 static int screenwidth     = CALICO_ORIG_SCREENWIDTH;
 static int screenheight    = CALICO_ORIG_SCREENHEIGHT;
 static int fullscreen      = 0;
 static int monitornum      = 0;
 static hal_aspect_t aspect = HAL_ASPECT_NOMINAL;
-static int aspectNum       = 10;
-static int aspectDenom     = 7;
+static int aspectNum       = 4;
+static int aspectDenom     = 3;
+static int renderer        = RENDERER_GL1_1;
 
 static cfgrange_t<int> swRange = { 320, 32768 };
 static cfgrange_t<int> shRange = { 224, 32768 };
@@ -72,12 +83,15 @@ static cfgrange_t<int> fsRange = { -1,  1     };
 static cfgrange_t<int> anRange = {  3,  100   };
 static cfgrange_t<int> adRange = {  2,  100   };
 
-static CfgItem cfgScreenWidth ("screenwidth",  &screenwidth,  &swRange);
-static CfgItem cfgScreenHeight("screenheight", &screenheight, &shRange);
-static CfgItem cfgFullScreen  ("fullscreen",   &fullscreen,   &fsRange);
-static CfgItem cfgMonitorNum  ("monitornum",   &monitornum);
-static CfgItem cfgAspectNum   ("aspectnum",    &aspectNum,    &anRange);
-static CfgItem cfgAspectDenom ("aspectdenom",  &aspectDenom,  &adRange);
+static cfgrange_t<int> rnRange = { RENDERER_MIN, RENDERER_MAX };
+
+static CfgItem cfgScreenWidth  { "screenwidth",  &screenwidth,  &swRange };
+static CfgItem cfgScreenHeight { "screenheight", &screenheight, &shRange };
+static CfgItem cfgFullScreen   { "fullscreen",   &fullscreen,   &fsRange };
+static CfgItem cfgMonitorNum   { "monitornum",   &monitornum };
+static CfgItem cfgAspectNum    { "aspectnum",    &aspectNum,    &anRange };
+static CfgItem cfgAspectDenom  { "aspectdenom",  &aspectDenom,  &adRange };
+static CfgItem cfgRenderer     { "renderer",     &renderer,     &rnRange };
 
 //=============================================================================
 //
@@ -105,27 +119,22 @@ static float screenyiscale;
 //
 
 //
-// Change to a 2D orthonormal projection
+// Select the proper renderer
 //
-static void SDL2_setOrthoMode(int w, int h)
+static void SDL2_setRenderer()
 {
-   // enable 2D texture mapping
-   RB_SetState(RB_GLSTATE_TEXTURE0, true);
-
-   // set viewport
-   glViewport(0, 0, (GLsizei)curscreenwidth, (GLsizei)curscreenheight);
-
-   // clear model-view matrix
-   glMatrixMode(GL_MODELVIEW);
-   glLoadIdentity();
-
-   // set projection matrix to a standard orthonormal projection
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   glOrtho(0.0, (GLdouble)w, (GLdouble)h, 0.0, -1.0, 1.0);
-
-   // disable depth buffer test
-   RB_SetState(RB_GLSTATE_DEPTHTEST, false);
+    switch(renderer)
+    {
+    case RENDERER_GL1_1:
+        GL_SelectRenderer();
+        break;
+    case RENDERER_GL4:
+        GL4_SelectRenderer();
+        break;
+    default:
+        hal_platform.fatalError("Unknown value for renderer (%d)", renderer);
+    }
+    g_renderer->InitRenderer(curscreenwidth, curscreenheight);
 }
 
 //
@@ -133,8 +142,8 @@ static void SDL2_setOrthoMode(int w, int h)
 //
 static void SDL2_calcSubRect()
 {
-   rbfixed aspectRatio    = curscreenwidth * RBFRACUNIT / curscreenheight;
-   rbfixed nomAspectRatio = aspectNum * RBFRACUNIT / aspectDenom;
+   const rbfixed aspectRatio    = curscreenwidth * RBFRACUNIT / curscreenheight;
+   const rbfixed nomAspectRatio = aspectNum * RBFRACUNIT / aspectDenom;
 
    if(aspectRatio == nomAspectRatio) // nominal
    {
@@ -207,6 +216,13 @@ hal_bool SDL2_SetVideoMode(int width, int height, int fs, int mnum)
    SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE,  32);
    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,  1);
 
+   if(renderer == RENDERER_GL4)
+   {
+       SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+   }
+
    if(!(mainwindow = SDL_CreateWindow("Calico", x, y, width, height, flags)))
    {
       // Try resetting previous mode
@@ -244,10 +260,7 @@ hal_bool SDL2_SetVideoMode(int width, int height, int fs, int mnum)
    SDL2_ToggleGLSwap(HAL_TRUE);
 
    // wake up RB system
-   RB_InitDefaultState();
-
-   // set orthonormal projection
-   SDL2_setOrthoMode(curscreenwidth, curscreenheight);
+   RB_InitDefaultState(renderer == RENDERER_GL4 ? 4 : 1);
 
    // update appstate maintenance
    hal_appstate.updateFocus();
@@ -274,6 +287,9 @@ void SDL2_InitVideo()
 {
    SDL2_SetVideoMode(screenwidth, screenheight, fullscreen, monitornum);
    SDL2_saveVideoMode(); // remember settings
+
+   // initialize renderer
+   SDL2_setRenderer();
 }
 
 //
@@ -288,6 +304,9 @@ hal_bool SDL2_SetNewVideoMode(int w, int h, int fs, int mnum)
 
    // notify all registered game objects and subsystems of the change
    VAllocItem::ModeChanging();
+
+   // initialize renderer
+   SDL2_setRenderer();
 
    return res;
 }
@@ -423,7 +442,7 @@ int SDL2_ToggleGLSwap(hal_bool swap)
 //
 // End frame and swap buffers
 //
-void SDL2_EndFrame(void)
+void SDL2_EndFrame()
 {
    if(mainwindow)
       SDL_GL_SwapWindow(mainwindow);
@@ -432,7 +451,7 @@ void SDL2_EndFrame(void)
 //
 // Get platform-specific window handle
 //
-void *SDL2_GetWindowHandle(void)
+void *SDL2_GetWindowHandle()
 {
 #ifdef _WIN32
    SDL_SysWMinfo info;
@@ -448,7 +467,7 @@ void *SDL2_GetWindowHandle(void)
 //
 // Get aspect ratio type
 //
-hal_aspect_t SDL2_GetAspectRatioType(void)
+hal_aspect_t SDL2_GetAspectRatioType()
 {
    return aspect;
 }

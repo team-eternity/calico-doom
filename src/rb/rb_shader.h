@@ -29,6 +29,9 @@
 #ifndef RB_SHADER_H__
 #define RB_SHADER_H__
 
+#include <unordered_map>
+#include "../elib/qstring.h"
+
 class rbShader
 {
 public:
@@ -85,8 +88,11 @@ public:
 
     ~rbProgram();
 
+    void createProgram();
+
     bool attachVertexShader(rbShader &&shader);
     bool attachFragmentShader(rbShader &&shader);
+    bool bindAttribLocation(int idx, const char *name);
     bool link();
 
     bool bind() const;
@@ -94,14 +100,27 @@ public:
     
     unsigned int getProgramID() const { return m_programID; }
 
+    int getAttribLocation(const char *name);
+    int getUniformLocation(const char *name);
+
+    void abandonProgram();
+
+    static void UniformMatrix4fv(int location, int size, bool transpose, const float *value);
+
 protected:
+    using AttribLocationMap  = std::unordered_map<qstring, int, qstring::hash>;
+    using UniformLocationMap = std::unordered_map<qstring, int, qstring::hash>;
+
     unsigned int m_programID = 0;
+    bool         m_linked    = false;
 
     rbShader m_vtxShader;
     rbShader m_frgShader;
 
+    AttribLocationMap  m_attributeLocations;
+    UniformLocationMap m_uniformLocations;
+
     void deleteProgram();
-    void abandonProgram();
     void outputLogInfo() const;
 };
 

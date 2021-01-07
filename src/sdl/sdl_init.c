@@ -98,6 +98,23 @@ hal_bool SDL2_IsExiting(void)
 }
 
 //
+// Get application base directory
+//
+const char *SDL2_GetBaseDirectory(void)
+{
+    static char *pszPath = NULL;
+    
+    if(!pszPath)
+    {
+        pszPath = SDL_GetBasePath();
+        if(!pszPath)
+            pszPath = "./"; // probably will not work
+    }
+
+    return pszPath;
+}
+
+//
 // Get a suitable write location for the application
 //
 const char *SDL2_GetWriteDirectory(const char *app)

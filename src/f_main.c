@@ -1,7 +1,7 @@
 /* f_main.c -- finale */
 
 #include "hal/hal_input.h"
-#include "gl/gl_render.h"
+#include "renderintr/ri_interface.h"
 #include "doomdef.h"
 #include "jagcry.h"
 #include "r_local.h"
@@ -65,8 +65,8 @@ void BufferedDrawSprite(int sprite, int frame, int rotation)
    sprleft -= tpatch.leftoffset;
 
    // CALICO: get framebuffer dest
-   fb = GL_GetFramebuffer(FB_320);
-   GL_FramebufferSetUpdated(FB_320);
+   fb = g_renderer->GetFramebuffer(FB_320);
+   g_renderer->FramebufferSetUpdated(FB_320);
 
    //
    // draw it by hand

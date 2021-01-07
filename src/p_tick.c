@@ -1,6 +1,6 @@
 
 #include "hal/hal_input.h"
-#include "gl/gl_render.h"
+#include "renderintr/ri_interface.h"
 #include "rb/rb_common.h"
 #include "doomdef.h"
 #include "jagcry.h"
@@ -356,13 +356,13 @@ void DrawPlaque(jagobj_t *pl, const char *name)
    h      = BIGSHORT(pl->height);
 
    // CALICO: create or retrieve a texture resource for this plaque
-   if(!(rez = GL_CheckForTextureResource(name)))
+   if(!(rez = g_renderer->CheckForTextureResource(name)))
    {
-      if(!(rez = GL_NewTextureResource(name, NULL, w, h, RES_FRAMEBUFFER, 0)))
+      if(!(rez = g_renderer->NewTextureResource(name, NULL, w, h, RES_FRAMEBUFFER, 0)))
          return;
       
-      GL_TextureResourceSetUpdated(rez);
-      bdest = GL_GetTextureResourceStore(rez);
+      g_renderer->TextureResourceSetUpdated(rez);
+      bdest = g_renderer->GetTextureResourceStore(rez);
 
       for(y = 0; y < h; y++)
       {
@@ -374,7 +374,7 @@ void DrawPlaque(jagobj_t *pl, const char *name)
       }
    }
 
-   GL_AddLateDrawCommand(rez, 160 - w, 80, w*2, h);
+   g_renderer->AddLateDrawCommand(rez, 160 - w, 80, w*2, h);
 }
 
 /* 
@@ -400,13 +400,13 @@ void DrawSinglePlaque(jagobj_t *pl, const char *name)
    h      = BIGSHORT(pl->height);
 
    // CALICO: create or retrieve a texture resource for this plaque
-   if(!(rez = GL_CheckForTextureResource(name)))
+   if(!(rez = g_renderer->CheckForTextureResource(name)))
    {
-      if(!(rez = GL_NewTextureResource(name, NULL, w, h, RES_FRAMEBUFFER, 0)))
+      if(!(rez = g_renderer->NewTextureResource(name, NULL, w, h, RES_FRAMEBUFFER, 0)))
          return;
 
-      GL_TextureResourceSetUpdated(rez);
-      bdest = GL_GetTextureResourceStore(rez);
+      g_renderer->TextureResourceSetUpdated(rez);
+      bdest = g_renderer->GetTextureResourceStore(rez);
 
       for(y = 0; y < h; y++)
       {
@@ -418,7 +418,7 @@ void DrawSinglePlaque(jagobj_t *pl, const char *name)
       }
    }
 
-   GL_AddLateDrawCommand(rez, 160 - w / 2, 80, w, h);
+   g_renderer->AddLateDrawCommand(rez, 160 - w / 2, 80, w, h);
 }
 
 /* 

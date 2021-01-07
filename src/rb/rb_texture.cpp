@@ -64,6 +64,8 @@ static PFNGLBUFFERDATAARBPROC    pglBufferDataARB    = nullptr;
 static PFNGLMAPBUFFERARBPROC     pglMapBufferARB     = nullptr;
 static PFNGLUNMAPBUFFERARBPROC   pglUnmapBufferARB   = nullptr;
 
+int rbTexture::GLVersion = 1;
+
 //
 // Must reload extension pointers if game video mode changes
 //
@@ -410,7 +412,8 @@ void rbTexture::upload(void *data, texClampMode_t clamp, texFilterMode_t filter)
       }
    }
 
-   glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
+   if(GLVersion != 4)
+      glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
 
    setTexParameters();
    Unbind();

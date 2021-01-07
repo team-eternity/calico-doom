@@ -157,7 +157,12 @@
     <ClCompile Include="..\src\elib\qstring.cpp" />
     <ClCompile Include="..\src\elib\zone.cpp" />
     <ClCompile Include="..\src\f_main.c" />
+    <ClCompile Include="..\src\gl4\gl4_buffers.cpp" />
+    <ClCompile Include="..\src\gl4\gl4_render.cpp" />
+    <ClCompile Include="..\src\gl\gl_drawcmd.cpp" />
+    <ClCompile Include="..\src\gl\gl_framebuffer.cpp" />
     <ClCompile Include="..\src\gl\gl_render.cpp" />
+    <ClCompile Include="..\src\gl\gl_textures.cpp" />
     <ClCompile Include="..\src\gl\resource.cpp" />
     <ClCompile Include="..\src\g_game.c" />
     <ClCompile Include="..\src\g_options.cpp" />
@@ -203,7 +208,9 @@
     <ClCompile Include="..\src\rb\rb_main.cpp" />
     <ClCompile Include="..\src\rb\rb_shader.cpp" />
     <ClCompile Include="..\src\rb\rb_texture.cpp" />
+    <ClCompile Include="..\src\rb\rb_vao.cpp" />
     <ClCompile Include="..\src\rb\valloc.cpp" />
+    <ClCompile Include="..\src\renderintr\ri_interface.cpp" />
     <ClCompile Include="..\src\r_data.c" />
     <ClCompile Include="..\src\r_main.c" />
     <ClCompile Include="..\src\r_phase1.c" />
@@ -251,9 +258,13 @@
     <ClInclude Include="..\src\elib\qstring.h" />
     <ClInclude Include="..\src\elib\swap.h" />
     <ClInclude Include="..\src\elib\zone.h" />
+    <ClInclude Include="..\src\gl4\gl4_buffers.h" />
+    <ClInclude Include="..\src\gl4\gl4_render.h" />
     <ClInclude Include="..\src\glm-0.9.9.6\glm\common.hpp" />
     <ClInclude Include="..\src\glm-0.9.9.6\glm\exponential.hpp" />
     <ClInclude Include="..\src\glm-0.9.9.6\glm\ext.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\ext\matrix_clip_space.hpp" />
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\ext\matrix_transform.hpp" />
     <ClInclude Include="..\src\glm-0.9.9.6\glm\fwd.hpp" />
     <ClInclude Include="..\src\glm-0.9.9.6\glm\geometric.hpp" />
     <ClInclude Include="..\src\glm-0.9.9.6\glm\glm.hpp" />
@@ -274,7 +285,10 @@
     <ClInclude Include="..\src\glm-0.9.9.6\glm\vec3.hpp" />
     <ClInclude Include="..\src\glm-0.9.9.6\glm\vec4.hpp" />
     <ClInclude Include="..\src\glm-0.9.9.6\glm\vector_relational.hpp" />
+    <ClInclude Include="..\src\gl\gl_drawcmd.h" />
+    <ClInclude Include="..\src\gl\gl_framebuffer.h" />
     <ClInclude Include="..\src\gl\gl_render.h" />
+    <ClInclude Include="..\src\gl\gl_textures.h" />
     <ClInclude Include="..\src\gl\resource.h" />
     <ClInclude Include="..\src\g_options.h" />
     <ClInclude Include="..\src\hal\hal_init.h" />
@@ -299,7 +313,9 @@
     <ClInclude Include="..\src\rb\rb_shader.h" />
     <ClInclude Include="..\src\rb\rb_texture.h" />
     <ClInclude Include="..\src\rb\rb_types.h" />
+    <ClInclude Include="..\src\rb\rb_vao.h" />
     <ClInclude Include="..\src\rb\valloc.h" />
+    <ClInclude Include="..\src\renderintr\ri_interface.h" />
     <ClInclude Include="..\src\r_local.h" />
     <ClInclude Include="..\src\sdl\sdl_hal.h" />
     <ClInclude Include="..\src\sdl\sdl_init.h" />

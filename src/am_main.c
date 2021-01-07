@@ -1,6 +1,6 @@
 /* am_main.c -- automap */
 
-#include "gl/gl_render.h"
+#include "renderintr/ri_interface.h"
 #include "rb/rb_common.h"
 #include "jagcry.h"
 #include "doomdef.h"
@@ -62,7 +62,7 @@ void AM_Start(void)
    players[consoleplayer].automapflags &= ~AF_ACTIVE;
    
    // CALICO: get framebuffer pointer
-   framebuffer = GL_GetFramebuffer(FB_160);
+   framebuffer = g_renderer->GetFramebuffer(FB_160);
 }
 
 //=================================================================
@@ -333,7 +333,7 @@ void AM_Drawer(void)
    int       drawn; // HOW MANY LINES DRAWN?
 
    // CALICO: Clear playfield framebuffer
-   GL_ClearFramebuffer(FB_160, RB_COLOR_BLACK);
+   g_renderer->ClearFramebuffer(FB_160, RB_COLOR_BLACK);
 
    p = &players[consoleplayer];
    ox = p->automapx;

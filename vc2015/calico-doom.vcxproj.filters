@@ -5,10 +5,6 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
@@ -22,23 +18,8 @@
     <Filter Include="Source Files\win32">
       <UniqueIdentifier>{ce5c63ac-9ba2-4f26-9bb7-b255f91f8172}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\hal">
-      <UniqueIdentifier>{1bd4fd28-b6bf-4083-9e80-193e9de390b1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\sdl">
-      <UniqueIdentifier>{41806c4a-1e39-4d7e-8b11-f7312e3a230c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\win32">
-      <UniqueIdentifier>{c4b0aab4-5a8b-4fe3-ad64-49ff40917ea9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\rb">
       <UniqueIdentifier>{542c5b3f-35e3-42e2-9fac-5478c0d701ab}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\rb">
-      <UniqueIdentifier>{5403fc4b-ff18-4833-be8a-f9275f59fdb3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\elib">
-      <UniqueIdentifier>{6f8f8f00-4827-4344-b56e-5d1cccaa8019}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\elib">
       <UniqueIdentifier>{962a0b65-cf27-4516-9764-d91672ad1993}</UniqueIdentifier>
@@ -46,11 +27,17 @@
     <Filter Include="Source Files\gl">
       <UniqueIdentifier>{ab39f6d2-f9ac-46c9-9c71-846f8bb03305}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\gl">
-      <UniqueIdentifier>{690e0459-1128-45c1-823a-c0fffe9189ca}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\glm">
+    <Filter Include="Source Files\glm">
       <UniqueIdentifier>{6dfc806f-5dd9-4a1e-8605-039fd83b3794}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\glm\ext">
+      <UniqueIdentifier>{abf1dbc5-8cfa-460f-af95-c98006a44bc9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\renderintr">
+      <UniqueIdentifier>{0f3ebd53-ee95-406c-99b0-d712edaa4873}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gl4">
+      <UniqueIdentifier>{1118522a-717c-4661-b188-e28bf32dde88}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -312,247 +299,295 @@
     <ClCompile Include="..\src\rb\rb_shader.cpp">
       <Filter>Source Files\rb</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\rb\rb_vao.cpp">
+      <Filter>Source Files\rb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\renderintr\ri_interface.cpp">
+      <Filter>Source Files\renderintr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gl4\gl4_render.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gl\gl_textures.cpp">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gl\gl_framebuffer.cpp">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gl\gl_drawcmd.cpp">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gl4\gl4_buffers.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\doomdata.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\doomdef.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\info.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\music.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\p_local.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\p_spec.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\r_local.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\sound.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\sounds.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\soundst.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\st_main.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\keywords.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\m_argv.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\w_iwad.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hal\hal_ml.h">
-      <Filter>Header Files\hal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\sdl\sdl_init.h">
-      <Filter>Header Files\sdl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hal\hal_types.h">
-      <Filter>Header Files\hal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\sdl\sdl_hal.h">
-      <Filter>Header Files\sdl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hal\hal_init.h">
-      <Filter>Header Files\hal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\sdl\sdl_video.h">
-      <Filter>Header Files\sdl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hal\hal_platform.h">
-      <Filter>Header Files\hal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\win32\win32_platform.h">
-      <Filter>Header Files\win32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\rb\rb_common.h">
-      <Filter>Header Files\rb</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\rb\rb_draw.h">
-      <Filter>Header Files\rb</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\rb\rb_main.h">
-      <Filter>Header Files\rb</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\rb\rb_texture.h">
-      <Filter>Header Files\rb</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\rb\rb_types.h">
-      <Filter>Header Files\rb</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\rb\valloc.h">
-      <Filter>Header Files\rb</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hal\hal_video.h">
-      <Filter>Header Files\hal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hal\hal_input.h">
-      <Filter>Header Files\hal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\sdl\sdl_input.h">
-      <Filter>Header Files\sdl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\elib\compare.h">
-      <Filter>Header Files\elib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\elib\configfile.h">
-      <Filter>Header Files\elib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\elib\misc.h">
-      <Filter>Header Files\elib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\elib\parser.h">
-      <Filter>Header Files\elib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\elib\qstring.h">
-      <Filter>Header Files\elib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\elib\zone.h">
-      <Filter>Header Files\elib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\elib\m_ctype.h">
-      <Filter>Header Files\elib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\elib\elib.h">
-      <Filter>Header Files\elib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\elib\atexit.h">
-      <Filter>Header Files\elib</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\jagcry.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\gl\gl_render.h">
-      <Filter>Header Files\gl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\gl\resource.h">
-      <Filter>Header Files\gl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\elib\dllist.h">
-      <Filter>Header Files\elib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\elib\bdlist.h">
-      <Filter>Header Files\elib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\jagpad.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\sdl\sdl_timer.h">
-      <Filter>Header Files\sdl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hal\hal_timer.h">
-      <Filter>Header Files\hal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hal\hal_sfx.h">
-      <Filter>Header Files\hal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\sdl\sdl_sound.h">
-      <Filter>Header Files\sdl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\s_soundfmt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\elib\binary.h">
-      <Filter>Header Files\elib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\elib\swap.h">
-      <Filter>Header Files\elib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\g_options.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\common.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\exponential.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\ext.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\fwd.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\geometric.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\glm.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\integer.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\mat2x2.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\mat2x3.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\mat2x4.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\mat3x2.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\mat3x3.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\mat3x4.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\mat4x2.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\mat4x3.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\mat4x4.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\matrix.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\packing.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\trigonometric.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\vec2.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\vec3.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\vec4.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\glm-0.9.9.6\glm\vector_relational.hpp">
-      <Filter>Header Files\glm</Filter>
+      <Filter>Source Files\glm</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\rb\rb_shader.h">
-      <Filter>Header Files\rb</Filter>
+    <ClInclude Include="..\src\elib\atexit.h">
+      <Filter>Source Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\bdlist.h">
+      <Filter>Source Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\binary.h">
+      <Filter>Source Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\compare.h">
+      <Filter>Source Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\configfile.h">
+      <Filter>Source Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\dllist.h">
+      <Filter>Source Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\elib.h">
+      <Filter>Source Files\elib</Filter>
     </ClInclude>
     <ClInclude Include="..\src\elib\esmartptr.h">
-      <Filter>Header Files\elib</Filter>
+      <Filter>Source Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\m_ctype.h">
+      <Filter>Source Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\misc.h">
+      <Filter>Source Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\parser.h">
+      <Filter>Source Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\qstring.h">
+      <Filter>Source Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\swap.h">
+      <Filter>Source Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\zone.h">
+      <Filter>Source Files\elib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gl\gl_render.h">
+      <Filter>Source Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gl\resource.h">
+      <Filter>Source Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hal\hal_init.h">
+      <Filter>Source Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hal\hal_input.h">
+      <Filter>Source Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hal\hal_ml.h">
+      <Filter>Source Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hal\hal_platform.h">
+      <Filter>Source Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hal\hal_sfx.h">
+      <Filter>Source Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hal\hal_timer.h">
+      <Filter>Source Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hal\hal_types.h">
+      <Filter>Source Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hal\hal_video.h">
+      <Filter>Source Files\hal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\rb_common.h">
+      <Filter>Source Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\rb_draw.h">
+      <Filter>Source Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\rb_main.h">
+      <Filter>Source Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\rb_shader.h">
+      <Filter>Source Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\rb_texture.h">
+      <Filter>Source Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\rb_types.h">
+      <Filter>Source Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\valloc.h">
+      <Filter>Source Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sdl\sdl_hal.h">
+      <Filter>Source Files\sdl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sdl\sdl_init.h">
+      <Filter>Source Files\sdl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sdl\sdl_input.h">
+      <Filter>Source Files\sdl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sdl\sdl_sound.h">
+      <Filter>Source Files\sdl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sdl\sdl_timer.h">
+      <Filter>Source Files\sdl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sdl\sdl_video.h">
+      <Filter>Source Files\sdl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\win32\win32_platform.h">
+      <Filter>Source Files\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\doomdata.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\doomdef.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\g_options.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\info.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\jagcry.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\jagpad.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\keywords.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\m_argv.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\music.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\p_local.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\p_spec.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\r_local.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\s_soundfmt.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sound.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sounds.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\soundst.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\st_main.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\w_iwad.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\rb\rb_vao.h">
+      <Filter>Source Files\rb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\ext\matrix_transform.hpp">
+      <Filter>Source Files\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\glm-0.9.9.6\glm\ext\matrix_clip_space.hpp">
+      <Filter>Source Files\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\renderintr\ri_interface.h">
+      <Filter>Source Files\renderintr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gl4\gl4_render.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gl\gl_textures.h">
+      <Filter>Source Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gl\gl_framebuffer.h">
+      <Filter>Source Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gl\gl_drawcmd.h">
+      <Filter>Source Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gl4\gl4_buffers.h">
+      <Filter>Source Files\gl4</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

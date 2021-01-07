@@ -1,6 +1,6 @@
 /* r_main.c */
 
-#include "gl/gl_render.h"
+#include "renderintr/ri_interface.h"
 #include "doomdef.h"
 #include "r_local.h"
 
@@ -284,7 +284,7 @@ void R_Setup(void)
 #endif
 
    // CALICO: framebuffer is modified
-   GL_FramebufferSetUpdated(FB_160);
+   g_renderer->FramebufferSetUpdated(FB_160);
 
    framecount++;
    validcount++;

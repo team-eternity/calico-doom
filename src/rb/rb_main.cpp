@@ -85,8 +85,9 @@ VALLOCATION(whiteTexture)
 //
 // Resets the OpenGL state
 //
-void RB_InitDefaultState()
+void RB_InitDefaultState(int version)
 {
+   rbTexture::GLVersion = version;
    rbTexture::Unbind();
    rbState.glStateBits = 0;
    rbState.blendDest   = RB_GLDST_UNDEF;
@@ -106,11 +107,18 @@ void RB_InitDefaultState()
    RB_ClearBuffer(RB_GLCB_ALL);
    RB_SetState(RB_GLSTATE_CULL, true);
    RB_SetCull(RB_GLCULL_BACK);
+   if(version == 4)
+   {
+       glEnable(GL_BLEND);
+   }
    RB_SetBlend(RB_GLSRC_SRC_ALPHA, RB_GLDST_ONE_MINUS_SRC_ALPHA);
 
-   glEnableClientState(GL_VERTEX_ARRAY);
-   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-   glEnableClientState(GL_COLOR_ARRAY);
+   if(version == 1)
+   {
+       glEnableClientState(GL_VERTEX_ARRAY);
+       glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+       glEnableClientState(GL_COLOR_ARRAY);
+   }
 }
 
 //
