@@ -83,9 +83,10 @@ void SDL2_InitHAL(void)
    hal_appstate.setGrabState         = SDL2_SetGrabState;
 
    // Input
-   hal_input.initInput     = SDL2_InitInput;
-   hal_input.getEvents     = SDL2_GetEvents;
-   hal_input.resetInput    = SDL2_ResetInput;
+   hal_input.initInput      = SDL2_InitInput;
+   hal_input.getEvents      = SDL2_GetEvents;
+   hal_input.resetInput     = SDL2_ResetInput;
+   hal_input.getMouseMotion = SDL2_GetMouseMotion;
 
    // Sound
    hal_sound.initSound       = SDL2Sfx_MixerInit;

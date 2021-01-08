@@ -45,6 +45,7 @@ typedef struct hal_input_s
    void (*initInput)(void);
    int  (*getEvents)(void);
    void (*resetInput)(void);
+   void (*getMouseMotion)(int *x, int *y);
 } hal_input_t;
 
 #ifdef __cplusplus

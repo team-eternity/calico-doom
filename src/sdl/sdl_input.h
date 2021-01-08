@@ -42,6 +42,7 @@ void     SDL2_UpdateFocus(void);
 void     SDL2_InitInput(void);
 int      SDL2_GetEvents(void);
 void     SDL2_ResetInput(void);
+void     SDL2_GetMouseMotion(int *x, int *y);
 
 #ifdef __cplusplus
 }

@@ -37,6 +37,7 @@
 #include "../hal/hal_video.h"
 #include "../jagpad.h"
 #include "sdl_input.h"
+#include "sdl_video.h"
 
 //=============================================================================
 //
@@ -69,6 +70,14 @@ hal_bool SDL2_MouseShouldBeGrabbed(void)
    return (hal_bool)(windowFocused && shouldGrabInput && gameWants);
 }
 
+static void SetShowCursor(bool show)
+{
+    // When the cursor is hidden, grab the input.
+    // Relative mode implicitly hides the cursor.
+    SDL_SetRelativeMouseMode(!show ? SDL_TRUE : SDL_FALSE);
+    SDL_GetRelativeMouseState(nullptr, nullptr);
+}
+
 //
 // Update input grabbing status
 //
@@ -81,14 +90,19 @@ void SDL2_UpdateGrab(void)
 
    if(grab && !currentlyGrabbed)
    {
-      SDL_ShowCursor(SDL_DISABLE);
+      SetShowCursor(false);
       hal_video.setGrab(HAL_TRUE);
    }
 
    if(!grab && currentlyGrabbed)
    {
-      SDL_ShowCursor(SDL_ENABLE);
+      SetShowCursor(true);
       hal_video.setGrab(HAL_FALSE);
+
+      int w, h;
+      SDL_GetWindowSize(mainwindow, &w, &h);
+      SDL_WarpMouseInWindow(mainwindow, w / 2, h / 2);
+      SDL_GetRelativeMouseState(nullptr, nullptr);
    }
 
    currentlyGrabbed = grab;
@@ -609,6 +623,63 @@ static void SDL2_processGamepadAxes(int &buttons)
    // right trigger
    if(abs(rt) > gamepadTriggerThreshold)
       SDL2_processTrigger(buttons, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, rt);
+}
+
+//=============================================================================
+//
+// Mouse Input
+//
+
+static bool   useMouse          = true;
+static double mouseAcceleration = 2.0;
+static int    mouseThreshold    = 10;
+static int    mouseSensitivity  = 5;
+static int    mousex;
+static int    mousey;
+
+static cfgrange_t<double> mouseAccelRng  { 1.0, 5.0 };
+static cfgrange_t<int>    mouseThreshRng { 0,   32  };
+static cfgrange_t<int>    mouseSenseRng  { 1,   256 };
+
+static CfgItem cfgUseMouse         { "useMouse",          &useMouse };
+static CfgItem cfgMouseAccel       { "mouseAcceleration", &mouseAcceleration, &mouseAccelRng  };
+static CfgItem cfgMouseThreshold   { "mouseThreshold",    &mouseThreshold,    &mouseThreshRng };
+static CfgItem cfgMouseSensitivity { "mouseSensitivity",  &mouseSensitivity,  &mouseSenseRng  };
+
+static int AccelerateMouse(int val)
+{
+    if(val < 0)
+        return -AccelerateMouse(-val);
+
+    if(val > mouseThreshold)
+        return int((val - mouseThreshold) * mouseAcceleration + mouseThreshold);
+    else
+        return val;
+}
+
+static void SDL2_ReadMouse()
+{
+    int x = 0, y = 0;
+    SDL_GetRelativeMouseState(&x, &y);
+
+    if(x != 0 || y != 0)
+    {
+        mousex = AccelerateMouse(x) * (mouseSensitivity + 5) / 10;
+        mousey = AccelerateMouse(y) * (mouseSensitivity + 5) / 10;
+    }
+    else
+        mousex = mousey = 0;
+}
+
+void SDL2_GetMouseMotion(int *x, int *y)
+{
+    if(useMouse && windowFocused)
+        SDL2_ReadMouse();
+
+    if(x)
+        *x = mousex;
+    if(y)
+        *y = mousey;
 }
 
 //=============================================================================

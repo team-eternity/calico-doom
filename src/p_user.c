@@ -1,5 +1,6 @@
 /* P_user.c */
 
+#include "hal/hal_input.h"
 #include "doomdef.h"
 #include "g_options.h"
 #include "p_local.h"
@@ -234,6 +235,7 @@ void P_BuildMove(player_t *player)
    boolean strafe; 
    int     speed; 
    int     buttons, oldbuttons;
+   int     mousex,  mousey;     // CALICO: allow mouse input
    mobj_t *mo;
 
    buttons    = ticbuttons[playernum];
@@ -295,6 +297,12 @@ void P_BuildMove(player_t *player)
    if(buttons & BT_DOWN) 
       player->forwardmove = -forwardmove[speed];
 
+   // CALICO: allow mouse input
+   hal_input.getMouseMotion(&mousex, &mousey);
+   if(strafe)
+       player->sidemove += mousex * 96;
+   else
+       player->angleturn -= mousex * 0x10000;
 
    //
    // if slowed down to a stop, change to a standing frame
