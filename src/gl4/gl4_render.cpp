@@ -121,14 +121,6 @@ VALLOCATION(vao)
 static glm::mat4 projectionMatrix;
 static glm::mat4 modelMatrix;
 
-// FIXME: TEMP DEBUG
-#define CHECK_GL_ERROR() \
-{\
-    GLenum err = glGetError(); \
-    if(err != 0) \
-        printf("GL error (%s, %d): %d\n", __FILE__, __LINE__, err); \
-}
-
 //
 // Draw a rect from game coordinates (gx, gy) to translated framebuffer
 // coordinates with the provided information.
@@ -150,36 +142,26 @@ static void GL4_ExecuteDrawCommand(int gx, int gy, unsigned int gw, unsigned int
 
     if(modelMatrixLoc < 0)
         modelMatrixLoc = defaultshader.getUniformLocation("modelMatrix");
-    CHECK_GL_ERROR()
     if(modelMatrixLoc >= 0)
         defaultshader.UniformMatrix4fv(modelMatrixLoc, 1, false, &modelMatrix[0][0]);
-    CHECK_GL_ERROR()
 
     tx.bind();
-    CHECK_GL_ERROR()
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    CHECK_GL_ERROR()
 }
 
 static void GL4_RenderFrame()
 {
-    CHECK_GL_ERROR()
     glClear(GL_COLOR_BUFFER_BIT);
-    CHECK_GL_ERROR()
 
     // bind default shader
     defaultshader.bind();
-    CHECK_GL_ERROR()
 
     // execute draw commands
     GL_ExecuteDrawCommands();
-    CHECK_GL_ERROR()
     GL_ClearDrawCommands();
-    CHECK_GL_ERROR()
 
     // flip/refresh display
     hal_video.endFrame();
-    CHECK_GL_ERROR()
 }
 
 //=============================================================================
@@ -192,54 +174,44 @@ static void GL4_InitRenderer(int w, int h)
     // set draw command callback
     GL_SetDrawCommandFunc(GL4_ExecuteDrawCommand);
 
-    CHECK_GL_ERROR()
     // set viewport
     glViewport(0, 0, GLsizei(w), GLsizei(h));
-    CHECK_GL_ERROR()
+
     // load VAO/VBO support
     if(!RB_InitVAOSupport())
         hal_platform.fatalError("Could not initialize VAO/VBO support");
-    CHECK_GL_ERROR()
+
     // load default shaders
     GL4_LoadDefaultShaders();
-    CHECK_GL_ERROR()
+
     // bind default shader
     defaultshader.bind();
-    CHECK_GL_ERROR()
+
     // compute orthonormal projection matrix
     projectionMatrix = glm::ortho(0.0f, float(w), float(h), 0.0f, -1.0f, 1.0f);
     const int projMatLocation = defaultshader.getUniformLocation("projectionMatrix");
     if(projMatLocation >= 0)
         rbProgram::UniformMatrix4fv(projMatLocation, 1, false, &projectionMatrix[0][0]);
-    CHECK_GL_ERROR()
+
     // init VAO
     vao.generate();
-    CHECK_GL_ERROR()
     vao.bind();
-    CHECK_GL_ERROR()
+
     // init vertex VBO
     vertexVBO.generate();
-    CHECK_GL_ERROR()
     vertexVBO.bind();
-    CHECK_GL_ERROR()
     vertexVBO.bufferData(sizeof(vertices_xy_uv), vertices_xy_uv);
-    CHECK_GL_ERROR()
     const int verticesLoc = defaultshader.getAttribLocation("position");
     if(verticesLoc >= 0)
     {
         const uint uvl = uint(verticesLoc);
-        CHECK_GL_ERROR()
         vao.enableVertexAttribArray(uvl);
-        CHECK_GL_ERROR()
         vertexVBO.vertexAttribPointer(uvl, 2, rbVBO::FLOAT, false, 0, nullptr);
-        CHECK_GL_ERROR()
     }
     vertexVBO.unbind();
-    CHECK_GL_ERROR()
 
     // disable depth buffer test
     RB_SetState(RB_GLSTATE_DEPTHTEST, false);
-    CHECK_GL_ERROR()
 }
 
 static renderintr_t gl4Renderer
