@@ -28,10 +28,16 @@
 
 #if defined(__unix__) || defined(__linux__) || defined(__APPLE__)
 
+#include "../elib/m_argv.h"
+
 extern void Jag68k_main(int argc, const char *const *argv);
 
 int main(int argc, const char *const *argv)
 {
+   // initialize global command line state
+   myargc = argc;
+   myargv = argv;
+
    Jag68k_main(argc, argv);
    return 0;
 }

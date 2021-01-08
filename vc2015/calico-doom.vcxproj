@@ -153,6 +153,7 @@
     <ClCompile Include="..\src\elib\atexit.cpp" />
     <ClCompile Include="..\src\elib\configfile.cpp" />
     <ClCompile Include="..\src\elib\misc.cpp" />
+    <ClCompile Include="..\src\elib\m_argv.c" />
     <ClCompile Include="..\src\elib\parser.cpp" />
     <ClCompile Include="..\src\elib\qstring.cpp" />
     <ClCompile Include="..\src\elib\zone.cpp" />
@@ -178,7 +179,6 @@
     <ClCompile Include="..\src\jagcry.c" />
     <ClCompile Include="..\src\jagonly.c" />
     <ClCompile Include="..\src\j_eeprom.c" />
-    <ClCompile Include="..\src\m_argv.c" />
     <ClCompile Include="..\src\m_main.c" />
     <ClCompile Include="..\src\o_main.c" />
     <ClCompile Include="..\src\p_base.c" />
@@ -253,6 +253,7 @@
     <ClInclude Include="..\src\elib\elib.h" />
     <ClInclude Include="..\src\elib\esmartptr.h" />
     <ClInclude Include="..\src\elib\misc.h" />
+    <ClInclude Include="..\src\elib\m_argv.h" />
     <ClInclude Include="..\src\elib\m_ctype.h" />
     <ClInclude Include="..\src\elib\parser.h" />
     <ClInclude Include="..\src\elib\qstring.h" />
@@ -304,7 +305,6 @@
     <ClInclude Include="..\src\jagpad.h" />
     <ClInclude Include="..\src\keywords.h" />
     <ClInclude Include="..\src\music.h" />
-    <ClInclude Include="..\src\m_argv.h" />
     <ClInclude Include="..\src\p_local.h" />
     <ClInclude Include="..\src\p_spec.h" />
     <ClInclude Include="..\src\rb\rb_common.h" />

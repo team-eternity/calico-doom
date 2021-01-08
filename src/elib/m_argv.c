@@ -37,17 +37,15 @@ const char *const *myargv;
 // Returns true if the specified argument was passed to the program,
 // and false otherwise.
 //
-boolean M_FindArgument(const char *arg)
+hal_bool M_FindArgument(const char *arg)
 {
-   int i;
+    for(int i = 1; i < myargc; i++)
+    {
+        if(!strcmp(myargv[i], arg))
+            return HAL_TRUE;
+    }
 
-   for(i = 1; i < myargc; i++)
-   {
-      if(!strcmp(myargv[i], arg))
-         return true;
-   }
-
-   return false;
+    return HAL_FALSE;
 }
 
 //
@@ -58,9 +56,7 @@ boolean M_FindArgument(const char *arg)
 //
 int M_GetArgParameters(const char *arg, int count)
 {
-   int i;
-
-   for(i = 1; i < myargc; i++)
+   for(int i = 1; i < myargc; i++)
    {
       if(!strcmp(myargv[i], arg))
       {

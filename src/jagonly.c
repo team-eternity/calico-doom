@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "elib/configfile.h"
+#include "elib/m_argv.h"
 #include "hal/hal_init.h"
 #include "hal/hal_input.h"
 #include "hal/hal_platform.h"
@@ -13,7 +14,6 @@
 #include "rb/rb_common.h"
 #include "doomdef.h"
 #include "jagcry.h"
-#include "m_argv.h"
 #include "r_local.h"
 #include "w_iwad.h"
 
@@ -83,10 +83,6 @@ static hal_bool ShouldGrabInput(void)
 //
 void Jag68k_main(int argc, const char *const *argv)
 {
-   // CALICO: initialize global command line state
-   myargc = argc;
-   myargv = argv;
-
    // CALICO: initialize HAL
    if(!HAL_Init())
       hal_platform.fatalError("HAL initialization failed");

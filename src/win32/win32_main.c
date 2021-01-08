@@ -32,6 +32,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../elib/m_argv.h"
 
 extern void Jag68k_main(int argc, const char *const *argv);
 
@@ -189,6 +190,10 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR szCmdLine, int sw)
       return 0;
    }
    Win32_parseCommandLine(cmdline, argv);
+
+   // initialize global command line state
+   myargc = argc;
+   myargv = argv;
 
    // run application main program
    Jag68k_main(argc, argv);

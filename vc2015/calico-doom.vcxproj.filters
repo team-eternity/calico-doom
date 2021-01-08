@@ -203,9 +203,6 @@
     <ClCompile Include="..\src\r_phase9.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\m_argv.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\w_iwad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -319,6 +316,9 @@
     </ClCompile>
     <ClCompile Include="..\src\gl4\gl4_buffers.cpp">
       <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\elib\m_argv.c">
+      <Filter>Source Files\elib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -526,9 +526,6 @@
     <ClInclude Include="..\src\keywords.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\m_argv.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\music.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -588,6 +585,9 @@
     </ClInclude>
     <ClInclude Include="..\src\gl4\gl4_buffers.h">
       <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\elib\m_argv.h">
+      <Filter>Source Files\elib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

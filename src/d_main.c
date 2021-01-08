@@ -2,11 +2,11 @@
 
 #include <stdint.h>
 
+#include "elib/m_argv.h"
 #include "hal/hal_input.h"
 #include "hal/hal_timer.h"
 #include "doomdef.h"
 #include "g_options.h"
-#include "m_argv.h"
  
 unsigned int BT_ATTACK = BT_B;
 unsigned int BT_USE    = BT_C;

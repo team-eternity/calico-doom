@@ -1,9 +1,9 @@
 /* s_sound.c */
 
+#include "elib/m_argv.h" // CALICO
 #include "hal/hal_sfx.h" // CALICO
 #include "s_soundfmt.h"  // CALICO
 #include "doomdef.h"
-#include "m_argv.h"
 #include "music.h"
 
 #define EXTERN_BUFFER_SIZE (EXTERNALQUADS*32/2)

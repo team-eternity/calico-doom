@@ -29,14 +29,22 @@
 #ifndef M_ARGV_H__
 #define M_ARGV_H__
 
-#include "keywords.h"
+#include "../hal/hal_types.h"
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 // Global arguments
 extern int myargc;
 extern const char *const *myargv;
 
-boolean M_FindArgument(const char *arg);
-int     M_GetArgParameters(const char *arg, int count);
+hal_bool M_FindArgument(const char *arg);
+int      M_GetArgParameters(const char *arg, int count);
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif
 

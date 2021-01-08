@@ -30,8 +30,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "elib/m_argv.h"
 #include "keywords.h"
-#include "m_argv.h"
 #include "w_iwad.h"
 
 typedef enum wfiletype_e
