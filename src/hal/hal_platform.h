@@ -29,12 +29,15 @@
 #ifndef HAL_PLATFORM_H__
 #define HAL_PLATFORM_H__
 
+#include <stdio.h>
+
 typedef struct hal_platform_s
 {
    void        (*debugMsg)(const char *msg, ...);
    void        (*exitWithMsg)(const char *msg, ...);
    void        (*fatalError)(const char *msg, ...);
    void        (*setIcon)(void);
+   FILE       *(*fileOpen)(const char *path, const char *mode);
 } hal_platform_t;
 
 #ifdef __cplusplus

@@ -27,6 +27,10 @@
 */
 
 #include <stdio.h>
+#include "elib/elib.h"
+#include "elib/misc.h"
+#include "hal/hal_ml.h"
+#include "hal/hal_platform.h"
 
 static FILE *eepromFile;
 
@@ -35,12 +39,14 @@ static FILE *eepromFile;
 //
 static void J_OpenEEPROM(const char *mode)
 {
-   if(eepromFile)
-   {
-      fclose(eepromFile);
-      eepromFile = NULL;
-   }
-   eepromFile = fopen("eeprom.cal", mode);
+    char *const fullpath = M_SafeFilePath(hal_medialayer.getWriteDirectory(ELIB_APPNAME), "eeprom.cal");
+    if(eepromFile)
+    {
+        fclose(eepromFile);
+        eepromFile = NULL;
+    }
+    eepromFile = hal_platform.fileOpen(fullpath, mode);
+    efree(fullpath);
 }
 
 //

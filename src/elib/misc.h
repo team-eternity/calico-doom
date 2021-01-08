@@ -61,7 +61,9 @@ char *M_Itoa(int value, char *string, int radix);
 // Filename and Path Utils
 //
 
-void M_NormalizeSlashes(char *str);
+void  M_NormalizeSlashes(char *str);
+int   M_StringAlloc(char **str, int numstrs, size_t extra, const char *str1, ...);
+char *M_SafeFilePath(const char *basepath, const char *newcomponent);
 
 #ifdef __cplusplus
 }

@@ -37,7 +37,7 @@ extern "C"
 
    struct gamesettings_t gDemoSettings =   // settings for running the built-in demos
    {
-      0, // autoaim
+      0, // autorun
    };
 
    void G_OptionsNewGame(void)

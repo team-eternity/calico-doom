@@ -361,7 +361,7 @@ void Cfg_WriteFile(void)
    dstName.pathConcatenate("calico.cfg");
 
    cwd.itemMap = &items;
-   f = std::fopen(tmpName.constPtr(), "w");
+   f = hal_platform.fileOpen(tmpName.constPtr(), "w");
    if(!f)
    {
       hal_platform.debugMsg("Warning: could not open temp.cfg\n");

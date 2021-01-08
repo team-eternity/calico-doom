@@ -123,6 +123,11 @@ static void POSIX_SetIcon()
    // FIXME: Not implemented
 }
 
+static FILE *POSIX_FileOpen(const char *path, const char *mode)
+{
+    return fopen(path, mode);
+}
+
 //
 // Populate the HAL platform interface with POSIX implementation function pointers
 //
@@ -132,6 +137,7 @@ void POSIX_InitHAL(void)
    hal_platform.exitWithMsg = POSIX_ExitWithMsg;
    hal_platform.fatalError  = POSIX_FatalError;
    hal_platform.setIcon     = POSIX_SetIcon;
+   hal_platform.fileOpen    = POSIX_FileOpen;
 }
 
 #endif

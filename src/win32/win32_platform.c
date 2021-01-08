@@ -122,6 +122,31 @@ static void Win32_SetIcon(void)
    }
 }
 
+static WCHAR *UTF8ToWStr(const char *instr)
+{
+    const int clen = (int)(strlen(instr));
+    const int size_needed = MultiByteToWideChar(CP_UTF8, 0, instr, clen, NULL, 0);
+    WCHAR *const wStrTo = ecalloc(WCHAR, size_needed + 1, sizeof(WCHAR));
+    MultiByteToWideChar(CP_UTF8, 0, instr, clen, wStrTo, size_needed);
+    return wStrTo;
+}
+
+//
+// Open a file with the input path being assumed to contain a UTF-8 encoded string
+//
+static FILE *Win32_FileOpen(const char *path, const char *mode)
+{
+    WCHAR *const wpath = UTF8ToWStr(path);
+    WCHAR *const wmode = UTF8ToWStr(mode);
+
+    FILE *ret = _wfopen(wpath, wmode);
+    
+    efree(wpath);
+    efree(wmode);
+
+    return ret;
+}
+
 //
 // Populate the HAL platform interface with Win32 implementation function pointers
 //
@@ -131,6 +156,7 @@ void Win32_InitHAL(void)
    hal_platform.exitWithMsg = Win32_ExitWithMsg;
    hal_platform.fatalError  = Win32_FatalError;
    hal_platform.setIcon     = Win32_SetIcon;
+   hal_platform.fileOpen    = Win32_FileOpen;
 }
 
 #endif

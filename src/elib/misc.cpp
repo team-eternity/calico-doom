@@ -96,7 +96,7 @@ int M_WriteFile(const char *filename, const void *source, size_t length)
 
    errno = 0;
 
-   if(!(fp = std::fopen(filename, "wb")))
+   if(!(fp = hal_platform.fileOpen(filename, "wb")))
       return 0;
 
    result = (std::fwrite(source, 1, length, fp) == length);
@@ -131,7 +131,7 @@ size_t M_ReadFile(const char *name, uint8_t **buffer)
 
    errno = 0;
 
-   if((fp = std::fopen(name, "rb")))
+   if((fp = hal_platform.fileOpen(name, "rb")))
    {
       size_t length = static_cast<size_t>(M_FileLength(fp));
 
@@ -158,7 +158,7 @@ char *M_LoadStringFromFile(const char *filename)
    char   *buf = nullptr;
    size_t  len = 0;
 
-   if(!(f = std::fopen(filename, "rb")))
+   if(!(f = hal_platform.fileOpen(filename, "rb")))
       return nullptr;
 
    // allocate at length+1 for null termination
@@ -293,5 +293,75 @@ void M_NormalizeSlashes(char *str)
    }
 }
 
+//
+// M_StringAlloc
+//
+// haleyjd: This routine takes any number of strings and a number of extra
+// characters, calculates their combined length, and calls ecalloc to create
+// a temporary buffer of that size. This is extremely useful for allocation of
+// file paths. The pointer returned in *str must be manually freed.
+//
+int M_StringAlloc(char **str, int numstrs, size_t extra, const char *str1, ...)
+{
+    va_list args;
+    size_t len = extra;
+
+    if(numstrs < 1)
+        hal_platform.fatalError("M_StringAlloc: invalid input\n");
+
+    len += strlen(str1);
+
+    --numstrs;
+
+    if(numstrs != 0)
+    {   
+        va_start(args, str1);
+
+        while(numstrs != 0)
+        {
+            const char *argstr = va_arg(args, const char *);
+
+            len += strlen(argstr);
+
+            --numstrs;
+        }
+
+        va_end(args);
+    }
+
+    ++len;
+
+    *str = (char *)(ecalloc(char, 1, len));
+
+    return len;
+}
+
+//
+// M_SafeFilePath
+//
+// haleyjd 20110210 - original routine.
+// This routine performs safe, portable concatenation of a base file path
+// with another path component or file name. The returned string is ecalloc'd
+// and should be freed when it has exhausted its usefulness.
+//
+char *M_SafeFilePath(const char *basepath, const char *newcomponent)
+{
+    int   newstrlen = 0;
+    char *newstr = nullptr;
+
+    if(!strcmp(basepath, ""))
+    {
+        basepath = ".";
+    }
+
+    // Always throw in a slash. M_NormalizeSlashes will remove it in the case
+    // that either basepath or newcomponent includes a redundant slash at the
+    // end or beginning respectively.
+    newstrlen = M_StringAlloc(&newstr, 3, 1, basepath, "/", newcomponent);
+    psnprintf(newstr, newstrlen, "%s/%s", basepath, newcomponent);
+    M_NormalizeSlashes(newstr);
+
+    return newstr;
+}
 // EOF
 

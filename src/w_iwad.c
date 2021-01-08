@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "elib/m_argv.h"
+#include "hal/hal_platform.h"
 #include "keywords.h"
 #include "w_iwad.h"
 
@@ -50,7 +51,7 @@ static FILE *W_checkForIWADArg(void)
    int i;
 
    if((i = M_GetArgParameters("-iwad", 1)) != 0)
-      return fopen(myargv[i], "rb");
+      return hal_platform.fileOpen(myargv[i], "rb");
 
    return NULL;
 }
@@ -60,7 +61,7 @@ static FILE *W_checkForIWADArg(void)
 //
 static FILE *W_haveJagDoomWAD(void)
 {
-   return fopen("jagdoom.wad", "rb");
+   return hal_platform.fileOpen("jagdoom.wad", "rb");
 }
 
 //
@@ -68,7 +69,7 @@ static FILE *W_haveJagDoomWAD(void)
 //
 static FILE *W_haveJagDoomROM(void)
 {
-   return fopen("doom.jag", "rb");
+   return hal_platform.fileOpen("doom.jag", "rb");
 }
 
 //
