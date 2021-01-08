@@ -5,7 +5,7 @@
   
   The MIT License (MIT)
   
-  Copyright (c) 2017 James Haley
+  Copyright (c) 2021 James Haley, Max Waine
   
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,8 @@
 */
 
 #ifdef USE_SDL2
+
+#include <type_traits>
 
 #include "SDL.h"
 #include "SDL_mixer.h"
@@ -66,6 +68,12 @@ static bool sndInit;
 // sound mixing buffer
 static float *mixbuffer;
 static Uint32 mixbufferSize;
+
+// MaxW: 2019/08/24: float audio if true else Sint16
+bool float_samples = false;
+
+// MaxW: 2019/08/24: Audiospec we actually got
+SDL_AudioSpec audio_spec = {};
 
 //=============================================================================
 //
@@ -267,19 +275,20 @@ static inline double rational_tanh(double x)
 // The author assumes NO RESPONSIBILITY for any problems caused by the use of
 // this software.
 //
-static void do_3band(float *stream, float *end, Sint16 *dest)
+template<typename T>
+static void do_3band(const float *stream, const float *const end, T *dest)
 {
    int esnum = 0;
 
-   static double vsa = (1.0 / 4294967295.0);
-   double sample, l, m, h;    // Low / Mid / High - Sample Values
+   static const double vsa = (1.0 / 4294967295.0);
+   double l, m, h;    // Low / Mid / High - Sample Values
 
    while(stream != end)
    {
-      auto es = &eqstate[esnum];
+      EQSTATE *const es = &eqstate[esnum];
       esnum ^= 1; // haleyjd: toggle between equalizer channels
 
-      sample = *stream++ * s_preampmul;
+      const double sample = *stream++ * s_preampmul;
 
       // Filter #1 (lowpass)
       es->f1p0  += (es->lf * (sample   - es->f1p0)) + vsa;
@@ -312,7 +321,13 @@ static void do_3band(float *stream, float *end, Sint16 *dest)
 
       // Return result
       // haleyjd: use rational_tanh for soft clipping
-      *dest++ = (Sint16)(rational_tanh(l + m + h) * 32767.0);
+      if /*constexpr*/(std::is_same_v<T, Sint16>)
+         *dest = static_cast<T>(rational_tanh(l + m + h) * 32767.0);
+      else if /*constexpr*/(std::is_same_v<T, float>)
+         *dest = static_cast<T>(rational_tanh(l + m + h));
+      static_assert(std::is_same_v<T, Sint16> || std::is_same_v<T, float>,
+                    "do_3band called with incompatible template parameter");
+      dest++;
    }
 }
 
@@ -321,26 +336,44 @@ static void do_3band(float *stream, float *end, Sint16 *dest)
 // Audiospec Callback
 //
 
-#define SAMPLESIZE sizeof(Sint16)
-#define STEP       2
+// size of a single sample
+static int sample_size;
+
+// step to next stereo sample pair (prooobably 2 samples)
+static int step;
 
 //
-// Convert the input buffer to floating point.
+// Convert the input buffer to floating point
 //
-static inline void SDL2Sfx_cvtBuffer(Uint8 *stream, int len)
+template<typename T>
+static void inline I_SDLConvertSoundBuffer(Uint8 *stream, int len)
 {
-   Sint16 *leftout, *leftend;
+   // Pointers in audio stream, left, right, end.
+   T *leftout = reinterpret_cast<T *>(stream);
 
-   leftout = (Sint16 *)stream;
-   leftend = (Sint16 *)(stream + len);
+   // Determine end, for left channel only
+   //  (right channel is implicit).
+   const T *const leftend = reinterpret_cast<T *>(stream + len);
 
-   float *bptr = mixbuffer;
+   // convert input to mixbuffer
+   float *bptr0 = mixbuffer;
    while(leftout != leftend)
    {
-      *(bptr + 0) = (float)(*(leftout + 0)) * (1.0f/32768.0f); // L
-      *(bptr + 1) = (float)(*(leftout + 1)) * (1.0f/32768.0f); // R
-      leftout += STEP;
-      bptr    += STEP;
+      if /*constexpr*/(std::is_same_v<T, Sint16>)
+      {
+         *(bptr0 + 0) = static_cast<float>(*(leftout + 0)) * (1.0f / 32768.0f); // L
+         *(bptr0 + 1) = static_cast<float>(*(leftout + 1)) * (1.0f / 32768.0f); // R
+      }
+      else if /*constexpr*/(std::is_same_v<T, float>)
+      {
+         *(bptr0 + 0) = *(leftout + 0); // L
+         *(bptr0 + 1) = *(leftout + 1); // R
+      }
+      static_assert(std::is_same_v<T, Sint16> || std::is_same_v<T, float>,
+                    "I_SDLConvertSoundBuffer called with incompatible template parameter");
+
+      leftout += step;
+      bptr0   += step;
    }
 }
 
@@ -348,12 +381,14 @@ static inline void SDL2Sfx_cvtBuffer(Uint8 *stream, int len)
 // SDL_mixer postmix callback routine, dispatched asynchronously. We do
 // our own mixing on up to 32 digital sound channels.
 //
+template<typename T>
 static void SDL2Sfx_updateSoundCB(void *userdata, Uint8 *stream, int len)
 {
-   SDL2Sfx_cvtBuffer(stream, len);
+   // convert input samples to floating point
+   I_SDLConvertSoundBuffer<T>(stream, len);
 
    float *leftout = mixbuffer;
-   float *leftend = mixbuffer + (len / SAMPLESIZE);
+   const float *const leftend = mixbuffer + (len / sample_size);
 
    for(channelinfo_t *chan = channels; chan != &channels[MAXCHANNELS]; chan++)
    {
@@ -380,7 +415,7 @@ static void SDL2Sfx_updateSoundCB(void *userdata, Uint8 *stream, int len)
          *(leftout + 1) = *(leftout + 1) + sample * chan->rightvol;
 
          // increment current pointers in stream
-         leftout += STEP;
+         leftout += step;
 
          // increment index
          chan->stepremainder += chan->step;
@@ -414,7 +449,7 @@ static void SDL2Sfx_updateSoundCB(void *userdata, Uint8 *stream, int len)
    }
 
    // equalization output pass
-   do_3band(mixbuffer, leftend, (Sint16 *)stream);
+   do_3band(mixbuffer, leftend, reinterpret_cast<T *>(stream));
 }
 
 //=============================================================================
@@ -467,16 +502,18 @@ static void SDL2Sfx_dummyCallback(void *, Uint8 *, int) {}
 static Uint32 SDL2Sfx_testSoundBufferSize()
 {
    Uint32 ret = 0;
-   SDL_AudioSpec want, have;
+   SDL_AudioSpec want;
+   audio_spec = {};
+
    want.freq     = SAMPLERATE;
    want.format   = MIX_DEFAULT_FORMAT;
    want.channels = 2;
    want.samples  = 2048;
    want.callback = SDL2Sfx_dummyCallback;
 
-   if(SDL_OpenAudio(&want, &have) >= 0)
+   if(SDL_OpenAudio(&want, &audio_spec) >= 0)
    {
-      ret = have.size;
+      ret = audio_spec.size;
       SDL_CloseAudio();
    }
 
@@ -511,8 +548,12 @@ hal_bool SDL2Sfx_MixerInit()
       hal_platform.debugMsg("Failed to set mixbufferSize\n");
       return HAL_FALSE;
    }
-
-   if(Mix_OpenAudio(SAMPLERATE, MIX_DEFAULT_FORMAT, 2, 2048) != 0)
+   
+   sample_size   = SDL_AUDIO_BITSIZE(audio_spec.format) / 8; // bits to bytes
+   float_samples = !!SDL_AUDIO_ISFLOAT(audio_spec.format);
+   step          = audio_spec.channels;
+   
+   if(Mix_OpenAudio(audio_spec.freq, audio_spec.format, audio_spec.channels, audio_spec.samples) != 0)
    {
       hal_platform.debugMsg("Mix_OpenAudio failed\n");
       return HAL_FALSE;
@@ -524,7 +565,7 @@ hal_bool SDL2Sfx_MixerInit()
    SDL2Sfx_initChannels();
 
    // setup postmix
-   Mix_SetPostMix(SDL2Sfx_updateSoundCB, nullptr);
+   Mix_SetPostMix(float_samples ? SDL2Sfx_updateSoundCB<float> : SDL2Sfx_updateSoundCB<Sint16>, nullptr);
 
    return HAL_TRUE;
 }
@@ -532,9 +573,9 @@ hal_bool SDL2Sfx_MixerInit()
 //
 // Return the sample rate for digital sound mixing.
 //
-int SDL2Sfx_GetSampleRate(void)
+int SDL2Sfx_GetSampleRate()
 {
-   return SAMPLERATE;
+   return audio_spec.freq;
 }
 
 #endif
