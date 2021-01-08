@@ -84,9 +84,7 @@ static void SetShowCursor(bool show)
 void SDL2_UpdateGrab(void)
 {
    static hal_bool currentlyGrabbed = HAL_FALSE;
-   hal_bool grab;
-
-   grab = SDL2_MouseShouldBeGrabbed();
+   const hal_bool grab = SDL2_MouseShouldBeGrabbed();
 
    if(grab && !currentlyGrabbed)
    {
@@ -111,16 +109,13 @@ void SDL2_UpdateGrab(void)
 //
 // Update window visibility and input focus status
 //
-void SDL2_UpdateFocus(void)
+void SDL2_UpdateFocus()
 {
-   unsigned int state;
-   hal_bool active, focused;
-
    SDL_PumpEvents();
 
-   state   = hal_video.getWindowFlags();
-   active  = (hal_bool)((state & SDL_WINDOW_SHOWN) && !(state & SDL_WINDOW_MINIMIZED));
-   focused = (hal_bool)((state & (SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS)) != 0);
+   const unsigned int state   = hal_video.getWindowFlags();
+   const hal_bool     active  = (hal_bool)((state & SDL_WINDOW_SHOWN) && !(state & SDL_WINDOW_MINIMIZED));
+   const hal_bool     focused = (hal_bool)((state & (SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS)) != 0);
 
    screenVisible = active;
    windowFocused = (hal_bool)(active && focused);
@@ -331,7 +326,7 @@ static CfgItem cfgKeyNameSpeed      ("kb_key_speed",       &kbKeyNames[KBJK_SPEE
 //
 static void SDL2_processKeyboard()
 {
-   const Uint8 *state = SDL_GetKeyboardState(nullptr);
+   const Uint8 *const state = SDL_GetKeyboardState(nullptr);
    const Uint8 *state1, *state2;
 
    for(size_t i = 0; i < KBJK_MAX; i++)
@@ -434,21 +429,21 @@ static gpbutton_t sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_MAX] =
    { SDL_CONTROLLER_BUTTON_DPAD_RIGHT,    KBJK_RIGHT,  nullptr, false }, // default: move right
 };
 
-static CfgItem cfgGamepadButtonA     ("gamepad_button_a",      &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_A            ].name);
-static CfgItem cfgGamepadButtonB     ("gamepad_button_b",      &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_B            ].name);
-static CfgItem cfgGamepadButtonX     ("gamepad_button_x",      &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_X            ].name);
-static CfgItem cfgGamepadButtonY     ("gamepad_button_y",      &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_Y            ].name);
-static CfgItem cfgGamepadButtonBack  ("gamepad_button_back",   &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_BACK         ].name);
-static CfgItem cfgGamepadButtonGuide ("gamepad_button_guide",  &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_GUIDE        ].name);
-static CfgItem cfgGamepadButtonStart ("gamepad_button_start",  &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_START        ].name);
-static CfgItem cfgGamepadButtonLStick("gamepad_button_lstick", &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_LEFTSTICK    ].name);
-static CfgItem cfgGamepadButtonRStick("gamepad_button_rstick", &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_RIGHTSTICK   ].name);
-static CfgItem cfgGamepadButtonLShldr("gamepad_button_lshldr", &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_LEFTSHOULDER ].name);
-static CfgItem cfgGamepadButtonRShldr("gamepad_button_rshldr", &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER].name);
-static CfgItem cfgGamepadButtonUp    ("gamepad_button_up",     &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_DPAD_UP      ].name);
-static CfgItem cfgGamepadButtonDown  ("gamepad_button_down",   &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_DPAD_DOWN    ].name);
-static CfgItem cfgGamepadButtonLeft  ("gamepad_button_left",   &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_DPAD_LEFT    ].name);
-static CfgItem cfgGamepadButtonRight ("gamepad_button_right",  &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_DPAD_RIGHT   ].name);
+static CfgItem cfgGamepadButtonA      { "gamepad_button_a",      &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_A            ].name };
+static CfgItem cfgGamepadButtonB      { "gamepad_button_b",      &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_B            ].name };
+static CfgItem cfgGamepadButtonX      { "gamepad_button_x",      &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_X            ].name };
+static CfgItem cfgGamepadButtonY      { "gamepad_button_y",      &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_Y            ].name };
+static CfgItem cfgGamepadButtonBack   { "gamepad_button_back",   &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_BACK         ].name };
+static CfgItem cfgGamepadButtonGuide  { "gamepad_button_guide",  &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_GUIDE        ].name };
+static CfgItem cfgGamepadButtonStart  { "gamepad_button_start",  &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_START        ].name };
+static CfgItem cfgGamepadButtonLStick { "gamepad_button_lstick", &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_LEFTSTICK    ].name };
+static CfgItem cfgGamepadButtonRStick { "gamepad_button_rstick", &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_RIGHTSTICK   ].name };
+static CfgItem cfgGamepadButtonLShldr { "gamepad_button_lshldr", &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_LEFTSHOULDER ].name };
+static CfgItem cfgGamepadButtonRShldr { "gamepad_button_rshldr", &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER].name };
+static CfgItem cfgGamepadButtonUp     { "gamepad_button_up",     &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_DPAD_UP      ].name };
+static CfgItem cfgGamepadButtonDown   { "gamepad_button_down",   &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_DPAD_DOWN    ].name };
+static CfgItem cfgGamepadButtonLeft   { "gamepad_button_left",   &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_DPAD_LEFT    ].name };
+static CfgItem cfgGamepadButtonRight  { "gamepad_button_right",  &sdlButtonToJagButton[SDL_CONTROLLER_BUTTON_DPAD_RIGHT   ].name };
 
 //
 // Initialize the game controller
@@ -472,7 +467,7 @@ static void SDL2_PadInit()
       {
          if(SDL_IsGameController(i))
          {
-            const char *sdlName = SDL_GameControllerNameForIndex(i);
+            const char *const sdlName = SDL_GameControllerNameForIndex(i);
             if(sdlName && !strcasecmp(gamepadDevice, sdlName))
             {
                if((pCurController = SDL_GameControllerOpen(i)))
@@ -497,8 +492,8 @@ static void SDL2_PadInit()
    // save name of chosen device for config file
    if(pCurController)
    {
-      char *oldGamePad = gamepadDevice;
-      const char *newGamePad = SDL_GameControllerName(pCurController);
+      char *const oldGamePad = gamepadDevice;
+      const char *const newGamePad = SDL_GameControllerName(pCurController);
 
       if(pCurController)
       {
@@ -526,8 +521,7 @@ static void SDL2_processGamepadButton(const SDL_ControllerButtonEvent &cbe)
 // 
 static void SDL2_processTrigger(int &buttons, SDL_GameControllerAxis which, Sint16 value)
 {
-   int *actionVar;
-   gptriggeraction_e action;
+   const int *actionVar;
 
    switch(which)
    {
@@ -541,7 +535,7 @@ static void SDL2_processTrigger(int &buttons, SDL_GameControllerAxis which, Sint
       return;
    }
 
-   action = static_cast<gptriggeraction_e>(*actionVar);
+   const gptriggeraction_e action = static_cast<gptriggeraction_e>(*actionVar);
    switch(action)
    {
    case GPT_USE:
@@ -646,6 +640,58 @@ static CfgItem cfgMouseAccel       { "mouseAcceleration", &mouseAcceleration, &m
 static CfgItem cfgMouseThreshold   { "mouseThreshold",    &mouseThreshold,    &mouseThreshRng };
 static CfgItem cfgMouseSensitivity { "mouseSensitivity",  &mouseSensitivity,  &mouseSenseRng  };
 
+struct mbutton_t
+{
+   Uint8  button;   // SDL controller button for this slot
+   int    kbButton; // KBJ button to which the SDL controller button is assigned
+   char  *name;     // name of Jag controller button for config
+   bool   down;     // if true, button is down
+};
+
+enum calico_mb_e
+{
+    CMB_LEFT,
+    CMB_MIDDLE,
+    CMB_RIGHT,
+    CMB_X1,
+    CMB_X2,
+    NUM_CALICO_MBS
+};
+
+static const Uint8 calicoMBToSDLMB[NUM_CALICO_MBS] =
+{
+    SDL_BUTTON_LEFT,
+    SDL_BUTTON_MIDDLE,
+    SDL_BUTTON_RIGHT,
+    SDL_BUTTON_X1,
+    SDL_BUTTON_X2
+};
+
+static inline calico_mb_e SDLMBToCalicoMB(Uint8 button)
+{
+    for(size_t i = 0; i < NUM_CALICO_MBS; i++)
+    {
+        if(calicoMBToSDLMB[i] == button)
+            return static_cast<calico_mb_e>(i);
+    }
+    return NUM_CALICO_MBS;
+}
+
+static mbutton_t sdlMouseToJagButton[NUM_CALICO_MBS] =
+{
+   { SDL_BUTTON_LEFT,   KBJK_ATTACK, nullptr, false }, // default: attack
+   { SDL_BUTTON_MIDDLE, KBJK_STRAFE, nullptr, false }, // default: strafe
+   { SDL_BUTTON_RIGHT,  KBJK_USE,    nullptr, false }, // default: use
+   { SDL_BUTTON_X1,     KBJK_9,      nullptr, false }, // default: toggle map
+   { SDL_BUTTON_X2,     KBJK_PAUSE,  nullptr, false }, // default: pause
+};
+
+static CfgItem cfgMouseButtonLeft   { "mouse_button_left",   &sdlMouseToJagButton[CMB_LEFT  ].name };
+static CfgItem cfgMouseButtonMiddle { "mouse_button_middle", &sdlMouseToJagButton[CMB_MIDDLE].name };
+static CfgItem cfgMouseButtonRight  { "mouse_button_right",  &sdlMouseToJagButton[CMB_RIGHT ].name };
+static CfgItem cfgMouseButtonX1     { "mouse_button_x1",     &sdlMouseToJagButton[CMB_X1    ].name };
+static CfgItem cfgMouseButtonX2     { "mouse_button_x2",     &sdlMouseToJagButton[CMB_X2    ].name };
+
 static int AccelerateMouse(int val)
 {
     if(val < 0)
@@ -682,6 +728,19 @@ void SDL2_GetMouseMotion(int *x, int *y)
         *y = mousey;
 }
 
+//
+// Process a mouse button event
+//
+static void SDL2_processMouseButton(const SDL_MouseButtonEvent &mbe)
+{
+   if(!useMouse)
+      return;
+
+   const calico_mb_e button = SDLMBToCalicoMB(mbe.button);
+   if(button != NUM_CALICO_MBS)
+      sdlMouseToJagButton[button].down = (mbe.type == SDL_MOUSEBUTTONDOWN);
+}
+
 //=============================================================================
 //
 // Main Interface
@@ -690,7 +749,7 @@ void SDL2_GetMouseMotion(int *x, int *y)
 //
 // Initialize input subsystem
 //
-void SDL2_InitInput(void)
+void SDL2_InitInput()
 {
    // initialize keyboard key bindings
    for(size_t i = 0; i < KBJK_MAX; i++)
@@ -733,6 +792,38 @@ void SDL2_InitInput(void)
       }
    }
 
+   // intialize mouse button bindings
+   for(mbutton_t &mbutton : sdlMouseToJagButton)
+   {
+      if(estrempty(mbutton.name))
+      {
+         // unconfigured name
+         if(mbutton.kbButton >= 0)
+            mbutton.name = estrdup(kbJoyKeyJagNames[mbutton.kbButton]);
+         else
+            mbutton.name = estrdup("unbound");
+      }
+      else
+      {
+         // name is configured; find the corresponding KBJK enum value and setup the button correspondence
+         bool found = false;
+
+         for(size_t j = 0; j < KBJK_MAX; j++)
+         {
+            if(!strcasecmp(kbJoyKeyJagNames[j], mbutton.name))
+            {
+               mbutton.kbButton = j;
+               found = true;
+               break;
+            }
+         }
+
+         // must be unbound
+         if(!found)
+            mbutton.kbButton = -1;
+      }
+   }
+
    // init gamepad device
    SDL2_PadInit();
 }
@@ -740,7 +831,7 @@ void SDL2_InitInput(void)
 //
 // Primary input processing function
 //
-int SDL2_GetEvents(void)
+int SDL2_GetEvents()
 {
    SDL_Event evt;
 
@@ -753,19 +844,25 @@ int SDL2_GetEvents(void)
       SDL2_ResetInput();
    }
 
+   // turn input into Jaguar gamepad buttons
+   int buttons = 0;
+
    while(SDL_PollEvent(&evt))
    {
       switch(evt.type)
       {
-      case SDL_MOUSEMOTION:
-         // CALICO_TODO: mouse motion
-         break;
       case SDL_MOUSEBUTTONDOWN:
       case SDL_MOUSEBUTTONUP:
-         // CALICO_TODO: mouse buttons
+         SDL2_processMouseButton(evt.button);
          break;
       case SDL_MOUSEWHEEL:
-         // CALICO_TODO: mouse wheel
+         if(useMouse && !(buttons & (JP_NWEAPN|JP_PWEAPN)))
+         {
+            if(evt.wheel.y > 0)
+                buttons |= JP_NWEAPN;
+            else if(evt.wheel.y < 0)
+                buttons |= JP_PWEAPN;                          
+         }
          break;
       case SDL_CONTROLLERBUTTONDOWN:
       case SDL_CONTROLLERBUTTONUP:
@@ -790,9 +887,6 @@ int SDL2_GetEvents(void)
    // process keyboard state
    SDL2_processKeyboard();
 
-   // turn input into Jaguar gamepad buttons
-   int buttons = 0;
-
    // keyboard
    for(size_t i = 0; i < KBJK_MAX; i++)
    {
@@ -810,6 +904,16 @@ int SDL2_GetEvents(void)
       }
    }
 
+   // mouse buttons
+   if(useMouse)
+   {
+       for(const mbutton_t &mbutton : sdlMouseToJagButton)
+       {
+           if(mbutton.down && mbutton.kbButton >= 0)
+               buttons |= kbKeyToJagButton[mbutton.kbButton];
+       }
+   }
+
    // gamepad axes
    SDL2_processGamepadAxes(buttons);
 
@@ -819,13 +923,16 @@ int SDL2_GetEvents(void)
 //
 // Reset input states
 //
-void SDL2_ResetInput(void)
+void SDL2_ResetInput()
 {
-   for(bool &kd : kbKeyDown)
-      kd = false;
+    for(bool &kd : kbKeyDown)
+        kd = false;
 
-   for(gpbutton_t &gp : sdlButtonToJagButton)
-      gp.down = false;
+    for(gpbutton_t &gp : sdlButtonToJagButton)
+        gp.down = false;
+
+    for(mbutton_t &mb : sdlMouseToJagButton)
+        mb.down = false;
 }
 
 #endif
