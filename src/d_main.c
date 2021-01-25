@@ -518,6 +518,8 @@ reselect:
    G_OptionsNewGame(); // CALICO: reload game options from config
    G_InitNew(startskill, startmap, starttype);
    G_RunGame();
+   if(g_allowexit && gameaction == ga_exitdemo)
+       goto reselect; // haleyjd: CALICO
 }
 
 //============================================================================-

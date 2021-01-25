@@ -51,10 +51,15 @@ extern "C"
       // set the proper settings for demo playback
       gGameSettings = gDemoSettings;
    }
+
+   // other settings (not sync-critical)
+   int g_allowexit = 1;
 }
 
-static cfgrange_t<int> autorunRange = { 0, 1 };
-static CfgItem cfgAutorun("g_autorun", &gDefaultSettings.autorun, &autorunRange);
+static cfgrange_t<int> boolRange = { 0, 1 };
+
+static CfgItem cfgAutorun   { "g_autorun",   &gDefaultSettings.autorun, &boolRange };
+static CfgItem cfgAllowExit { "g_allowexit", &g_allowexit,              &boolRange };
 
 // EOF
 

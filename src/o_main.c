@@ -4,6 +4,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 #include "st_main.h"
+#include "g_options.h" // CALICO
 
 #define MOVEWAIT   5
 #define ITEMSPACE  40
@@ -39,10 +40,12 @@ typedef enum
 {
    soundvol,
    controls,
+   mainmenu, // CALICO: only if g_allowexit is true
    NUMMENUITEMS
 } menupos_t;
 
 menupos_t cursorpos;
+static int nummenuitems; // CALICO
 
 typedef struct
 {
@@ -97,7 +100,7 @@ void O_SetButtonsFromControltype(void)
 //
 void O_DrawControl(void)
 {
-   EraseBlock(menuitem[controls].x + 40, menuitem[controls].y + 20, 90, 80, NULL);
+   EraseBlock(menuitem[controls].x + 40, menuitem[controls].y + 20, 90, !g_allowexit ? 80 : 60, NULL);
    print(menuitem[controls].x + 40, menuitem[controls].y + 20, buttona[controltype]);
    print(menuitem[controls].x + 40, menuitem[controls].y + 40, buttonb[controltype]);
    print(menuitem[controls].x + 40, menuitem[controls].y + 60, buttonc[controltype]);
@@ -138,7 +141,7 @@ void O_Init(void)
 
    D_strncpy(menuitem[0].name, "  Volume", 8); // Fixed CEF
    menuitem[0].x = 95;
-   menuitem[0].y = 50;
+   menuitem[0].y = !g_allowexit ? 50 : 42;
    menuitem[0].hasslider = true;
 
    slider[0].maxval = 16;
@@ -146,8 +149,19 @@ void O_Init(void)
 
    D_strncpy(menuitem[1].name, "Controls", 8); // Fixed CEF
    menuitem[1].x = 95;
-   menuitem[1].y = 110;
+   menuitem[1].y = !g_allowexit ? 110 : 90;
    menuitem[1].hasslider = false;
+
+   nummenuitems = 2;
+
+   if(g_allowexit) // CALICO: add an option to return to the main menu
+   {
+       D_strncpy(menuitem[2].name, "Main Menu", 9);
+       menuitem[2].x = 95;
+       menuitem[2].y = 180;
+       menuitem[2].hasslider = false;
+       nummenuitems = 3;
+   }
 }
 
 /*
@@ -198,11 +212,24 @@ void O_Control(player_t *player)
    }
 
    // check for movement
-   if(!(buttons & (JP_UP|JP_DOWN|JP_LEFT|JP_RIGHT)))
+   if(!(buttons & (JP_UP|JP_DOWN|JP_LEFT|JP_RIGHT|JP_SLEFT|JP_SRIGHT))) // CALICO: added SLEFT/SRIGHT
+   {
       movecount = 0; // move immediately on next press
+
+      // CALICO: allow exit option
+      if(g_allowexit && cursorpos == 2)
+      {
+          if(buttons & (BT_ATTACK|JP_ATTACK))
+          {
+              WriteEEProm(); // save new settings
+              gameaction = ga_exitdemo;
+              return;
+          }
+      }
+   }
    else
    {
-      if(buttons & JP_RIGHT)
+      if(buttons & (JP_RIGHT | JP_SRIGHT)) // CALICO: allow strafie-right input
       {
          if(menuitem[cursorpos].hasslider)
          {
@@ -216,7 +243,7 @@ void O_Control(player_t *player)
             }
          }
       }
-      if(buttons & JP_LEFT)
+      if(buttons & (JP_LEFT | JP_SLEFT)) // CALICO: allow stafe-left input
       {
          if(menuitem[cursorpos].hasslider)
          {
@@ -238,7 +265,7 @@ void O_Control(player_t *player)
          if(buttons & JP_DOWN)
          {
             cursorpos++;
-            if(cursorpos == NUMMENUITEMS)
+            if(cursorpos == nummenuitems)
                cursorpos = 0;
          }
 
@@ -246,9 +273,9 @@ void O_Control(player_t *player)
          {
             cursorpos--;
             if(cursorpos == -1)
-               cursorpos = NUMMENUITEMS-1;
+               cursorpos = nummenuitems-1;
          }
-         if(buttons & JP_RIGHT)
+         if(buttons & (JP_RIGHT | JP_SRIGHT)) // CALICO: allow strafe-right input
          {
             if(cursorpos == controls)
             {
@@ -257,7 +284,7 @@ void O_Control(player_t *player)
                   controltype = (NUMCONTROLOPTIONS - 1); 
             }
          }
-         if(buttons & JP_LEFT)
+         if(buttons & (JP_LEFT | JP_SLEFT)) // CALICO: allow strafe-left input
          {
             if(cursorpos == controls)
             {
@@ -286,7 +313,7 @@ void O_Drawer(void)
 
    print(104, 10, "Options");
 
-   for(i = 0; i < NUMMENUITEMS; i++)
+   for(i = 0; i < nummenuitems; i++)
    {
       print(menuitem[i].x, menuitem[i].y, menuitem[i].name);
 

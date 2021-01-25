@@ -1,7 +1,9 @@
 /* m_main.c -- main menu */
 
 #include "hal/hal_input.h"
+#include "hal/hal_ml.h"
 #include "doomdef.h"
+#include "g_options.h" // CALICO
 	
 #define MOVEWAIT   3
 #define CURSORX    50
@@ -14,8 +16,11 @@ typedef enum
    gamemode,
    level,
    difficulty,
+   quit,
    NUMMENUITEMS
 } menu_t;
+
+static int nummenuitems; // CALICO
 
 typedef enum
 {
@@ -43,6 +48,8 @@ skill_t    playerskill;
 void M_Start(void)
 {
    int i,l;
+
+   nummenuitems = g_allowexit ? NUMMENUITEMS : NUMMENUITEMS - 1; // CALICO: adjustable bounds
 
    // cache all needed graphics
    m_doom       = W_CacheLumpName("M_DOOM",   PU_STATIC);
@@ -91,12 +98,13 @@ void M_Stop(void)
 int M_Ticker(void)
 {
    int buttons;
+   const int onquit = (g_allowexit && cursorpos == quit); // CALICO: allow quit option
 
    buttons = ticbuttons[consoleplayer];
 
    // exit menu if button press
    // CALICO: added extra custom input actions
-   if(ticon > 10 && (buttons & (JP_A|JP_B|JP_C|JP_ATTACK|JP_USE|JP_STRAFE|JP_SPEED)))
+   if(ticon > 10 && (buttons & (JP_A|JP_B|JP_C|JP_ATTACK|JP_USE|JP_STRAFE|JP_SPEED)) && !onquit)
    {
       startmap   = playermap;       // set map number
       startskill = playerskill;     // set skill level
@@ -112,8 +120,14 @@ int M_Ticker(void)
    }
 
    // check for movement
-   if(!(buttons & (JP_UP|JP_DOWN|JP_LEFT|JP_RIGHT)))
+   if(!(buttons & (JP_UP|JP_DOWN|JP_LEFT|JP_RIGHT|JP_SLEFT|JP_SRIGHT))) // CALICO: allow SLEFT/SRIGHT
+   {
       movecount = 0; // move immediately on next press
+
+      // CALICO: allow quit option
+      if(onquit && (buttons & (BT_ATTACK|JP_ATTACK)))
+          hal_medialayer.exit();
+   }
    else
    {
       if(cursorpos == level && movecount == 3)
@@ -125,7 +139,7 @@ int M_Ticker(void)
          if(buttons & JP_DOWN)
          {
             cursorpos++;
-            if(cursorpos == NUMMENUITEMS)
+            if(cursorpos == nummenuitems)
                cursorpos = 0;
          }
 
@@ -133,19 +147,19 @@ int M_Ticker(void)
          {
             cursorpos--;
             if(cursorpos == -1)
-               cursorpos = NUMMENUITEMS-1;
+               cursorpos = nummenuitems-1;
          }
 
          switch(cursorpos)
          {
          case gamemode:
-            if(buttons & JP_RIGHT)
+            if(buttons & (JP_RIGHT|JP_SRIGHT)) // CALICO: allow SRIGHT
             {
                currentplaymode++;
                if(currentplaymode == NUMMODES)
                   currentplaymode--;
             }
-            if(buttons & JP_LEFT)
+            if(buttons & (JP_LEFT|JP_SLEFT)) // CALICO: allow SLEFT
             {
                currentplaymode--;
                if (currentplaymode == -1)
@@ -153,13 +167,13 @@ int M_Ticker(void)
             }
             break;
          case level:
-            if(buttons & JP_RIGHT)
+            if(buttons & (JP_RIGHT|JP_SRIGHT))
             {			
                playermap++;
                if(playermap == maxlevel+1)
                   playermap--;
             }	
-            if(buttons & JP_LEFT)
+            if(buttons & (JP_LEFT|JP_SLEFT))
             {
                playermap--;
                if(playermap == 0)
@@ -167,13 +181,13 @@ int M_Ticker(void)
             }
             break;
          case difficulty:
-            if(buttons & JP_RIGHT)
+            if(buttons & (JP_RIGHT|JP_SRIGHT))
             {
                playerskill++;
                if(playerskill > sk_nightmare)
                   playerskill--;
             }
-            if(buttons & JP_LEFT)
+            if(buttons & (JP_LEFT|JP_SLEFT))
             {
                playerskill--;
                if(playerskill == -1)
@@ -188,6 +202,8 @@ int M_Ticker(void)
 
    return 0;
 }
+
+extern void print(int x, int y, char *string); // CALICO
 
 /*
 =================
@@ -238,6 +254,10 @@ void M_Drawer(void)
    DrawJagobj(m_difficulty, CURSORX + 24, CURSORY(2) + m_doomheight + 2, NULL); 
    EraseBlock(92, m_doomheight + 102, 320-92, 240 - m_doomheight + 102, NULL);
    DrawJagobj(m_skill[playerskill], 92, m_doomheight + 102, NULL);
+
+   // CALICO: test
+   if(g_allowexit)
+       print(CURSORX + 24, CURSORY(3) + m_doomheight + 2, "Quit Game");
 
    UpdateBuffer();
 }

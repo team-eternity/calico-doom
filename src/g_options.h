@@ -38,6 +38,7 @@ struct gamesettings_t
 extern "C" {
 #endif
    extern struct gamesettings_t gGameSettings;
+   extern int g_allowexit;
    void G_OptionsNewGame(void);
    void G_OptionsStartDemo(void);
 

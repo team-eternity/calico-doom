@@ -382,6 +382,9 @@ void G_RunGame(void)
       if(gameaction == ga_warped)
          continue; // skip intermission
 
+      if(g_allowexit && gameaction == ga_exitdemo)
+          return; // CALICO: O_Control may set ga_exitdemo state to end this loop
+
       // decide which level to go to next
       if(gameaction == ga_secretexit)
       {
