@@ -749,8 +749,8 @@ void EraseBlock(int x, int y, int width, int height, void *destResource)
    }
    if(x + width > 320)
       width = 320 - x;
-   if(y + height > 200)
-      height = 200 - y;
+   if(y + height > 244) // CALICO: adjusted to proper bound of 244
+      height = 244 - y;
 
    if(width < 1 || height < 1)
       return;
@@ -812,8 +812,8 @@ void DrawJagobj(jagobj_t *jo, int x, int y, void *destResource)
    }
    if(x + width > 320)
       width = 320 - x;
-   if(y + height > 200)
-      height = 200 - y;
+   if(y + height > 224) // CALICO: use a corrected bound of 224 (was 200)
+      height = 224 - y;
 
    if(width < 1 || height < 1)
       return;
