@@ -29,8 +29,8 @@ detected at runtime and is not dependent on the name of the file.
 Currently only keyboard input is supported; mouse and gamepad support will be 
 added in future versions. The default controls, which can be rebound via the 
 configuration file, are as follows, when using control scheme "A":
-* 1 - 9 : Select weapon
-* 0 : Toggle automap
+* 1 - 8 : Select weapon
+* 9 : Toggle automap
 * Right Ctrl : Fire weapon
 * Right Alt : Press to use; hold to strafe
 * Right Shift : Hold to run
