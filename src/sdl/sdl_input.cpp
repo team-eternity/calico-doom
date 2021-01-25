@@ -463,15 +463,16 @@ static void SDL2_PadInit()
    // try to find the device named in the configuration file
    if(!estrempty(gamepadDevice))
    {
+      const SDL_JoystickGUID currentGUID = SDL_JoystickGetGUIDFromString(gamepadDevice);
       for(int i = 0; i < SDL_NumJoysticks(); i++)
       {
          if(SDL_IsGameController(i))
          {
-            const char *const sdlName = SDL_GameControllerNameForIndex(i);
-            if(sdlName && !strcasecmp(gamepadDevice, sdlName))
+            const SDL_JoystickGUID thisGUID = SDL_JoystickGetDeviceGUID(i);
+            if(!memcmp(&thisGUID, &currentGUID, sizeof(SDL_JoystickGUID)))
             {
-               if((pCurController = SDL_GameControllerOpen(i)))
-                  break;
+                if((pCurController = SDL_GameControllerOpen(i)))
+                    break;
             }
          }
       }
@@ -493,14 +494,14 @@ static void SDL2_PadInit()
    if(pCurController)
    {
       char *const oldGamePad = gamepadDevice;
-      const char *const newGamePad = SDL_GameControllerName(pCurController);
+      char newGUIDStr[33];
 
-      if(pCurController)
-      {
-         gamepadDevice = estrdup(newGamePad);
-         if(oldGamePad)
-            efree(oldGamePad);
-      }
+      SDL_JoystickGUID newGUID = SDL_JoystickGetGUID(SDL_GameControllerGetJoystick(pCurController));
+      SDL_JoystickGetGUIDString(newGUID, newGUIDStr, earrlen(newGUIDStr));
+
+      gamepadDevice = estrdup(newGUIDStr);
+      if(oldGamePad)
+         efree(oldGamePad);
    }
 }
 
