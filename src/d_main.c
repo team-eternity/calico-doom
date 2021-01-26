@@ -26,6 +26,7 @@ int *demo_p, *demobuffer;
 
 int     warpdest  = 0;         // CALICO: allow -warp, -skill
 int     warpskill = sk_medium;
+boolean fastparm   = false;    // CALICO: allow -fast
 boolean nomonsters = false;    // CALICO: allow -nomonsters
 
 /*============================================================================ */
@@ -583,8 +584,8 @@ static void D_CheckGameArguments(void)
       }
    }
 
-   // -nomonsters
-   nomonsters = M_FindArgument("-nomonsters");
+   fastparm   = M_FindArgument("-fast");       // -fast
+   nomonsters = M_FindArgument("-nomonsters"); // -nomonsters   
 }
 
 //============================================================================-

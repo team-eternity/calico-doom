@@ -319,7 +319,7 @@ void G_InitNew(skill_t skill, int map, gametype_t gametype)
 
    gametic = 0; 
 
-   if(skill == sk_nightmare)
+   if(fastparm || skill == sk_nightmare) // CALICO: allow -fast
    { 
       states[S_SARG_ATK1].tics = 2;
       states[S_SARG_ATK2].tics = 2;

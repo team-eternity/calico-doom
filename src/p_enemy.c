@@ -450,11 +450,11 @@ void A_Chase(mobj_t *actor)
    }
 
    // check for missile attack
-   if((gameskill == sk_nightmare || !actor->movecount) && actor->info->missilestate && 
+   if((gameskill == sk_nightmare || fastparm || !actor->movecount) && actor->info->missilestate && 
       P_CheckMissileRange(actor))
    {
       P_SetMobjState(actor, actor->info->missilestate);
-      if(gameskill != sk_nightmare)
+      if(gameskill != sk_nightmare && !fastparm) // CALICO: allow -fast
          actor->flags |= MF_JUSTATTACKED;
       return;
    }
