@@ -213,7 +213,7 @@ void S_StartSound(mobj_t *origin, int sound_id)
          break;
       }
 
-      if(!hal_sound.isSamplePlaying(channel->handle))
+      if(!channel->sfx || !hal_sound.isSamplePlaying(channel->handle))
       {
          newchannel = channel;    // this is a dead channel, ok to reuse
          break;
@@ -227,7 +227,7 @@ void S_StartSound(mobj_t *origin, int sound_id)
    {
       for(channel = sfxchannels, i = 0; i < SFXCHANNELS; i++, channel++)
       {
-         if(channel->sfx->priority >= sfx->priority)
+         if(channel->sfx && channel->sfx->priority >= sfx->priority)
          {
             hal_sound.stopSound(channel->handle);
             newchannel = channel;
