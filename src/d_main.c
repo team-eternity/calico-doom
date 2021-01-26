@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+#include "elib/elib.h"
 #include "elib/m_argv.h"
 #include "hal/hal_input.h"
 #include "hal/hal_timer.h"
@@ -22,6 +23,9 @@ int       maxlevel;      /* highest level selectable in menu (1-25) */
 jagobj_t *backgroundpic;
 
 int *demo_p, *demobuffer;
+
+int warpdest  = 0;         // CALICO: allow -warp
+int warpskill = sk_medium;
 
 /*============================================================================ */
 
@@ -478,9 +482,17 @@ void RunTitle(void)
 {
    int exit;
 
-   exit = MiniLoop(START_Title, STOP_Title, TIC_Abortable, DRAW_Title);
-   if(exit == ga_exitdemo)
+   // CALICO: check for warp; go straight to menu state
+   if(warpdest != 0)
+   {
       RunMenu();
+   }
+   else
+   {
+      exit = MiniLoop(START_Title, STOP_Title, TIC_Abortable, DRAW_Title);
+      if(exit == ga_exitdemo)
+         RunMenu();
+   }
 }
 
 void RunCredits(void)
@@ -504,22 +516,70 @@ void RunDemo(char *demoname)
       RunMenu();
 }
 
-void RunMenu(void)
+//
+// CALICO: Separated from RunMenu for -warp support
+//
+static void RunGame(void)
 {
-reselect:
-   MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);
-   if(starttype != gt_single)
-   {
-      I_NetSetup();
-      if(starttype == gt_single)
-         goto reselect; /* aborted net startup */
-   }
-
    G_OptionsNewGame(); // CALICO: reload game options from config
    G_InitNew(startskill, startmap, starttype);
    G_RunGame();
-   if(g_allowexit && gameaction == ga_exitdemo)
-       goto reselect; // haleyjd: CALICO
+}
+
+void RunMenu(void)
+{
+   // CALICO: check for -warp
+   if(warpdest != 0)
+   {
+      startmap   = warpdest;
+      startskill = warpskill;
+      starttype  = gt_single;
+      warpdest   = 0; // one-time only
+      RunGame();
+      // if game returns, go on to the menu
+   }
+
+   while(1)
+   {
+      MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);
+      if(starttype != gt_single)
+      {
+         I_NetSetup();
+         if(starttype == gt_single)
+            continue; /* aborted net startup */
+      }
+
+      RunGame();
+
+      // haleyjd: CALICO: loop should run again if player exited to main menu
+      if(!(g_allowexit && gameaction == ga_exitdemo))
+         break;
+   }
+}
+
+//
+// CALICO: Allow -warp parameter
+//
+static void D_CheckWarpArg(void)
+{
+   int warparg;
+   if((warparg = M_GetArgParameters("-warp", 1)) != 0)
+   {
+      warpdest = atoi(myargv[warparg]);
+      if(warpdest < 1)
+         warpdest = 1;
+      else if(warpdest > 25)
+         warpdest = 25;
+
+      if((warparg = M_GetArgParameters("-skill", 1)) != 0)
+      {
+         warpskill = atoi(myargv[warparg]);
+         if(warpskill < sk_easy)
+            warpskill = sk_easy;
+         else if(warpskill > sk_nightmare)
+            warpskill = sk_nightmare;
+      }
+   }
 }
 
 //============================================================================-
@@ -551,6 +611,9 @@ void D_DoomMain(void)
    S_Init();
    ST_Init();
    O_Init();
+
+   // CALICO: check for -warp
+   D_CheckWarpArg();
 
    //==========================================================================
 
