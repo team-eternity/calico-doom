@@ -32,8 +32,11 @@
 
 #include "../elib/elib.h"
 #include "../elib/configfile.h"
+#include "../elib/m_argv.h"
+#include "../elib/misc.h"
 #include "../hal/hal_types.h"
 #include "../hal/hal_input.h"
+#include "../hal/hal_ml.h"
 #include "../hal/hal_platform.h"
 #include "../hal/hal_video.h"
 #include "../rb/rb_draw.h"
@@ -62,7 +65,58 @@ VALLOCATION(defaultshader)
 }
 
 //
-// Load the default shaders
+// Allow specification of the folder path from which to get shaders
+//
+static qstring GetShaderPath()
+{
+    int shaderarg;
+    if((shaderarg = M_GetArgParameters("-shaderpath", 1)) != 0)
+        return qstring(myargv[shaderarg]);
+    else
+        return qstring(hal_medialayer.getBaseDirectory()) / "shaders";
+}
+
+//
+// Get a user-specified shader file name, or use the default.
+//
+static qstring GetShaderName()
+{
+    int shaderarg;
+    if((shaderarg = M_GetArgParameters("-shader", 1)) != 0)
+        return qstring(myargv[shaderarg]);
+    else
+        return qstring("default");
+}
+
+//
+// Get proper file extension for the specified type of shader
+//
+static inline constexpr const char *ExtForShaderType(const rbShader::type_e type)
+{
+    return (type == rbShader::TYPE_FRAGMENT) ? ".frag" : ".vert";
+}
+
+//
+// Figure out the path and name of a shader file to use with possible
+// customization by the user. If a .vert or .frag file isn't found with
+// the given name, the default will be tried instead.
+//
+static qstring GetShaderFile(rbShader::type_e type)
+{
+    const qstring     path = GetShaderPath();
+    const qstring     name = GetShaderName();
+    const char *const ext  = ExtForShaderType(type);
+
+    qstring fullfn = path / (name + ext);
+
+    if(!hal_platform.fileExists(fullfn.constPtr()))
+        fullfn = path / (qstring("default") + ext);
+
+    return fullfn;
+}
+
+//
+// Load shaders
 //
 static void GL4_LoadDefaultShaders()
 {
@@ -72,11 +126,14 @@ static void GL4_LoadDefaultShaders()
     rbShader frg { rbShader::TYPE_FRAGMENT };
     rbShader vtx { rbShader::TYPE_VERTEX   };
 
+    const qstring fragShaderName = GetShaderFile(rbShader::TYPE_FRAGMENT);
+    const qstring vertShaderName = GetShaderFile(rbShader::TYPE_VERTEX);
+
     // load shaders
-    if(!frg.loadFromFile("./default.frag"))
-        hal_platform.fatalError("Could not load or compile default fragment shader");
-    if(!vtx.loadFromFile("./default.vert"))
-        hal_platform.fatalError("Could not load or compile default vertex shader");
+    if(!frg.loadFromFile(fragShaderName.constPtr()))
+        hal_platform.fatalError("Could not load or compile fragment shader %s", fragShaderName.constPtr());
+    if(!vtx.loadFromFile(vertShaderName.constPtr()))
+        hal_platform.fatalError("Could not load or compile vertex shader %s", vertShaderName.constPtr());
 
     // create program
     defaultshader.createProgram();
@@ -143,7 +200,7 @@ static void GL4_ExecuteDrawCommand(int gx, int gy, unsigned int gw, unsigned int
     if(modelMatrixLoc < 0)
         modelMatrixLoc = defaultshader.getUniformLocation("modelMatrix");
     if(modelMatrixLoc >= 0)
-        defaultshader.UniformMatrix4fv(modelMatrixLoc, 1, false, &modelMatrix[0][0]);
+        rbProgram::UniformMatrix4fv(modelMatrixLoc, 1, false, &modelMatrix[0][0]);
 
     tx.bind();
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

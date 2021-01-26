@@ -30,6 +30,7 @@
 
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #include "../elib/elib.h"
 #include "../elib/misc.h"
@@ -128,6 +129,15 @@ static FILE *POSIX_FileOpen(const char *path, const char *mode)
     return fopen(path, mode);
 }
 
+static hal_bool POSIX_FileExists(const char *path)
+{
+    struct stat st;
+    qstring normpath { path };
+    normpath.normalizeSlashes();
+
+    return (!stat(normpath.constPtr(), &st) && !S_ISDIR(st.st_mode));
+}
+
 //
 // Populate the HAL platform interface with POSIX implementation function pointers
 //
@@ -138,6 +148,7 @@ void POSIX_InitHAL(void)
    hal_platform.fatalError  = POSIX_FatalError;
    hal_platform.setIcon     = POSIX_SetIcon;
    hal_platform.fileOpen    = POSIX_FileOpen;
+   hal_platform.fileExists  = POSIX_FileExists;
 }
 
 #endif

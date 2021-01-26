@@ -148,6 +148,25 @@ static FILE *Win32_FileOpen(const char *path, const char *mode)
 }
 
 //
+// Check if a file exists and is not a directory
+//
+static hal_bool Win32_FileExists(const char *path)
+{
+    hal_bool res = HAL_FALSE;
+    WCHAR *const wpath = UTF8ToWStr(path);
+
+    DWORD attribs;
+    if((attribs = GetFileAttributesW(wpath)) != INVALID_FILE_ATTRIBUTES)
+    {
+        if(!(attribs & FILE_ATTRIBUTE_DIRECTORY))
+            res = HAL_TRUE;
+    }
+
+    efree(wpath);
+    return res;
+}
+
+//
 // Populate the HAL platform interface with Win32 implementation function pointers
 //
 void Win32_InitHAL(void)
@@ -157,6 +176,7 @@ void Win32_InitHAL(void)
    hal_platform.fatalError  = Win32_FatalError;
    hal_platform.setIcon     = Win32_SetIcon;
    hal_platform.fileOpen    = Win32_FileOpen;
+   hal_platform.fileExists  = Win32_FileExists;
 }
 
 #endif

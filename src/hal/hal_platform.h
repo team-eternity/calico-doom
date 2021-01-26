@@ -30,6 +30,7 @@
 #define HAL_PLATFORM_H__
 
 #include <stdio.h>
+#include "hal_types.h"
 
 typedef struct hal_platform_s
 {
@@ -38,6 +39,7 @@ typedef struct hal_platform_s
    void        (*fatalError)(const char *msg, ...);
    void        (*setIcon)(void);
    FILE       *(*fileOpen)(const char *path, const char *mode);
+   hal_bool    (*fileExists)(const char *path);
 } hal_platform_t;
 
 #ifdef __cplusplus
