@@ -793,6 +793,8 @@ extern int maxlevel; // highest level selectable in menu (1-25)
 extern int gamevbls;    // may not really be vbls in multiplayer
 extern int vblsinframe; // range from 4 to 8
 
+extern boolean nomonsters; // CALICO: -nomonsters support
+
 void I_DrawSbar(void);
 void S_StartSong(int music_id, int looping);
 void S_StopSong(void);

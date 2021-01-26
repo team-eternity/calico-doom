@@ -312,6 +312,10 @@ void P_SpawnMapThing(mapthing_t *mthing)
    // don't spawn keycards and players in deathmatch
    if(netgame == gt_deathmatch && mobjinfo[i].flags & (MF_NOTDMATCH|MF_COUNTKILL))
       return;
+
+   // CALICO: check for -nomonsters
+   if(nomonsters && mobjinfo[i].flags & MF_COUNTKILL)
+       return;
 	
    // spawn it
 

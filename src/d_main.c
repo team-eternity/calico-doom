@@ -24,8 +24,9 @@ jagobj_t *backgroundpic;
 
 int *demo_p, *demobuffer;
 
-int warpdest  = 0;         // CALICO: allow -warp
-int warpskill = sk_medium;
+int     warpdest  = 0;         // CALICO: allow -warp, -skill
+int     warpskill = sk_medium;
+boolean nomonsters = false;    // CALICO: allow -nomonsters
 
 /*============================================================================ */
 
@@ -558,11 +559,12 @@ void RunMenu(void)
 }
 
 //
-// CALICO: Allow -warp parameter
+// Check for gameplay-affecting command-line arguments
 //
-static void D_CheckWarpArg(void)
+static void D_CheckGameArguments(void)
 {
-   int warparg;
+   // -warp, -skill
+   int warparg, skillarg;
    if((warparg = M_GetArgParameters("-warp", 1)) != 0)
    {
       warpdest = atoi(myargv[warparg]);
@@ -571,15 +573,18 @@ static void D_CheckWarpArg(void)
       else if(warpdest > 25)
          warpdest = 25;
 
-      if((warparg = M_GetArgParameters("-skill", 1)) != 0)
+      if((skillarg = M_GetArgParameters("-skill", 1)) != 0)
       {
-         warpskill = atoi(myargv[warparg]);
-         if(warpskill < sk_easy)
-            warpskill = sk_easy;
+         warpskill = atoi(myargv[skillarg]) - 1; // user view of skill is 1 to 5
+         if(warpskill < sk_baby)
+            warpskill = sk_baby;
          else if(warpskill > sk_nightmare)
             warpskill = sk_nightmare;
       }
    }
+
+   // -nomonsters
+   nomonsters = M_FindArgument("-nomonsters");
 }
 
 //============================================================================-
@@ -613,7 +618,7 @@ void D_DoomMain(void)
    O_Init();
 
    // CALICO: check for -warp
-   D_CheckWarpArg();
+   D_CheckGameArguments();
 
    //==========================================================================
 
