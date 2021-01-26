@@ -43,6 +43,8 @@ private:
    bool isLocal() const { return (buffer == local); }
    void unLocalize(size_t pSize);
 
+   void moveFrom(qstring &&other) noexcept;
+
 public:
    static const size_t npos;
    static const size_t basesize;
@@ -206,6 +208,7 @@ public:
    const char *findSubStr(const char *substr) const;
    const char *findSubStrNoCase(const char *substr) const;
    size_t find(const char *s, size_t pos = 0) const;
+   bool endsWith(char c) const;
 
    // Stripping and Truncation
    qstring &lstrip(char c);
@@ -224,14 +227,31 @@ public:
    bool     operator != (const char    *other) const;
    qstring &operator  = (const qstring &other);
    qstring &operator  = (const char    *other);
+   qstring &operator  = (qstring &&other);
    qstring &operator += (const qstring &other);
    qstring &operator += (const char    *other);
    qstring &operator += (char  ch);
+   qstring  operator +  (const qstring &other) const;
+   qstring  operator +  (const char    *other) const;
    qstring &operator << (const qstring &other);
    qstring &operator << (const char    *other);
    qstring &operator << (char   ch);
    qstring &operator << (int    i);
    qstring &operator << (double d);
+   qstring  operator /  (const qstring &other) const;
+   qstring  operator /  (const char    *other) const;
+   qstring &operator /= (const qstring &other);
+   qstring &operator /= (const char    *other);
+
+   friend qstring operator + (const char *a, const qstring &b)
+   {
+       return qstring(a).concat(b);
+   }
+
+   friend qstring operator / (const char *a, const qstring &b)
+   {
+       return qstring(a).pathConcatenate(b);
+   }
    
    char       &operator [] (size_t idx);
    const char &operator [] (size_t idx) const;
