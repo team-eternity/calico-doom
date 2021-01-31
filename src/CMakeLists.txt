@@ -15,7 +15,6 @@ set(CALICO_SOURCES
                     jagpad.h
     j_eeprom.c
                     keywords.h
-    m_argv.c        m_argv.h
     m_main.c
                     music.h
     o_main.c
@@ -76,6 +75,7 @@ set(ELIB_SOURCES
                         elib/dllist.h
                         elib/elib.h
                         elib/m_ctype.h
+    elib/m_argv.c       elib/m_argv.h
     elib/misc.cpp       elib/misc.h
     elib/parser.cpp     elib/parser.h
     elib/qstring.cpp    elib/qstring.h

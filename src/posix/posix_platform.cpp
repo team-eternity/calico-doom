@@ -135,7 +135,9 @@ static hal_bool POSIX_FileExists(const char *path)
     qstring normpath { path };
     normpath.normalizeSlashes();
 
-    return (!stat(normpath.constPtr(), &st) && !S_ISDIR(st.st_mode));
+    if (!stat(normpath.constPtr(), &st) && !S_ISDIR(st.st_mode))
+        return HAL_TRUE;
+    return HAL_FALSE;
 }
 
 //
