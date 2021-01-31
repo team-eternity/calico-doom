@@ -158,7 +158,6 @@
     <ClCompile Include="..\src\elib\qstring.cpp" />
     <ClCompile Include="..\src\elib\zone.cpp" />
     <ClCompile Include="..\src\f_main.c" />
-    <ClCompile Include="..\src\gl4\gl4_buffers.cpp" />
     <ClCompile Include="..\src\gl4\gl4_render.cpp" />
     <ClCompile Include="..\src\gl\gl_drawcmd.cpp" />
     <ClCompile Include="..\src\gl\gl_framebuffer.cpp" />
@@ -259,7 +258,6 @@
     <ClInclude Include="..\src\elib\qstring.h" />
     <ClInclude Include="..\src\elib\swap.h" />
     <ClInclude Include="..\src\elib\zone.h" />
-    <ClInclude Include="..\src\gl4\gl4_buffers.h" />
     <ClInclude Include="..\src\gl4\gl4_render.h" />
     <ClInclude Include="..\src\glm-0.9.9.6\glm\common.hpp" />
     <ClInclude Include="..\src\glm-0.9.9.6\glm\exponential.hpp" />

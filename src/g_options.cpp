@@ -30,31 +30,38 @@
 #include "elib/configfile.h"
 #include "g_options.h"
 
-extern "C"
+extern "C" {
+
+struct gamesettings_t gGameSettings; // current settings
+
+// defaults in config file
+struct gamesettings_t gDefaultSettings = 
 {
-   struct gamesettings_t gGameSettings;    // current settings
-   struct gamesettings_t gDefaultSettings; // defaults in config file
+    1, // autorun
+};
 
-   struct gamesettings_t gDemoSettings =   // settings for running the built-in demos
-   {
-      0, // autorun
-   };
+// settings for running the built-in demos
+struct gamesettings_t gDemoSettings =
+{
+    0, // autorun
+};
 
-   void G_OptionsNewGame(void)
-   {
-      // restore defaults from config
-      gGameSettings = gDefaultSettings;
-   }
-
-   void G_OptionsStartDemo(void)
-   {
-      // set the proper settings for demo playback
-      gGameSettings = gDemoSettings;
-   }
-
-   // other settings (not sync-critical)
-   int g_allowexit = 1;
+void G_OptionsNewGame(void)
+{
+    // restore defaults from config
+    gGameSettings = gDefaultSettings;
 }
+
+void G_OptionsStartDemo(void)
+{
+    // set the proper settings for demo playback
+    gGameSettings = gDemoSettings;
+}
+
+// other settings (not sync-critical)
+int g_allowexit = 1;
+
+} // end extern "C"
 
 static cfgrange_t<int> boolRange = { 0, 1 };
 

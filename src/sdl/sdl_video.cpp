@@ -75,7 +75,7 @@ static int monitornum      = 0;
 static hal_aspect_t aspect = HAL_ASPECT_NOMINAL;
 static int aspectNum       = 4;
 static int aspectDenom     = 3;
-static int renderer        = RENDERER_GL1_1;
+static int renderer        = RENDERER_GL4;
 
 static cfgrange_t<int> swRange = { 320, 32768 };
 static cfgrange_t<int> shRange = { 224, 32768 };

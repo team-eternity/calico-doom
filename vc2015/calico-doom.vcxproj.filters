@@ -314,9 +314,6 @@
     <ClCompile Include="..\src\gl\gl_drawcmd.cpp">
       <Filter>Source Files\gl</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gl4\gl4_buffers.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\elib\m_argv.c">
       <Filter>Source Files\elib</Filter>
     </ClCompile>
@@ -582,9 +579,6 @@
     </ClInclude>
     <ClInclude Include="..\src\gl\gl_drawcmd.h">
       <Filter>Source Files\gl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\gl4\gl4_buffers.h">
-      <Filter>Source Files\gl4</Filter>
     </ClInclude>
     <ClInclude Include="..\src\elib\m_argv.h">
       <Filter>Source Files\elib</Filter>

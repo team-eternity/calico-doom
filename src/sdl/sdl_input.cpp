@@ -222,14 +222,17 @@ static char *kbJoyKeyJagNames[KBJK_MAX] =
    "speed"
 };
 
+// config settings
 static char *kbKeyNames[KBJK_MAX];
+
+// default bindings
 static SDL_Keycode kbKeyCodes[KBJK_MAX] =
 {
-   SDLK_RSHIFT,
-   SDLK_RCTRL,
-   SDLK_RALT,
-   SDLK_UP,
-   SDLK_DOWN,
+   SDLK_UNKNOWN,
+   SDLK_UNKNOWN,
+   SDLK_UNKNOWN,
+   SDLK_w,
+   SDLK_s,
    SDLK_LEFT,
    SDLK_RIGHT,
    SDLK_ESCAPE,
@@ -245,15 +248,15 @@ static SDL_Keycode kbKeyCodes[KBJK_MAX] =
    SDLK_6,
    SDLK_7,
    SDLK_8,
-   SDLK_9,
-   SDLK_UNKNOWN,
-   SDLK_UNKNOWN,
-   SDLK_UNKNOWN,
-   SDLK_UNKNOWN,
-   SDLK_UNKNOWN,
-   SDLK_UNKNOWN,
-   SDLK_UNKNOWN,
-   SDLK_UNKNOWN
+   SDLK_TAB,
+   SDLK_RALT,
+   SDLK_a,
+   SDLK_d,
+   SDLK_SPACE,
+   SDLK_LEFTBRACKET,
+   SDLK_RIGHTBRACKET,
+   SDLK_RCTRL,
+   SDLK_LSHIFT
 };
 static bool kbKeyDown[KBJK_MAX];
 static int kbKeyToJagButton[KBJK_MAX] =
@@ -381,13 +384,13 @@ enum gptriggeraction_e
    GPT_MAX
 };
 
-static bool  useGamepad;
+static bool  useGamepad = true;
 static char *gamepadDevice;
 static bool  gamepadInvertY;
 static int   gamepadThreshold = 8000;
 static int   gamepadTriggerThreshold = 3000;
-static int   gamepadLTriggerAction = GPT_ATTACK;
-static int   gamepadRTriggerAction = GPT_NONE;
+static int   gamepadLTriggerAction = GPT_NONE;
+static int   gamepadRTriggerAction = GPT_ATTACK;
 
 static cfgrange_t<int> triggerRange = { GPT_NONE, GPT_MAX - 1 };
 
