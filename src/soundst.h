@@ -1,5 +1,5 @@
 #ifndef SOUNDST_H__
-#define SOUNTST_H__
+#define SOUNDST_H__
 
 /* newsfx.h */
 

@@ -61,8 +61,8 @@ void S_Init(void)
    int instnum;
 
    // CALICO: options to turn off sound or music
-   nosfx   = M_FindArgument("-nosfx"  );
-   nomusic = M_FindArgument("-nomusic");
+   nosfx   = (boolean)(M_FindArgument("-nosfx"  ));
+   nomusic = (boolean)(M_FindArgument("-nomusic"));
 
    // CALICO: initialize low-level sound API
    if(!nosfx || !nomusic)
@@ -246,7 +246,7 @@ void S_StartSound(mobj_t *origin, int sound_id)
    newchannel->origin    = origin;
    newchannel->startquad = finalquad;
    newchannel->stopquad  = finalquad + (sfx->md_data->samples / 4);
-   newchannel->source    = (int *)&sfx->md_data->data;
+   newchannel->source    = (unsigned int *)&sfx->md_data->data;
    newchannel->volume    = vol * (short)sfxvolume;
 
    // CALICO: start sound through HAL

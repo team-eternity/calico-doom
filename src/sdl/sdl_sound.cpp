@@ -321,11 +321,11 @@ static void do_3band(const float *stream, const float *const end, T *dest)
 
       // Return result
       // haleyjd: use rational_tanh for soft clipping
-      if /*constexpr*/(std::is_same_v<T, Sint16>)
+      if /*constexpr*/(std::is_same<T, Sint16>::value)
          *dest = static_cast<T>(rational_tanh(l + m + h) * 32767.0);
-      else if /*constexpr*/(std::is_same_v<T, float>)
+      else if /*constexpr*/(std::is_same<T, float>::value)
          *dest = static_cast<T>(rational_tanh(l + m + h));
-      static_assert(std::is_same_v<T, Sint16> || std::is_same_v<T, float>,
+      static_assert(std::is_same<T, Sint16>::value || std::is_same<T, float>::value,
                     "do_3band called with incompatible template parameter");
       dest++;
    }
@@ -359,17 +359,17 @@ static void inline I_SDLConvertSoundBuffer(Uint8 *stream, int len)
    float *bptr0 = mixbuffer;
    while(leftout != leftend)
    {
-      if /*constexpr*/(std::is_same_v<T, Sint16>)
+      if /*constexpr*/(std::is_same<T, Sint16>::value)
       {
          *(bptr0 + 0) = static_cast<float>(*(leftout + 0)) * (1.0f / 32768.0f); // L
          *(bptr0 + 1) = static_cast<float>(*(leftout + 1)) * (1.0f / 32768.0f); // R
       }
-      else if /*constexpr*/(std::is_same_v<T, float>)
+      else if /*constexpr*/(std::is_same<T, float>::value)
       {
          *(bptr0 + 0) = *(leftout + 0); // L
          *(bptr0 + 1) = *(leftout + 1); // R
       }
-      static_assert(std::is_same_v<T, Sint16> || std::is_same_v<T, float>,
+      static_assert(std::is_same<T, Sint16>::value || std::is_same<T, float>::value,
                     "I_SDLConvertSoundBuffer called with incompatible template parameter");
 
       leftout += step;

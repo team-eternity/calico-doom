@@ -30,7 +30,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "elib/elib.h"
 #include "elib/m_argv.h"
+#include "elib/misc.h"
+#include "hal/hal_ml.h"
 #include "hal/hal_platform.h"
 #include "keywords.h"
 #include "w_iwad.h"
@@ -61,7 +64,10 @@ static FILE *W_checkForIWADArg(void)
 //
 static FILE *W_haveJagDoomWAD(void)
 {
-   return hal_platform.fileOpen("jagdoom.wad", "rb");
+    char *const fullpath = M_SafeFilePath(hal_medialayer.getBaseDirectory(), "jagdoom.wad");
+    FILE *const f = hal_platform.fileOpen(fullpath, "rb");
+    efree(fullpath);
+    return f;
 }
 
 //
@@ -69,7 +75,10 @@ static FILE *W_haveJagDoomWAD(void)
 //
 static FILE *W_haveJagDoomROM(void)
 {
-   return hal_platform.fileOpen("doom.jag", "rb");
+    char *const fullpath = M_SafeFilePath(hal_medialayer.getBaseDirectory(), "doom.jag");
+    FILE *const f = hal_platform.fileOpen(fullpath, "rb");
+    efree(fullpath);
+    return f;
 }
 
 //

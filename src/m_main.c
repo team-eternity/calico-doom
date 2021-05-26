@@ -37,13 +37,13 @@ jagobj_t *nums[10];
 jagobj_t *m_skill[5];
 jagobj_t *m_playmode[NUMMODES];
 
-int cursorframe, cursorcount;
-int movecount;
-int playermap;
+extern int cursorframe, cursorcount;
+extern int movecount;
+int        playermap;
 
-playmode_t currentplaymode;
-menu_t     cursorpos;
-skill_t    playerskill;
+playmode_t    currentplaymode;
+extern menu_t cursorpos;
+skill_t       playerskill;
 
 void M_Start(void)
 {
@@ -106,10 +106,10 @@ int M_Ticker(void)
    // CALICO: added extra custom input actions
    if(ticon > 10 && (buttons & (JP_A|JP_B|JP_C|JP_ATTACK|JP_USE|JP_STRAFE|JP_SPEED)) && !onquit)
    {
-      startmap   = playermap;       // set map number
-      startskill = playerskill;     // set skill level
-      starttype  = currentplaymode; // set play type
-      return 1;                     // done with menu
+      startmap   = playermap;                     // set map number
+      startskill = playerskill;                   // set skill level
+      starttype  = (gametype_t)(currentplaymode); // set play type
+      return 1; // done with menu
    }
 
    // animate skull

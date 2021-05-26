@@ -85,7 +85,7 @@
 
 // Types
 typedef uint8_t byte;
-typedef int32_t fixed_t;
+typedef int32_t efixed_t;
 
 // Fixed-point defines
 #define FRACBITS 16

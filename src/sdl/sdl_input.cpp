@@ -189,7 +189,7 @@ enum kbjoykeys_e
    KBJK_MAX
 };
 
-static char *kbJoyKeyJagNames[KBJK_MAX] =
+static const char *kbJoyKeyJagNames[KBJK_MAX] =
 {
    "a",
    "b",

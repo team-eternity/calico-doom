@@ -87,7 +87,7 @@ jagobj_t *i_secret, *i_percent, *i_level, *i_kills, *i_items, *i_finish,
 
 jagobj_t *snums[10];
 jagobj_t *infaces[10];
-jagobj_t *uchar[52];
+extern jagobj_t *uchar[52];
 
 //
 // Lame-o print routine

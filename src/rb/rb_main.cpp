@@ -260,6 +260,9 @@ void RB_SetBlend(rbSrcBlend_e src, rbDstBlend_e dest)
    case RB_GLSRC_ALPHA_SATURATE:
       glSrc = GL_SRC_ALPHA_SATURATE;
       break;
+
+   default:
+       break;
    }
 
    switch(dest) 
@@ -295,6 +298,9 @@ void RB_SetBlend(rbSrcBlend_e src, rbDstBlend_e dest)
    case RB_GLDST_ONE_MINUS_DST_ALPHA:
       glDst = GL_ONE_MINUS_DST_ALPHA;
       break;
+
+   default:
+       break;
    }
 
    glBlendFunc(glSrc, glDst);

@@ -584,8 +584,8 @@ static void D_CheckGameArguments(void)
       }
    }
 
-   fastparm   = M_FindArgument("-fast");       // -fast
-   nomonsters = M_FindArgument("-nomonsters"); // -nomonsters   
+   fastparm   = (boolean)(M_FindArgument("-fast"));       // -fast
+   nomonsters = (boolean)(M_FindArgument("-nomonsters")); // -nomonsters   
 }
 
 //============================================================================-
