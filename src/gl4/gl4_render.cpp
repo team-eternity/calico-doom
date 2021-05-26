@@ -166,7 +166,7 @@ static float vertices_xy_uv[4 * 2] =
 
 static rbVAO vao;
 static rbVBO vertexVBO;
-static int modelMatrixLoc;
+static int modelMatrixLoc = -1;
 
 VALLOCATION(vao)
 {
