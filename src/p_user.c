@@ -298,7 +298,7 @@ void P_BuildMove(player_t *player)
       player->forwardmove = -forwardmove[speed];
 
    // CALICO: allow mouse input
-   if (!demoplayback) // Eric194: disables mouse movement while running a demo.
+   if (!demoplayback) // Erick194: disables mouse movement while running a demo.
    {
        hal_input.getMouseMotion(&mousex, &mousey);
        if (strafe)
