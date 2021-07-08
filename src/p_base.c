@@ -454,6 +454,9 @@ void P_ZMovement(mobj_t *mo)
 //
 void P_MobjThinker(mobj_t *mobj)
 {
+   state_t* st;
+   statenum_t state;
+
    // momentum movement
    if(mobj->momx || mobj->momy)
       P_XYMovement(mobj);
@@ -477,8 +480,23 @@ void P_MobjThinker(mobj_t *mobj)
       // you can cycle through multiple states in a tic
       if(!mobj->tics)
       {
-         if(mobj->state)
-            P_SetMobjState(mobj, mobj->state->nextstate);
+          //if (mobj->state)
+          //    P_SetMobjState(mobj, mobj->state->nextstate);
+
+          state = mobj->state->nextstate;
+          if (state == S_NULL) {
+              mobj->latecall = P_RemoveMobj;
+          }
+          else
+          {
+              st = &states[state];
+
+              mobj->state = st;
+              mobj->tics = st->tics;
+              mobj->sprite = st->sprite;
+              mobj->frame = st->frame;
+              mobj->latecall = st->action;
+          }
       }
    }
 }
@@ -544,11 +562,12 @@ void P_RunMobjBase2()
       if(currentmobj->latecall == P_RemoveMobjDeferred)
          continue; // CALICO: not if about to be removed.
 
-      // clear any latecall from the previous frame
-      currentmobj->latecall = NULL;
+      if (!currentmobj->player) {
+          // clear any latecall from the previous frame
+          currentmobj->latecall = NULL;
 
-      if(!currentmobj->player)
-         P_MobjThinker(currentmobj);
+          P_MobjThinker(currentmobj);
+      }
    }
 }
 

@@ -298,11 +298,14 @@ void P_BuildMove(player_t *player)
       player->forwardmove = -forwardmove[speed];
 
    // CALICO: allow mouse input
-   hal_input.getMouseMotion(&mousex, &mousey);
-   if(strafe)
-       player->sidemove += mousex * 96;
-   else
-       player->angleturn -= mousex * 0x10000;
+   if (!demoplayback) // Erick194: disables mouse movement while running a demo.
+   {
+       hal_input.getMouseMotion(&mousex, &mousey);
+       if (strafe)
+           player->sidemove += mousex * 96;
+       else
+           player->angleturn -= mousex * 0x10000;
+   }
 
    //
    // if slowed down to a stop, change to a standing frame
