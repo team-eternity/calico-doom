@@ -6,6 +6,7 @@
 #include "elib/m_argv.h"
 #include "hal/hal_input.h"
 #include "hal/hal_timer.h"
+#include "hal/hal_sfx.h" // CALICO
 #include "doomdef.h"
 #include "g_options.h"
  
@@ -620,6 +621,7 @@ void D_DoomMain(void)
 
    // CALICO: check for -warp
    D_CheckGameArguments();
+   hal_sound.setMasterVolume(sfxvolume, g_allowmusicvolume ? musicvolume : sfxvolume); // CALICO
 
    //==========================================================================
 

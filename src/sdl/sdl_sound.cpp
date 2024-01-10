@@ -36,14 +36,24 @@
 
 #include "sdl_sound.h"
 
+#include "../hal/hal_timer.h"
+#include "sdl_timer.h"
+
 #include "../hal/hal_platform.h"
 #include "../elib/elib.h"
 #include "../elib/atexit.h"
 #include "../elib/compare.h"
 #include "../elib/configfile.h"
+#include "../s_soundfmt.h"
 
 // CALICO-TODO: allow more sound channels as an option?
-#define MAXCHANNELS 4
+#define MAXCHANNELS 20//4
+
+typedef enum sfx_type_e
+{
+    SFX_SND,
+    SFX_MUS
+} sfx_type;
 
 // channel structure
 struct channelinfo_t
@@ -55,8 +65,10 @@ struct channelinfo_t
    float        *enddata;            // end of sample
    float         leftvol, rightvol;  // stereo volume levels
    bool          loop;               // looping?
+   int           loopoffset;         // loop offset
    SDL_sem      *sem;                // semaphore
    bool          shouldstop;         // flagged to stop by game engine
+   sfx_type      sfxtype;             // "SFX_SND" sound sfx or "SFX_MUS" music sfx
 };
 
 // sound channels
@@ -75,6 +87,34 @@ bool float_samples = false;
 // MaxW: 2019/08/24: Audiospec we actually got
 SDL_AudioSpec audio_spec = {};
 
+// Erick194: Master volume for sound and music.
+static float sfxVolume = 1.0;
+static float musVolume = 1.0;
+
+// music 
+#define MAXMUSICSAMPLES 256
+struct musicsampleinfo_t
+{
+    float* data;            // data location
+    size_t len;             // num numsamples
+    size_t loopoffset;      // loop offset
+    hal_bool loop;          // looping?
+};
+
+static musicsampleinfo_t instSample[MAXMUSICSAMPLES];
+
+static int            musicbasetime;  
+static int            musictime;      // internal music time, follows samplecount
+static int            next_eventtime; // when next event will occur
+static unsigned char* music;          // pointer to current music data
+static unsigned char* music_start;    // current music start pointer
+static unsigned char* music_end;      // current music end pointer
+static unsigned char* music_memory;   // current location of cached music
+
+int samples_per_midiclock;     // multiplier for midi clocks
+
+void M_PaintMusic();
+
 //=============================================================================
 //
 // Channel Management
@@ -88,12 +128,14 @@ static bool SDL2Sfx_addSfx(float *data, size_t numsamples, int volume, bool loop
    // critical section
    if(SDL_SemWait(channels[channel].sem) == 0)
    {
+      channels[channel].sfxtype   = SFX_SND;
       channels[channel].data      = data;
       channels[channel].enddata   = data + numsamples - 1;
       channels[channel].startdata = channels[channel].data;
 
       channels[channel].stepremainder = 0;
       channels[channel].loop = loop;
+      channels[channel].loopoffset = 0;
       channels[channel].shouldstop = false;
 
       // CALICO-TODO: allow stereo separation as option?
@@ -181,8 +223,24 @@ void SDL2Sfx_StopAllChannels()
    if(!sndInit)
       return;
 
-   for(int i = 0; i < MAXCHANNELS; i++)
-      channels[i].shouldstop = true;
+   for (int i = 0; i < MAXCHANNELS; i++) {
+       if (channels[i].sfxtype == SFX_SND) {
+           channels[i].shouldstop = true;
+       }
+   }
+}
+
+
+//
+// Set master volume sfx and mus
+//
+void SDL2Sfx_SetMasterVolume(int sfxvolume, int musvolume)
+{
+    if (!sndInit)
+        return;
+
+    sfxVolume = (float)(eclamp((double)sfxvolume / 255.0, 0.0, 1.0));
+    musVolume = (float)(eclamp((double)musvolume / 255.0, 0.0, 1.0));
 }
 
 //=============================================================================
@@ -387,6 +445,10 @@ static void SDL2Sfx_updateSoundCB(void *userdata, Uint8 *stream, int len)
    // convert input samples to floating point
    I_SDLConvertSoundBuffer<T>(stream, len);
 
+   if (music != nullptr) {
+       M_PaintMusic();
+   }
+
    float *leftout = mixbuffer;
    const float *const leftend = mixbuffer + (len / sample_size);
 
@@ -408,11 +470,13 @@ static void SDL2Sfx_updateSoundCB(void *userdata, Uint8 *stream, int len)
          continue;
       }
 
+      float volume = (chan->sfxtype == SFX_SND) ? sfxVolume : musVolume;
+
       while(leftout != leftend)
       {
          float sample = *chan->data;
-         *(leftout + 0) = *(leftout + 0) + sample * chan->leftvol;
-         *(leftout + 1) = *(leftout + 1) + sample * chan->rightvol;
+         *(leftout + 0) = *(leftout + 0) + sample * chan->leftvol * volume;
+         *(leftout + 1) = *(leftout + 1) + sample * chan->rightvol * volume;
 
          // increment current pointers in stream
          leftout += step;
@@ -429,17 +493,18 @@ static void SDL2Sfx_updateSoundCB(void *userdata, Uint8 *stream, int len)
          // check if done
          if(chan->data >= chan->enddata)
          {
-            if(chan->loop) // TODO: stop looping while game is paused or minimized
-            {
-               chan->data = chan->startdata;
-               chan->stepremainder = 0;
-            }
-            else
-            {
-               // flag the channel to be stopped by the main thread ASAP
-               chan->data = nullptr;
-               break;
-            }
+             if (chan->loop) // TODO: stop looping while game is paused or minimized
+             {
+                 //chan->data = chan->startdata;
+                 chan->data = chan->enddata - chan->loopoffset;
+                 chan->stepremainder = 0;
+             }
+             else
+             {
+                 // flag the channel to be stopped by the main thread ASAP
+                 chan->data = nullptr;
+                 break;
+             }
          }
       }
 
@@ -564,6 +629,14 @@ hal_bool SDL2Sfx_MixerInit()
 
    SDL2Sfx_initChannels();
 
+   for (int i = 0; i < 256; i++)
+   {
+       instSample[i].data = nullptr;
+       instSample[i].len = 0;
+       instSample[i].loopoffset = 0;
+       instSample[i].loop = HAL_FALSE;
+   }
+
    // setup postmix
    Mix_SetPostMix(float_samples ? SDL2Sfx_updateSoundCB<float> : SDL2Sfx_updateSoundCB<Sint16>, nullptr);
 
@@ -576,6 +649,207 @@ hal_bool SDL2Sfx_MixerInit()
 int SDL2Sfx_GetSampleRate()
 {
    return audio_spec.freq;
+}
+
+static Uint32 basetime = 0;
+void SDL2Sfx_StartMusic(unsigned char* musicPtr, unsigned char* music_startPtr, unsigned char* music_endPtr)
+{
+    if (!sndInit)
+        return;
+
+    basetime = SDL_GetTicks();
+    musictime = 0;
+    next_eventtime = 0;
+    samples_per_midiclock = 0;
+    music = musicPtr;
+    music_start = music_startPtr;
+    music_end = music_endPtr;
+}
+
+void SDL2Sfx_addMusicSample(int instnum, float* data, size_t len, size_t loopoffset, hal_bool loop)
+{
+    if (!sndInit)
+        return;
+
+    if(instnum >= MAXMUSICSAMPLES)
+        return;
+
+    instSample[instnum].data = data;
+    instSample[instnum].len = len;
+    instSample[instnum].loopoffset = loopoffset;
+    instSample[instnum].loop = loop;
+}
+
+void SDL2Sfx_StopMusic(void) {
+    music = nullptr;
+    musictime = (SDL_GetTicks() - basetime);
+
+    for (int i = 10; i < MAXCHANNELS; i++) {
+        channels[i].shouldstop = true;
+    }
+}
+
+//
+// Add the effect to the already determined free channel.
+//
+static bool SDL2Sfx_addSfxMus(float* data, size_t numsamples, int volume, bool loop, int channel, unsigned int step, int sampleloopoffset)
+{
+    // critical section
+    if (SDL_SemWait(channels[channel].sem) == 0)
+    {
+        channels[channel].sfxtype = SFX_MUS;
+        channels[channel].data = data;
+        channels[channel].enddata = data + numsamples - 1;
+        channels[channel].startdata = channels[channel].data;
+
+        channels[channel].stepremainder = 0;
+        channels[channel].loop = loop;
+        channels[channel].loopoffset = sampleloopoffset;
+        channels[channel].shouldstop = false;
+
+        // CALICO-TODO: allow stereo separation as option?
+        channels[channel].leftvol = (float)(eclamp((double)volume / 191.0, 0.0, 1.0));
+        channels[channel].rightvol = channels[channel].leftvol;
+
+        channels[channel].step = step;
+
+        SDL_SemPost(channels[channel].sem);
+        return true;
+    }
+    else
+        return false;
+}
+
+void SDL2Sfx_SetChannelVolume(int handle, int volume)
+{
+    if (!sndInit || handle < 0 || handle >= MAXCHANNELS)
+        return;
+    if (SDL_SemWait(channels[handle].sem) == 0)
+    {
+        channels[handle].leftvol = (float)(eclamp((double)volume / 191.0, 0.0, 1.0));
+        channels[handle].rightvol = channels[handle].leftvol;
+        SDL_SemPost(channels[handle].sem);
+    }
+}
+
+void SDL2Sfx_SetChannelStep(int handle, unsigned int step)
+{
+    if (!sndInit || handle < 0 || handle >= MAXCHANNELS)
+        return;
+    if (SDL_SemWait(channels[handle].sem) == 0)
+    {
+        channels[handle].step = step;
+        SDL_SemPost(channels[handle].sem);
+    }
+}
+
+static int M_GetEvent() {
+    int cmd = *music++;  // Read command byte from music data
+    int numChannel = (cmd & 15) + 10;
+    channelinfo_t* ch = &channels[numChannel];  // Get channel pointer
+    cmd &= 240;  // Mask off channel ID
+
+    switch (cmd) {
+    case 48:  // Set samples per MIDI clock
+        samples_per_midiclock = music[0] << 24;
+        samples_per_midiclock += music[1] << 16;
+        samples_per_midiclock += music[2] << 8;
+        samples_per_midiclock += music[3];
+        music += 4;
+        break;
+    case 16: {  // Note on
+        int instrument = *music++;
+        int vol = (*music++ * 255); // musicvolume
+        music++; // Skip unused byte
+        int step = (music[0] << 16) + (music[1] << 8) + music[2];
+        music += 3;
+
+        // CALICO: start sound through HAL
+        musicsampleinfo_t* sampleInfo = &instSample[instrument];
+        SDL2Sfx_addSfxMus(sampleInfo->data, sampleInfo->len, vol / 255, sampleInfo->loop == HAL_TRUE, numChannel, step << 1, sampleInfo->loopoffset);
+        break;
+    }
+    case 32:  // Note off
+        ch->shouldstop = true;
+        break;
+    case 64: {  // Set volume
+        int vol = (*music++ * 255); // musicvolume
+        music++; // Skip unused byte
+        SDL2Sfx_SetChannelVolume(numChannel, vol / 255);
+        break;
+    }
+    case 80: {  // Step
+        int step = (music[0] << 16) + (music[1] << 8) + music[2];
+        music += 3;
+        SDL2Sfx_SetChannelStep(numChannel, step << 1);
+        break;
+    }
+    case 0:
+        break;
+    default:
+        return 1;
+    }
+
+    if (music == music_end) {
+        music = music_start;
+        if (music == 0) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+void M_PaintMusic() {
+    int actual_endtime;
+    int stop_time;
+    int samples;
+
+    //printf("M_PaintMusic loop\n");
+
+    //actual_endtime = samplecount + 8192; //EXTERN_BUFFER_SIZE;
+    actual_endtime = (SDL_GetTicks() - basetime);
+
+    while (musictime != actual_endtime) {
+        if (!music) {
+            break;
+        }
+        if (musictime == next_eventtime) {
+            //next_eventtime += (*music * samples_per_midiclock);
+            next_eventtime += static_cast<int>(static_cast<float>(*music * samples_per_midiclock) / 20.5);
+            music++;
+        }
+
+        if (actual_endtime < next_eventtime)
+            stop_time = actual_endtime;
+        else
+            stop_time = next_eventtime;
+
+        samples = 256;//INTERNAL_BUFFER_SIZE;
+        while (musictime != stop_time) {
+            if (stop_time - musictime < samples)
+                samples = stop_time - musictime;
+            //M_PaintUnsatSound(samples);
+            //M_WriteOutSamples(samples);
+            musictime += samples;
+        }
+
+        if (music == music_end) {
+            music = music_start;
+            if (music != 0) {
+                music++;
+            }
+            else {
+                break;
+            }
+        }
+
+        if (musictime == next_eventtime) {
+            if (M_GetEvent()) {
+                break;
+            }
+        }
+    }
 }
 
 #endif

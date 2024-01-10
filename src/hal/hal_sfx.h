@@ -47,6 +47,10 @@ typedef struct hal_sound_s
    void     (*stopAllChannels)(void);
    void     (*updateEQParams)(void);
    int      (*getSampleRate)(void);
+   void		(*setMasterVolume)(int sfxvolume, int musvolume);
+   void		(*startMusic)(unsigned char* musicPtr, unsigned char* music_startPtr, unsigned char* music_endPtr);
+   void		(*addMusicSample)(int instnum, float* data, size_t len, size_t loopoffset, hal_bool loop);
+   void		(*stopMusic)(void);
 } hal_sound_t;
 
 #ifdef __cplusplus
