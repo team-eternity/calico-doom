@@ -9,7 +9,7 @@
  
 typedef enum 
 { 
-   mus_None, 
+   //mus_None, 
    mus_e1m1,
    mus_e1m2,
    mus_e1m4,

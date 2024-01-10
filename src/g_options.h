@@ -39,6 +39,7 @@ extern "C" {
 #endif
    extern struct gamesettings_t gGameSettings;
    extern int g_allowexit;
+   extern int g_allowmusicvolume;
    void G_OptionsNewGame(void);
    void G_OptionsStartDemo(void);
 

@@ -49,6 +49,11 @@ hal_bool SDL2Sfx_IsInit(void);
 hal_bool SDL2Sfx_MixerInit(void);
 int      SDL2Sfx_GetSampleRate(void);
 
+void SDL2Sfx_SetMasterVolume(int sfxvolume, int musvolume);
+void SDL2Sfx_StartMusic(unsigned char* musicPtr, unsigned char* music_startPtr, unsigned char* music_endPtr);
+void SDL2Sfx_addMusicSample(int instnum, float* data, size_t len, size_t loopoffset, hal_bool loop);
+void SDL2Sfx_StopMusic(void);
+
 #ifdef __cplusplus
 }
 #endif

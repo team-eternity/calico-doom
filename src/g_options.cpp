@@ -60,6 +60,7 @@ void G_OptionsStartDemo(void)
 
 // other settings (not sync-critical)
 int g_allowexit = 1;
+int g_allowmusicvolume = 1;
 
 } // end extern "C"
 
@@ -67,6 +68,7 @@ static cfgrange_t<int> boolRange = { 0, 1 };
 
 static CfgItem cfgAutorun   { "g_autorun",   &gDefaultSettings.autorun, &boolRange };
 static CfgItem cfgAllowExit { "g_allowexit", &g_allowexit,              &boolRange };
+static CfgItem cfgAllowMusicVolume { "g_allowmusicvolume", &g_allowmusicvolume, &boolRange };
 
 // EOF
 

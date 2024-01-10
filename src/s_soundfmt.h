@@ -49,6 +49,8 @@ PSFXSAMPLE SfxSample_LoadFromData(const char *tag, void *data, size_t len);
 PSFXSAMPLE SfxSample_FindByTag(const char *tag);
 size_t     SfxSample_GetNumSamples(PCSFXSAMPLE sfx);
 float     *SfxSample_GetSamples(PCSFXSAMPLE sfx);
+size_t	   SfxSample_GetLoopOffset(PCSFXSAMPLE sfx);
+hal_bool   SfxSample_GetLoop(PCSFXSAMPLE sfx);
 
 #ifdef __cplusplus
 }

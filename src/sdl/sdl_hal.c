@@ -99,6 +99,13 @@ void SDL2_InitHAL(void)
    hal_sound.updateEQParams  = SDL2Sfx_UpdateEQParams;
    hal_sound.getSampleRate   = SDL2Sfx_GetSampleRate;
 
+
+   hal_sound.setMasterVolume = SDL2Sfx_SetMasterVolume;
+   // Music
+   hal_sound.startMusic = SDL2Sfx_StartMusic;
+   hal_sound.addMusicSample = SDL2Sfx_addMusicSample;
+   hal_sound.stopMusic = SDL2Sfx_StopMusic;
+
    // Timer
    hal_timer.delay     = SDL2_Delay;
    hal_timer.getTime   = SDL2_GetTime;

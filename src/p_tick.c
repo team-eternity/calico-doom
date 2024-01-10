@@ -468,11 +468,14 @@ void P_Start(void)
    players[1].automapflags = 0;
    ticremainder[0] = ticremainder[1] = 0;
    M_ClearRandom();
+
+   S_StartSong(((gamemap -1) % 10), 1);
 }
 
 void P_Stop(void)
 {
    Z_FreeTags(mainzone);
+   S_StopSong();
 }
 
 // EOF

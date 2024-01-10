@@ -29,8 +29,8 @@ sfx_t *instruments[256];       // pointers to all patches
 
 channel_t music_channels[10];  // master music channel list
 
-int            musictime;      // internal music time, follows samplecount
-int            next_eventtime; // when next event will occur
+int            musictime = 0;      // internal music time, follows samplecount
+int            next_eventtime = 0; // when next event will occur
 unsigned char *music;          // pointer to current music data
 unsigned char *music_start;    // current music start pointer
 unsigned char *music_end;      // current music end pointer
@@ -87,7 +87,7 @@ void S_Init(void)
    if(!nomusic)
    {
       D_memset(instruments, 0, sizeof(instruments));
-      lump = W_GetNumForName("inststrt"); // get available instruments[]
+      lump = W_GetNumForName("inststrt") + 1; // get available instruments[]
       end  = W_GetNumForName("instend");
       while(lump != end)
       {
@@ -98,6 +98,14 @@ void S_Init(void)
              + (lumpinfo[lump].name[0] == 'P' ? 128 : 0);
          instruments[instnum] = (sfx_t *)(W_POINTLUMPNUM(lump)); // CALICO: endianness
          // CALICO-TODO: also load as SfxSample
+         struct SfxSample* sample;
+         sample = SfxSample_LoadFromData(lumpinfo[lump].name, W_POINTLUMPNUM(lump), W_LumpLength(lump));
+
+         float* data = SfxSample_GetSamples(sample);
+         size_t len = SfxSample_GetNumSamples(sample);
+         size_t loopoffset = SfxSample_GetLoopOffset(sample);
+         hal_bool loop = SfxSample_GetLoop(sample);
+         hal_sound.addMusicSample(instnum, data, len, loopoffset, loop);
          lump++;
       }
  
@@ -247,7 +255,7 @@ void S_StartSound(mobj_t *origin, int sound_id)
    newchannel->startquad = finalquad;
    newchannel->stopquad  = finalquad + (sfx->md_data->samples / 4);
    newchannel->source    = (unsigned int *)&sfx->md_data->data;
-   newchannel->volume    = vol * (short)sfxvolume;
+   newchannel->volume    = vol * (short)255;//sfxvolume;
 
    // CALICO: start sound through HAL
    sampledata = SfxSample_GetSamples(sfx->sample);
@@ -334,6 +342,7 @@ void S_StartSong(int music_id, int looping)
    music_start  = looping ? music : 0;
    music_end    = (unsigned char *)music + BIGLONG(lumpinfo[lump].size); // CALICO: endianness
 
+   hal_sound.startMusic(music, music_start, music_end);
 }
 
 void S_StopSong(void)
@@ -341,8 +350,12 @@ void S_StopSong(void)
    if(nomusic) // CALICO
       return;
 
-   Z_Free(music_memory);
+   if (music_memory) { // CALICO Fix
+       Z_Free(music_memory);
+   }
    music = 0; // prevent the DSP from running
+
+   hal_sound.stopMusic();
    
    // CALICO: Jag-specific.
 #if 0

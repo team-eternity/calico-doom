@@ -274,7 +274,7 @@ void F_Start(void)
 
    hal_appstate.setGrabState(HAL_FALSE); // CALICO: don't grab input
 
-   S_StartSong(2, 1);
+   S_StartSong(mus_e1m2, 1);
 
    status = fin_endtext; // END TEXT PRINTS FIRST
    textprint = false;

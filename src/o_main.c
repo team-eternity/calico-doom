@@ -5,6 +5,7 @@
 #include "p_local.h"
 #include "st_main.h"
 #include "g_options.h" // CALICO
+#include "hal/hal_sfx.h" // CALICO
 
 #define MOVEWAIT   5
 #define ITEMSPACE  40
@@ -39,6 +40,7 @@ typedef enum
 typedef enum
 {
    soundvol,
+   musicvol, // CALICO:
    controls,
    mainmenu, // CALICO: only if g_allowexit is true
    NUMMENUITEMS
@@ -55,7 +57,7 @@ typedef struct
    char    name[20];
 } menuitem_t;
 
-menuitem_t menuitem[3];
+menuitem_t menuitem[NUMMENUITEMS];
  
 typedef struct
 {
@@ -139,28 +141,38 @@ void O_Init(void)
    cursorframe = 0;
    cursorpos   = 0;
 
-   D_strncpy(menuitem[0].name, "  Volume", 8); // Fixed CEF
-   menuitem[0].x = 95;
-   menuitem[0].y = !g_allowexit ? 50 : 42;
-   menuitem[0].hasslider = true;
+   D_strncpy(menuitem[soundvol].name, !g_allowmusicvolume ? "  Volume": "  Sound Volume", 16); // Fixed CEF
+   menuitem[soundvol].x = 95 - (!g_allowmusicvolume ? 0 : 40);
+   menuitem[soundvol].y = !g_allowexit ? 50 - (!g_allowmusicvolume ? 0 : 15) : 42 - (!g_allowmusicvolume ? 0 : 15);
+   menuitem[soundvol].hasslider = true;
 
-   slider[0].maxval = 16;
-   slider[0].curval = 16*sfxvolume/255;
+   slider[soundvol].maxval = 16;
+   slider[soundvol].curval = 16*(sfxvolume + 1)/255; // [GEC] Fixes a small error in the position of the slider track. "sfxvolume -> (sfxvolume + 1)"
 
-   D_strncpy(menuitem[1].name, "Controls", 8); // Fixed CEF
-   menuitem[1].x = 95;
-   menuitem[1].y = !g_allowexit ? 110 : 90;
-   menuitem[1].hasslider = false;
+   if (g_allowmusicvolume) { // CALICO: add an option music volume
+       D_strncpy(menuitem[musicvol].name, "  Music Volume", 16); // Fixed CEF
+       menuitem[musicvol].x = 95 - 32;
+       menuitem[musicvol].y = !g_allowexit ? 60 + (!g_allowmusicvolume ? 0 : 25) : 42 + (!g_allowmusicvolume ? 0 : 25);
+       menuitem[musicvol].hasslider = true;
 
-   nummenuitems = 2;
+       slider[musicvol].maxval = 16;
+       slider[musicvol].curval = 16 * (musicvolume + 1) / 255; // [GEC] Fixes a small error in the position of the slider track. "sfxvolume -> (sfxvolume + 1)"
+   }
+
+   D_strncpy(menuitem[controls].name, "Controls", 8); // Fixed CEF
+   menuitem[controls].x = 95;
+   menuitem[controls].y = !g_allowexit ? 110 + (!g_allowmusicvolume ? 0 : 20) : 90 + (!g_allowmusicvolume ? 0 : 20);
+   menuitem[controls].hasslider = false;
+
+   nummenuitems = 3;
 
    if(g_allowexit) // CALICO: add an option to return to the main menu
    {
-       D_strncpy(menuitem[2].name, "Main Menu", 9);
-       menuitem[2].x = 95;
-       menuitem[2].y = 180;
-       menuitem[2].hasslider = false;
-       nummenuitems = 3;
+       D_strncpy(menuitem[mainmenu].name, "Main Menu", 9);
+       menuitem[mainmenu].x = 95;
+       menuitem[mainmenu].y = 180 + (!g_allowmusicvolume ? 0 : 15);
+       menuitem[mainmenu].hasslider = false;
+       nummenuitems = 4;
    }
 }
 
@@ -217,7 +229,7 @@ void O_Control(player_t *player)
       movecount = 0; // move immediately on next press
 
       // CALICO: allow exit option
-      if(g_allowexit && cursorpos == 2)
+      if(g_allowexit && cursorpos == mainmenu)
       {
           if(buttons & (BT_ATTACK|JP_ATTACK))
           {
@@ -229,31 +241,51 @@ void O_Control(player_t *player)
    }
    else
    {
-      if(buttons & (JP_RIGHT | JP_SRIGHT)) // CALICO: allow strafie-right input
+      if(buttons & (JP_RIGHT | JP_SRIGHT)) // CALICO: allow strafe-right input
       {
          if(menuitem[cursorpos].hasslider)
          {
             slider[cursorpos].curval++;
             if(slider[cursorpos].curval > slider[cursorpos].maxval)
                slider[cursorpos].curval = slider[cursorpos].maxval;
-            if(cursorpos == 0)
+            if(cursorpos == soundvol)
             {
-               sfxvolume = 255*slider[0].curval / slider[0].maxval;
+               sfxvolume = 255*slider[cursorpos].curval / slider[cursorpos].maxval;
                S_StartSound(NULL, sfx_pistol);
+
+               hal_sound.setMasterVolume(sfxvolume, g_allowmusicvolume ? musicvolume : sfxvolume); // CALICO
+            }
+
+            if (cursorpos == musicvol && g_allowmusicvolume)
+            {
+                musicvolume = 255 * slider[cursorpos].curval / slider[cursorpos].maxval;
+                S_StartSound(NULL, sfx_pistol);
+
+                hal_sound.setMasterVolume(sfxvolume, musicvolume); // CALICO
             }
          }
       }
-      if(buttons & (JP_LEFT | JP_SLEFT)) // CALICO: allow stafe-left input
+      if(buttons & (JP_LEFT | JP_SLEFT)) // CALICO: allow strafe-left input
       {
          if(menuitem[cursorpos].hasslider)
          {
             slider[cursorpos].curval--;
             if(slider[cursorpos].curval < 0)
                slider[cursorpos].curval = 0;
-            if(cursorpos == 0)
+            if(cursorpos == soundvol)
             {
-               sfxvolume = 255*slider[0].curval / slider[0].maxval;
+               sfxvolume = 255*slider[cursorpos].curval / slider[cursorpos].maxval;
                S_StartSound(NULL, sfx_pistol);
+
+               hal_sound.setMasterVolume(sfxvolume, g_allowmusicvolume ? musicvolume: sfxvolume); // CALICO
+            }
+
+            if (cursorpos == musicvol && g_allowmusicvolume)
+            {
+                musicvolume = 255 * slider[cursorpos].curval / slider[cursorpos].maxval;
+                S_StartSound(NULL, sfx_pistol);
+
+                hal_sound.setMasterVolume(sfxvolume, musicvolume); // CALICO
             }
          }
       }
@@ -265,6 +297,11 @@ void O_Control(player_t *player)
          if(buttons & JP_DOWN)
          {
             cursorpos++;
+            if (!g_allowmusicvolume) { // CALICO: skip music volume option
+                if (cursorpos == musicvol) {
+                    cursorpos++;
+                }
+            }
             if(cursorpos == nummenuitems)
                cursorpos = 0;
          }
@@ -272,6 +309,11 @@ void O_Control(player_t *player)
          if(buttons & JP_UP)
          {
             cursorpos--;
+            if (!g_allowmusicvolume) { // CALICO: skip music volume option
+                if (cursorpos == musicvol) {
+                    cursorpos--;
+                }
+            }
             if(cursorpos == -1)
                cursorpos = nummenuitems-1;
          }
@@ -303,15 +345,28 @@ void O_Drawer(void)
    int offset;
 
    // Erase old and Draw new cursor frame
-   EraseBlock(56, 40, o_cursor1->width, 200, NULL);
+   EraseBlock(56 - (!g_allowmusicvolume ? 0 : 40), 40 - (!g_allowmusicvolume ? 0 : 20), o_cursor1->width, 200, NULL);
+
+   int cursorposX = 0;
+
+   if (g_allowmusicvolume) {
+       if (cursorpos == soundvol) {
+           cursorposX = 28;
+       }
+
+       if (cursorpos == musicvol) {
+           cursorposX = 20;
+       }
+   }
+
    if(cursorframe)
-      DrawJagobj(o_cursor1, 60, menuitem[cursorpos].y - 2, NULL);
+      DrawJagobj(o_cursor1, 60 - cursorposX, menuitem[cursorpos].y - 2, NULL);
    else
-      DrawJagobj(o_cursor2, 60, menuitem[cursorpos].y - 2, NULL);
+      DrawJagobj(o_cursor2, 60 - cursorposX, menuitem[cursorpos].y - 2, NULL);
 
    // Draw menu
 
-   print(104, 10, "Options");
+   print(104, 10 - (!g_allowmusicvolume ? 0 : 5), "Options");
 
    for(i = 0; i < nummenuitems; i++)
    {
@@ -319,9 +374,10 @@ void O_Drawer(void)
 
       if(menuitem[i].hasslider == true)
       {
-         DrawJagobj(o_slidertrack , menuitem[i].x + 2, menuitem[i].y + 20, NULL);
+         int sliderX = !g_allowmusicvolume ? menuitem[i].x : (160 - (BIGSHORT(o_slidertrack->width) / 2)) - 2;
+         DrawJagobj(o_slidertrack, sliderX + 2, menuitem[i].y + 20, NULL);
          offset = (slider[i].curval * SLIDEWIDTH) / slider[i].maxval;
-         DrawJagobj(o_slider, menuitem[i].x + 7 + offset, menuitem[i].y + 20, NULL);
+         DrawJagobj(o_slider, sliderX + 7 + offset, menuitem[i].y + 20, NULL);
       }
    }
 
